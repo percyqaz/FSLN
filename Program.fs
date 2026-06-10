@@ -30,6 +30,6 @@ let main (_: string array) : int =
     | Some solution_path ->
         let solution = SolutionTree.read_solution_file(solution_path)
         TreeOperations.render solution
-        TreeOperations.insert_after(solution.Projects.[0], "/home/deck/Desktop/Source/fsln/SolutionTree.fs", "NewFile.fs")
+        TreeOperations.move_file_up(solution.Projects.[0], "/home/deck/Desktop/Source/fsln/Program.fs")
         TreeOperations.render solution
         0

@@ -153,3 +153,33 @@ module TreeOperations =
             project.ProjectRootElement.Save()
         | None ->
             printfn "not found!"
+            
+    let move_file_up(project: Project, full_file_path: string) =
+        match project.FindFileAndSiblings(full_file_path) with
+        | Some (file, siblings) ->
+            let folder_pos = siblings.IndexOf(File file)
+            if folder_pos > 0 then
+                siblings.RemoveAt(folder_pos)
+                siblings.Insert(folder_pos - 1, File file)
+                let parent = file.ProjectItemElement.Parent
+                let previous_sibling_proj = file.ProjectItemElement.PreviousSibling
+                parent.RemoveChild(file.ProjectItemElement)
+                parent.InsertBeforeChild(file.ProjectItemElement, previous_sibling_proj)
+                project.ProjectRootElement.Save()
+        | None ->
+            printfn "not found!"
+            
+    let move_file_down(project: Project, full_file_path: string) =
+        match project.FindFileAndSiblings(full_file_path) with
+        | Some (file, siblings) ->
+            let folder_pos = siblings.IndexOf(File file)
+            if folder_pos + 1 < siblings.Count then
+                siblings.RemoveAt(folder_pos)
+                siblings.Insert(folder_pos + 1, File file)
+                let parent = file.ProjectItemElement.Parent
+                let next_sibling_proj = file.ProjectItemElement.NextSibling
+                parent.RemoveChild(file.ProjectItemElement)
+                parent.InsertAfterChild(file.ProjectItemElement, next_sibling_proj)
+                project.ProjectRootElement.Save()
+        | None ->
+            printfn "not found!"
