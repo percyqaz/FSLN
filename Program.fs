@@ -29,8 +29,8 @@ let main (argv: string array) : int =
     | None -> 1
     | Some solution_path ->
         let solution = SolutionLoader.read_solution_file(solution_path)
-        if argv.Length > 0 && argv.[0] = "-i" then
-            Interactive.loop solution
-        else
+        if argv.Length > 0 && argv.[0] = "-p" then
             Operations.render solution
+        else
+            Interactive.loop solution
         0

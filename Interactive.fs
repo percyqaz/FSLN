@@ -1,6 +1,8 @@
 namespace fsln
 
 open System
+open System.Diagnostics
+open fsln.Operations
 
 module Interactive =
     
@@ -18,6 +20,7 @@ module Interactive =
             mutable Expanded: Set<string>
             mutable Selected: Selection
             mutable Buffer: string
+            mutable StatusLine: string
         }
         member this.IsExpanded(folder: FileTreeFolder) : bool = this.Expanded.Contains folder.FullPath
         member this.IsExpanded(project: Project) : bool = this.Expanded.Contains project.FullPath
@@ -28,6 +31,7 @@ module Interactive =
                 Expanded = Set.empty
                 Selected = Selection.Solution solution
                 Buffer = ""
+                StatusLine = ""
             }
         
     let private previous<'t>(siblings: ResizeArray<'t>, child: 't) : 't option =
@@ -184,6 +188,20 @@ module Interactive =
                 for f in project.Children do
                     print_fs(0, f)
                     
+    let move_selection_up(state: State) : unit =
+        match state.Selected with
+        | Selection.Solution _ -> ()
+        | Selection.Project _ -> () // todo: reorder projects?
+        | Selection.Folder folder -> state.Selected <- Selection.Folder(move_folder_up(folder.ParentProject, folder))
+        | Selection.File file -> move_file_up(file.ParentProject, file)
+        
+    let move_selection_down(state: State) : unit =
+        match state.Selected with
+        | Selection.Solution _ -> ()
+        | Selection.Project _ -> () // todo: reorder projects?
+        | Selection.Folder folder -> state.Selected <- Selection.Folder(move_folder_down(folder.ParentProject, folder))
+        | Selection.File file -> move_file_down(file.ParentProject, file)
+
     let key_to_buffer(state: State) : unit =
         let input = Console.ReadKey(true)
         
@@ -202,7 +220,9 @@ module Interactive =
                 
         elif input.Key = ConsoleKey.Escape then
             state.Buffer <- state.Buffer + "<Esc>"
-        elif input.KeyChar <> '\u0000' && Char.IsAscii(input.KeyChar) && not (Char.IsWhiteSpace(input.KeyChar))  then
+        elif input.Key = ConsoleKey.Spacebar then
+            state.Buffer <- state.Buffer + " "
+        elif input.KeyChar <> '\u0000' && Char.IsAscii(input.KeyChar) && not (Char.IsWhiteSpace(input.KeyChar)) then
             if input.Modifiers &&& ConsoleModifiers.Alt = ConsoleModifiers.Alt then
                 state.Buffer <- state.Buffer + sprintf "<A-%c>" input.KeyChar
             else
@@ -219,8 +239,71 @@ module Interactive =
             state.Buffer <- state.Buffer + sprintf "<%s%s>" alt key
             
     let consume_buffer(state: State, keymap: string, action: unit -> unit) =
-        if state.Buffer = keymap then
+        if state.Buffer.StartsWith keymap then
             action()
+            state.Buffer <- state.Buffer.Substring(keymap.Length)
+            
+    let dispatch_shell_command(state: State, command: string) : unit =
+        let shell, first_arg = if OperatingSystem.IsWindows() then "cmd.exe", "-c" else "/bin/sh", "-c"
+        let selection_path =
+            match state.Selected with
+            | Selection.Solution solution -> sprintf "%A" solution.FullPath
+            | Selection.Project project -> sprintf "%A" project.FullPath
+            | Selection.Folder folder -> sprintf "%A" folder.FullPath
+            | Selection.File file -> sprintf "%A" file.FullPath
+
+        let args =
+            first_arg + " " +
+            command
+                .Replace("$$", '\uFFFD'.ToString())
+                .Replace("$", selection_path)
+                .Replace('\uFFFD', '$')
+        let start_info = ProcessStartInfo(shell, args)
+        start_info.UseShellExecute <- false
+        start_info.CreateNoWindow <- false
+        
+        Console.Clear()
+        let proc = Process.Start(start_info)
+        proc.WaitForExit()
+        if proc.ExitCode <> 0 then
+            state.StatusLine <- sprintf "(%i)" proc.ExitCode
+        Console.ReadKey(true) |> ignore
+            
+    let dispatch_internal_command(state: State, command: string) : unit =
+        state.StatusLine <- command
+        
+    let dispatch_keybindings(state: State) : unit =
+        
+        consume_buffer(state, "<Left>", fun () -> collapse_selected(state))
+        consume_buffer(state, "h", fun () -> collapse_selected(state))
+        consume_buffer(state, "<Down>", fun () -> state.Selected <- navigate_down(state))
+        consume_buffer(state, "j", fun () -> state.Selected <- navigate_down(state))
+        consume_buffer(state, "<Up>", fun () -> state.Selected <- navigate_up(state))
+        consume_buffer(state, "k", fun () -> state.Selected <- navigate_up(state))
+        consume_buffer(state, "<Right>", fun () -> expand_selected(state))
+        consume_buffer(state, "l", fun () -> expand_selected(state))
+        consume_buffer(state, "<A-j>", fun () -> move_selection_up(state))
+        consume_buffer(state, "<A-Up>", fun () -> move_selection_up(state))
+        consume_buffer(state, "<A-k>", fun () -> move_selection_down(state))
+        consume_buffer(state, "<A-Down>", fun () -> move_selection_down(state))
+            
+    let handle_input(state: State) : unit =
+        key_to_buffer(state)
+        if state.Buffer.EndsWith "<Esc>" then
+            if state.Buffer = "<Esc>" then
+                state.Running <- false
+            else
+                state.Buffer <- ""
+                
+        dispatch_keybindings(state)
+        
+        if state.Buffer.StartsWith ":!" && state.Buffer.EndsWith "<Enter>" then
+            let command = state.Buffer.Substring(2, state.Buffer.Length - 9)
+            dispatch_shell_command(state, command)
+            state.Buffer <- ""
+        elif state.Buffer.StartsWith ":" && state.Buffer.EndsWith "<Enter>" then
+            let command = state.Buffer.Substring(1, state.Buffer.Length - 8)
+            dispatch_internal_command(state, command)
             state.Buffer <- ""
     
     let loop (solution: Solution) : unit =
@@ -228,19 +311,8 @@ module Interactive =
         while state.Running do
             Console.Clear()
             render state
-            printfn "%s" state.Buffer
-            key_to_buffer(state)
-            if state.Buffer.EndsWith "<Esc>" then
-                if state.Buffer = "<Esc>" then
-                    state.Running <- false
-                else
-                    state.Buffer <- ""
-                    
-            consume_buffer(state, "<Left>", fun () -> collapse_selected(state))
-            consume_buffer(state, "h", fun () -> collapse_selected(state))
-            consume_buffer(state, "<Down>", fun () -> state.Selected <- navigate_down(state))
-            consume_buffer(state, "j", fun () -> state.Selected <- navigate_down(state))
-            consume_buffer(state, "<Up>", fun () -> state.Selected <- navigate_up(state))
-            consume_buffer(state, "k", fun () -> state.Selected <- navigate_up(state))
-            consume_buffer(state, "<Right>", fun () -> expand_selected(state))
-            consume_buffer(state, "l", fun () -> expand_selected(state))
+            if state.Buffer <> "" then
+                printfn "%s" state.Buffer
+            else
+                printfn "%s" state.StatusLine
+            handle_input(state)

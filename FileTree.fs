@@ -23,6 +23,11 @@ and FileTreeFile =
         Parent: Parent
     }
     
+    member this.ParentProject : Project =
+        match this.Parent with
+        | Parent.Folder parent_folder -> parent_folder.ParentProject
+        | Parent.Project parent_project -> parent_project
+    
 and FileTreeFolder =
     {
         Name: string
@@ -48,7 +53,12 @@ and FileTreeFolder =
                     yield folder
                     yield! folder.EnumerateSubfolders()
         }
-    
+        
+    member this.ParentProject : Project =
+        match this.Parent with
+        | Parent.Folder parent_folder -> parent_folder.ParentProject
+        | Parent.Project parent_project -> parent_project
+
 and FileTreeEntry =
     | File of FileTreeFile
     | Folder of FileTreeFolder
@@ -56,7 +66,7 @@ and FileTreeEntry =
         match this with
         | File f -> f.Parent
         | Folder f -> f.Parent
-    member this.WithParent(parent: Parent) =
+    member this.WithParent(parent: Parent) : FileTreeEntry =
         match this with
         | File f -> File { f with Parent = parent }
         | Folder f -> Folder { f with Parent = parent }

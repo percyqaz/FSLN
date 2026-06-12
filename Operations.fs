@@ -69,17 +69,24 @@ module Operations =
             parent.InsertAfterChild(file.ProjectItemElement, next_sibling_proj)
             project.ProjectRootElement.Save()
             
-    let move_folder_up(project: Project, folder: FileTreeFolder) : unit =
+    let move_folder_up(project: Project, folder: FileTreeFolder) : FileTreeFolder =
         let siblings = folder.Parent.Children
         let files = folder.EnumerateFiles() |> Array.ofSeq
         let folder_pos = siblings.IndexOf(Folder folder)
         
+        let mutable result_folder = folder
+        
         if folder_pos > 0 && files.Length > 0 then
             siblings.RemoveAt(folder_pos)
-            match siblings.[folder_pos - 1] with
-            | Folder merge when merge.FullPath = folder.FullPath ->
-                merge.Children.AddRange(folder.Children |> Seq.map _.WithParent(Parent.Folder merge))
-            | _ -> siblings.Insert(folder_pos - 1, Folder folder)
+            if folder_pos > 1 then
+                match siblings.[folder_pos - 2] with
+                | Folder merge when merge.FullPath = folder.FullPath ->
+                    merge.Children.AddRange(folder.Children |> Seq.map _.WithParent(Parent.Folder merge))
+                    result_folder <- merge
+                | _ -> siblings.Insert(folder_pos - 1, Folder folder)
+            else
+                siblings.Insert(folder_pos - 1, Folder folder)
+            // todo: neighbors below might now need merging!
             
             let first_file = files.[0]
             let parent = first_file.ProjectItemElement.Parent
@@ -89,17 +96,26 @@ module Operations =
                 parent.InsertBeforeChild(file.ProjectItemElement, previous_sibling_proj)
             project.ProjectRootElement.Save()
             
-    let move_folder_down(project: Project, folder: FileTreeFolder) : unit =
+        result_folder
+            
+    let move_folder_down(project: Project, folder: FileTreeFolder) : FileTreeFolder =
         let siblings = folder.Parent.Children
         let files = folder.EnumerateFiles() |> Array.ofSeq
         let folder_pos = siblings.IndexOf(Folder folder)
         
+        let mutable result_folder = folder
+        
         if folder_pos + 1 < siblings.Count && files.Length > 0 then
             siblings.RemoveAt(folder_pos)
-            match siblings.[folder_pos + 1] with
-            | Folder merge when merge.FullPath = folder.FullPath ->
-                merge.Children.InsertRange(0, folder.Children |> Seq.map _.WithParent(Parent.Folder merge))
-            | _ -> siblings.Insert(folder_pos + 1, Folder folder)
+            if folder_pos + 1 < siblings.Count then
+                match siblings.[folder_pos + 1] with
+                | Folder merge when merge.FullPath = folder.FullPath ->
+                    merge.Children.InsertRange(0, folder.Children |> Seq.map _.WithParent(Parent.Folder merge))
+                    result_folder <- merge
+                | _ -> siblings.Insert(folder_pos + 1, Folder folder)
+            else
+                siblings.Insert(folder_pos + 1, Folder folder)
+            // todo: neighbors above might now need merging!
             
             let last_file = files.[files.Length - 1]
             let parent = last_file.ProjectItemElement.Parent
@@ -108,3 +124,5 @@ module Operations =
                 parent.RemoveChild(file.ProjectItemElement)
                 parent.InsertAfterChild(file.ProjectItemElement, next_sibling_proj)
             project.ProjectRootElement.Save()
+            
+        result_folder
