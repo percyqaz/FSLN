@@ -5,14 +5,20 @@ open System.IO
 open Microsoft.Build.Construction
 open fsln
 
+module Path =
+    
+    let normalise(path: string) : string =
+        Uri(Path.GetFullPath(path)).LocalPath.Replace('\\', Path.AltDirectorySeparatorChar)
+
+    let get_directory_name(path: string) : string =
+        Path.GetDirectoryName(path).Replace('\\', Path.AltDirectorySeparatorChar)
+
+
 module SolutionLoader =
     
-    let normalise_path(path: string) : string =
-        Uri(Path.GetFullPath(path)).LocalPath.Replace('\\', Path.AltDirectorySeparatorChar)
-    
     let read_project_file(name: string, project_path: string) : Project =
-        let project_path = normalise_path(project_path)
-        let project_containing_folder = Path.GetDirectoryName(project_path)
+        let project_path = Path.normalise(project_path)
+        let project_containing_folder = Path.get_directory_name(project_path)
         let project_file = ProjectRootElement.Open(project_path)
         
         let project =
@@ -58,10 +64,10 @@ module SolutionLoader =
         for item_group in project_file.ItemGroups do
             for property in item_group.Items do
                 if property.ElementName = "Compile" || property.ElementName = "None" || property.ElementName = "EmbeddedResource" then
-                    let file_path = normalise_path(Path.Combine(project_containing_folder, property.Include))
+                    let file_path = Path.normalise(Path.Combine(project_containing_folder, property.Include))
                     if is_subdirectory(project_containing_folder, file_path) then
                         let relative_path_segments =
-                            Path.GetDirectoryName(file_path)
+                            Path.get_directory_name(file_path)
                                 .Replace(project_containing_folder, "")
                                 .Split(Path.AltDirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries)
                             |> List.ofArray
