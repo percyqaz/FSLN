@@ -29,6 +29,7 @@ let main (argv: string array) : int =
     | None -> 1
     | Some solution_path ->
         let solution = SolutionLoader.read_solution_file(solution_path)
+        Directory.SetCurrentDirectory(Path.GetDirectoryName(solution_path))
         if argv.Length > 0 && argv.[0] = "-p" then
             Operations.render solution
         else
