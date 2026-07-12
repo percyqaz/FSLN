@@ -39,12 +39,12 @@ type InteractiveDisplay(state: InteractiveState) =
     member inline private this.RenderFolder(indent: string, icolor: Color, is_selected: bool, is_expanded: bool, is_last: bool, folder: FileTreeFolder) : unit =
         let tree_marker = if is_last then state.Theme.TreeConnectors.Leaf else state.Theme.TreeConnectors.Branch
         let indent = indent + tree_marker.ForeColor(icolor)
-        let expand_marker = if is_expanded then state.Theme.IconExpanded else state.Theme.IconCollapsed
+        let expand_marker = if is_expanded then state.Theme.ExpandMarkers.Open else state.Theme.ExpandMarkers.Closed
         let line = sprintf "%c %s %s" state.Theme.IconFolder ((folder.Name + "/").ForeColor(state.Theme.ColorFolder).Bold()) (expand_marker.ToString().ForeColor(state.Theme.ColorExpandIcon))
         Console.WriteLine(indent + if is_selected then line.BackColor(state.Theme.ColorSelection) else line)
             
     member inline private this.RenderProject(is_selected: bool, is_expanded: bool, project: Project) : unit =
-        let expand_marker = if is_expanded then state.Theme.IconExpanded else state.Theme.IconCollapsed
+        let expand_marker = if is_expanded then state.Theme.ExpandMarkers.Open else state.Theme.ExpandMarkers.Closed
         let line = sprintf "%c %s %s" state.Theme.IconProject (project.Name.ForeColor(state.Theme.ColorProject).Bold()) (expand_marker.ToString().ForeColor(state.Theme.ColorExpandIcon))
         Console.WriteLine(if is_selected then line.BackColor(state.Theme.ColorSelection) else line)
             

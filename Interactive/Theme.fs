@@ -10,11 +10,12 @@ type TreeConnectors =
         Empty: string
     }
 
+type ExpandMarkers = { Open: string; Closed: string }
+
 type Theme =
     {
         TreeConnectors: TreeConnectors
-        IconExpanded: char
-        IconCollapsed: char
+        ExpandMarkers: ExpandMarkers
         IconFile: char
         IconFolder: char
         IconProject: char
@@ -33,8 +34,7 @@ type Theme =
     static member Default =
         {
             TreeConnectors = { Branch = "├─"; Leaf = "└─"; Vertical = "│ "; Empty = "  " }
-            IconExpanded = '-'
-            IconCollapsed = '+'
+            ExpandMarkers = { Open = "-"; Closed = "+" }
             IconFile = '*'
             IconFolder = '■'
             IconProject = '■'
