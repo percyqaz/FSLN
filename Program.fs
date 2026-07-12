@@ -1,3 +1,4 @@
+open System
 open System.IO
 open FSLN
 
@@ -24,6 +25,20 @@ let walk_tree_specific_filetypes (targets: string array) : string option =
 
     result
 
+let get_fsln_config() : string seq =    
+    let user_profile_settings = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".fsln")
+    let local_directory_settings = walk_tree_specific_file(".fsln")
+    seq {
+        if File.Exists(user_profile_settings) then
+            yield! File.ReadAllLines(user_profile_settings)
+            
+        match local_directory_settings with
+        | Some file when file <> user_profile_settings && File.Exists(file) ->
+            yield! File.ReadAllLines(file)
+        | _ -> ()
+    }
+    |> Seq.filter (String.IsNullOrWhiteSpace >> not)
+
 [<EntryPoint>]
 let main (argv: string array) : int =
     ignore argv
@@ -34,7 +49,7 @@ let main (argv: string array) : int =
     | Some solution_path ->
         let solution = SolutionLoader.read_solution_file(solution_path)
         Directory.SetCurrentDirectory(Path.GetDirectoryName(solution_path))
-        Interactive.loop solution
+        Interactive.loop(get_fsln_config(), solution)
         0
 
 // todo list:

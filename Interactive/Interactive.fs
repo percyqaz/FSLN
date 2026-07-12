@@ -2,9 +2,13 @@ namespace FSLN
 
 module Interactive =
 
-    let loop (solution: Solution) : unit =
+    let loop (config: string seq, solution: Solution) : unit =
         let state = InteractiveState.Create(solution)
         Commands.register_default_binds(state)
+        
+        state.Buffer <- String.concat InputBuffer.ENTER config + InputBuffer.ENTER
+        InputBuffer.dispatch_keybindings(state)
+        
         let render = InteractiveDisplay(state)
 
         while state.Running do

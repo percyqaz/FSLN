@@ -13,6 +13,7 @@ module InputBuffer =
     let inline private special (s: string) = LT_LOOKALIKE + s + GT_LOOKALIKE
 
     let ENTER = special("Enter")
+    let ESC = special("Esc")
 
     let key_to_buffer (state: InteractiveState) : unit =
         let input = Console.ReadKey(true)
@@ -32,7 +33,7 @@ module InputBuffer =
             ()
 
         elif input.Key = ConsoleKey.Escape then
-            state.Buffer <- state.Buffer + special("Esc")
+            state.Buffer <- state.Buffer + ESC
         elif input.Key = ConsoleKey.Spacebar then
             state.Buffer <- state.Buffer + " "
         elif input.KeyChar <> '\u0000' && Char.IsAscii(input.KeyChar) && not(Char.IsWhiteSpace(input.KeyChar)) then
@@ -58,6 +59,9 @@ module InputBuffer =
         if state.Buffer.StartsWith(shorthand) then
             state.Buffer <- target + state.Buffer.Substring(shorthand.Length)
 
+    [<Literal>]
+    let ARBITRARY_BUFFER_LIMIT = 4096 // For when binds create an infinite loop of expansion
+    
     [<TailCall>]
     let rec dispatch_keybindings (state: InteractiveState) : unit =
         let previous_buffer = state.Buffer
@@ -65,7 +69,7 @@ module InputBuffer =
         for bind_source, bind_target in state.Keymap do
             consume_buffer(state, bind_source, bind_target)
 
-        if state.Buffer.EndsWith(special("Esc")) then
+        if state.Buffer.EndsWith(ESC) then
             state.Buffer <- ""
 
         elif state.Buffer.StartsWith(":!") && state.Buffer.EndsWith(ENTER) then
@@ -81,7 +85,7 @@ module InputBuffer =
             state.Buffer <- state.Buffer.Substring(end_of_command + ENTER.Length)
 
         if previous_buffer <> state.Buffer then
-            if state.Buffer.Length > 4000 then
+            if state.Buffer.Length > ARBITRARY_BUFFER_LIMIT && previous_buffer.Length <= ARBITRARY_BUFFER_LIMIT then
                 printfn "%s" state.Buffer
                 state.Running <- false
             else
