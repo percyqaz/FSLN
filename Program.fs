@@ -33,3 +33,14 @@ let main (argv: string array) : int =
         Directory.SetCurrentDirectory(Path.GetDirectoryName(solution_path))
         Interactive.loop solution
         0
+        
+// todo list:
+// command allowing rebinding while fsln is running
+// read config from .fsln, higher directories first then more local ones to stack configs together
+// file search showing a filtered view
+// git information, run git status and annotate the tree with it
+// git mode, filter tree to just git changed files, keys to stage files, quick-commit, hotkey to show git log
+// run programs and parse their MSBuild-style output, ability to browse this list and hit enter to open editor on these files
+// use for: formatting tools, build errors
+// statusline, showing git branch and that's about it
+// auto-reload file tree if external modification detected, check every 2s
