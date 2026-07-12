@@ -27,7 +27,7 @@ type Theme =
         ColorSelection: Color
         ColorConnectorsDefault: Color
         ColorConnectorsFolder: Color
-        ColorConnectorsSolution: Color
+        ColorConnectorsProject: Color
     }
     
     static member Default =
@@ -47,5 +47,5 @@ type Theme =
             ColorSelection = Color.FromArgb(0x333300)
             ColorConnectorsDefault = Color.FromArgb(0x222222)
             ColorConnectorsFolder = Color.FromArgb(0x888844)
-            ColorConnectorsSolution = Color.FromArgb(0x664488)
+            ColorConnectorsProject = Color.FromArgb(0x664488)
         }
