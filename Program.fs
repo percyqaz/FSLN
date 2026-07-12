@@ -38,7 +38,6 @@ let main (argv: string array) : int =
         0
 
 // todo list:
-// bug: create folder before creating or moving file!
 // read config from .fsln, higher directories first then more local ones to stack configs together
 // file search showing a filtered view
 // git information, run git status and annotate the tree with it
