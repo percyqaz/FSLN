@@ -3,6 +3,7 @@ namespace FSLN
 open System
 open System.Drawing
 open System.Runtime.CompilerServices
+open System.Text
 
 type AnsiStringExtensions =
 
@@ -25,9 +26,48 @@ type AnsiStringExtensions =
     [<Extension>]
     static member Bold(text: string) : string = sprintf "\u001b[1m%s\u001b[22m" text
 
+    [<Extension>]
+    static member ClearRestOfLine(text: string) : string = sprintf "%s\u001b[K" text
+
+type ScreenBuffer(height: int) =
+
+    let lines = ResizeArray()
+    let mutable cursor = 0
+    let mutable scroll_position = 0
+
+    member this.CursorHere() : unit = cursor <- lines.Count
+
+    member this.Line(line: string) : unit = lines.Add(line)
+
+    member this.Line(line: string, cursor_here: bool) : unit =
+        if cursor_here then
+            this.CursorHere()
+
+        this.Line(line)
+
+    member this.Draw() : unit =
+        let sb = StringBuilder().Append("\u001b[H")
+
+        if cursor < scroll_position then
+            scroll_position <- cursor
+
+        if cursor - height + 1 > scroll_position then
+            scroll_position <- cursor - height + 1
+
+        let mutable index = scroll_position
+
+        for i = 1 to height do
+            let line = if index < lines.Count then lines.[index] else ""
+            sb.AppendLine(line.ClearRestOfLine()) |> ignore
+            index <- index + 1
+
+        Console.Write(sb.ToString())
+
+        lines.Clear()
+
 type InteractiveDisplay(state: InteractiveState) =
 
-    // todo: buffer the draw
+    let view = ScreenBuffer(Console.BufferHeight - 2)
 
     member inline private this.RenderFile
         (indent: string, icolor: Color, is_selected: bool, is_last: bool, file: FileTreeFile)
@@ -40,7 +80,7 @@ type InteractiveDisplay(state: InteractiveState) =
         let line =
             sprintf "%c %s  " state.Theme.IconFile (file.Name.ForeColor(state.Theme.ColorFile))
 
-        Console.WriteLine(indent + if is_selected then line.BackColor(state.Theme.ColorSelection) else line)
+        view.Line(indent + (if is_selected then line.BackColor(state.Theme.ColorSelection) else line), is_selected)
 
     member inline private this.RenderFolder
         (indent: string, icolor: Color, is_selected: bool, is_expanded: bool, is_last: bool, folder: FileTreeFolder)
@@ -60,7 +100,7 @@ type InteractiveDisplay(state: InteractiveState) =
                 ((folder.Name + "/").ForeColor(state.Theme.ColorFolder).Bold())
                 (expand_marker.ToString().ForeColor(state.Theme.ColorExpandIcon))
 
-        Console.WriteLine(indent + if is_selected then line.BackColor(state.Theme.ColorSelection) else line)
+        view.Line(indent + (if is_selected then line.BackColor(state.Theme.ColorSelection) else line), is_selected)
 
     member inline private this.RenderProject(is_selected: bool, is_expanded: bool, project: Project) : unit =
         let expand_marker =
@@ -73,7 +113,7 @@ type InteractiveDisplay(state: InteractiveState) =
                 (project.Name.ForeColor(state.Theme.ColorProject).Bold())
                 (expand_marker.ToString().ForeColor(state.Theme.ColorExpandIcon))
 
-        Console.WriteLine(if is_selected then line.BackColor(state.Theme.ColorSelection) else line)
+        view.Line((if is_selected then line.BackColor(state.Theme.ColorSelection) else line), is_selected)
 
     member inline private this.RenderSolution(solution: Solution) : unit =
         let is_selected = state.Selected = Selection.Solution(solution)
@@ -81,7 +121,7 @@ type InteractiveDisplay(state: InteractiveState) =
         let line =
             sprintf "%c %s " state.Theme.IconSolution (solution.Name.ForeColor(state.Theme.ColorSolution).Bold())
 
-        Console.WriteLine(if is_selected then line.BackColor(state.Theme.ColorSelection) else line)
+        view.Line((if is_selected then line.BackColor(state.Theme.ColorSelection) else line), is_selected)
 
     member this.RenderTree() : unit =
 
@@ -136,6 +176,7 @@ type InteractiveDisplay(state: InteractiveState) =
             display_project(project)
 
     member this.Redraw() : unit =
-        Console.Clear()
         this.RenderTree()
-        if state.Buffer <> "" then printfn "%s" state.Buffer else printfn "%s" state.StatusLine
+        view.Draw()
+        Console.WriteLine(state.StatusLine.ClearRestOfLine())
+        Console.Write(state.Buffer.ForeColor(0x88FF88).Bold().ClearRestOfLine())

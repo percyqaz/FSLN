@@ -61,7 +61,7 @@ module InputBuffer =
 
     [<Literal>]
     let ARBITRARY_BUFFER_LIMIT = 4096 // For when binds create an infinite loop of expansion
-    
+
     [<TailCall>]
     let rec dispatch_keybindings (state: InteractiveState) : unit =
         let previous_buffer = state.Buffer
