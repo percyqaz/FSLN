@@ -18,7 +18,7 @@ module Interactive =
         while state.Running do
             render.Redraw()
 
-            match input_thread.TryReadKey(5000) with
+            match input_thread.TryReadKey(2000) with
             | true, input ->
                 InputBuffer.add_input_to_buffer(input, state)
                 InputBuffer.dispatch_keybindings(state)
