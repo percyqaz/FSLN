@@ -121,4 +121,5 @@ module SolutionLoader =
             FullPath = solution_path
             SolutionFile = solution_file
             Projects = projects_list
+            LastSeenUtc = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
         }

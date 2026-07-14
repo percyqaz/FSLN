@@ -27,7 +27,7 @@ module Interactive =
             | false, _ ->
                 state.GitStatus <- GitStatus.Fetch()
 
-                if state.Solution.Projects |> Seq.exists _.HasExternalChange() then
+                if state.Solution.HasExternalChange() then
                     state.Solution <- SolutionLoader.read_solution_file(state.Solution.FullPath)
                     state.Selected <- Selection.Solution(state.Solution)
 
