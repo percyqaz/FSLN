@@ -174,12 +174,12 @@ module InteractiveState =
         match state.Selected with
         | Selection.Solution _ -> ()
         | Selection.Project _ -> ()
-        | Selection.Folder folder -> FileTreeOperations.move_folder_up(folder.ParentProject, folder)
-        | Selection.File file -> FileTreeOperations.move_file_up(file.ParentProject, file)
+        | Selection.Folder folder -> folder.ParentProject.MoveUp(folder)
+        | Selection.File file -> file.ParentProject.MoveUp(file)
 
     let move_selection_down (state: InteractiveState) : unit =
         match state.Selected with
         | Selection.Solution _ -> ()
         | Selection.Project _ -> ()
-        | Selection.Folder folder -> FileTreeOperations.move_folder_down(folder.ParentProject, folder)
-        | Selection.File file -> FileTreeOperations.move_file_down(file.ParentProject, file)
+        | Selection.Folder folder -> folder.ParentProject.MoveDown(folder)
+        | Selection.File file -> file.ParentProject.MoveDown(file)

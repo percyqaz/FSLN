@@ -61,14 +61,14 @@ module Commands =
         | "add" when args <> "" ->
             match state.Selected.ParentProject, state.Selected.ToParent() with
             | Some project, Some parent ->
-                match FileTreeOperations.add_file(project, parent, args) with
+                match project.TryAdd(parent, args) with
                 | Ok() -> state.StatusLine <- "Created file!"
                 | Error reason -> state.StatusLine <- reason
             | _ -> ()
         | "move" when args <> "" ->
             match state.Selected with
             | Selection.File file ->
-                match FileTreeOperations.move_file(file.ParentProject, file, args) with
+                match file.ParentProject.TryMove(file, args) with
                 | Ok() -> state.StatusLine <- "Moved file!"
                 | Error reason -> state.StatusLine <- reason
             | _ -> ()

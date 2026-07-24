@@ -2,16 +2,17 @@ namespace FSLN
 
 open System
 open System.IO
+open System.Runtime.CompilerServices
 open Microsoft.Build.Construction
 open FSLN
 
-module FileTreeOperations =
+type FileTreeFileOperations =
 
-    let inline private validate_name (name: string) : bool =
+    static let validate_name (name: string) : bool =
         name.Trim().TrimEnd('.').Replace("..", "") = name
         && String.forall (fun c -> Char.IsAsciiLetterOrDigit(c) || c = '.' || c = '_' || c = ' ') name
 
-    let rec private resolve_path (parent: Parent, parts: string list) : Result<Parent * string, string> =
+    static let rec resolve_path (parent: Parent, parts: string list) : Result<Parent * string, string> =
         match parts with
         | [ name ] -> if validate_name(name) then Ok(parent, name) else Error "Invalid file name"
         | path_segment :: remaining ->
@@ -45,7 +46,7 @@ module FileTreeOperations =
 
         | [] -> Error "empty parts passed!"
 
-    let rec private find_lowest_neighbor (parent: Parent) : ProjectItemElement =
+    static let rec find_lowest_neighbor (parent: Parent) : ProjectItemElement =
         let children = parent.Children
 
         if children.Count = 0 then
@@ -59,7 +60,7 @@ module FileTreeOperations =
             | FileTreeEntry.File file -> file.ProjectItemElement
             | FileTreeEntry.Folder folder -> find_lowest_neighbor(Parent.Folder(folder))
 
-    let inline private insert_after_neighbor
+    static let insert_after_neighbor
         (project: Project, relative_path: string, neighbor: ProjectItemElement)
         : ProjectItemElement =
         let added_item = project.ProjectRootElement.AddItem("Compile", relative_path)
@@ -68,7 +69,7 @@ module FileTreeOperations =
         parent.InsertAfterChild(added_item, neighbor)
         added_item
 
-    let rec private connect_to_tree (parent: Parent, item: FileTreeEntry) : unit =
+    static let rec connect_to_tree (parent: Parent, item: FileTreeEntry) : unit =
         let children = parent.Children
         let parent_needs_connecting = children.Count = 0
         children.Add(item)
@@ -78,7 +79,7 @@ module FileTreeOperations =
             | Parent.Project _ -> assert false
             | Parent.Folder folder -> connect_to_tree(folder.Parent, Folder folder)
 
-    let rec private remove_from_tree (parent: Parent, item: FileTreeEntry) : unit =
+    static let rec remove_from_tree (parent: Parent, item: FileTreeEntry) : unit =
         let children = parent.Children
         children.Remove(item) |> ignore
         let parent_needs_removing = children.Count = 0
@@ -88,9 +89,10 @@ module FileTreeOperations =
             | Parent.Project _ -> assert false
             | Parent.Folder folder -> remove_from_tree(folder.Parent, Folder folder)
 
-    let add_file (project: Project, parent: Parent, path: string) : Result<unit, string> =
+    [<Extension>]
+    static member TryAdd(project: Project, parent: Parent, new_name_or_path: string) : Result<unit, string> =
         let directory_parts =
-            path.Replace('\\', '/').Split('/', StringSplitOptions.None) |> List.ofArray
+            new_name_or_path.Replace('\\', '/').Split('/', StringSplitOptions.None) |> List.ofArray
 
         match resolve_path(parent, directory_parts) with
         | Error reason -> Error reason
@@ -129,11 +131,12 @@ module FileTreeOperations =
             connect_to_tree(new_parent, tree_file)
             Ok()
 
-    let move_file (project: Project, original_file: FileTreeFile, path: string) : Result<unit, string> =
+    [<Extension>]
+    static member TryMove(project: Project, file: FileTreeFile, new_name_or_path: string) : Result<unit, string> =
         let directory_parts =
-            path.Replace('\\', '/').Split('/', StringSplitOptions.None) |> List.ofArray
+            new_name_or_path.Replace('\\', '/').Split('/', StringSplitOptions.None) |> List.ofArray
 
-        match resolve_path(original_file.Parent, directory_parts) with
+        match resolve_path(file.Parent, directory_parts) with
         | Error reason -> Error reason
         | Ok(new_parent, file_name) ->
             let new_parent_full_path =
@@ -153,15 +156,12 @@ module FileTreeOperations =
                     .Replace('/', '\\')
 
             let insertion_neighbor =
-                if new_parent = original_file.Parent then
-                    original_file.ProjectItemElement
-                else
-                    find_lowest_neighbor(new_parent)
+                if new_parent = file.Parent then file.ProjectItemElement else find_lowest_neighbor(new_parent)
 
             let new_project_item =
                 insert_after_neighbor(project, moved_item_relative_path, insertion_neighbor)
 
-            original_file.ProjectItemElement.Parent.RemoveChild(original_file.ProjectItemElement)
+            file.ProjectItemElement.Parent.RemoveChild(file.ProjectItemElement)
 
             let new_tree_file =
                 File
@@ -173,15 +173,15 @@ module FileTreeOperations =
                     }
 
             Directory.CreateDirectory(Path.GetDirectoryName(moved_item_full_path)) |> ignore
-            File.Move(original_file.FullPath, moved_item_full_path)
+            File.Move(file.FullPath, moved_item_full_path)
             project.Save()
             connect_to_tree(new_parent, new_tree_file)
-            remove_from_tree(original_file.Parent, File original_file)
+            remove_from_tree(file.Parent, File file)
             Ok()
 
-    let inline private swap_files_in_project
-        (above_files: ProjectItemElement seq, below_files: ProjectItemElement seq)
-        : unit =
+type FileTreeReorderOperations =
+
+    static let swap_files_in_project (above_files: ProjectItemElement seq, below_files: ProjectItemElement seq) : unit =
         let first_above_file = Seq.head above_files
         let parent = first_above_file.Parent
 
@@ -189,7 +189,7 @@ module FileTreeOperations =
             parent.RemoveChild(file)
             parent.InsertBeforeChild(file, first_above_file)
 
-    let inline private merge_folders_if_needed
+    static let merge_folders_if_needed
         (entry_one: FileTreeEntry, entry_two: FileTreeEntry, siblings: ResizeArray<FileTreeEntry>)
         : unit =
         match entry_one, entry_two with
@@ -198,7 +198,8 @@ module FileTreeOperations =
             siblings.Remove(entry_two) |> ignore
         | _ -> ()
 
-    let move_file_up (project: Project, file: FileTreeFile) : unit =
+    [<Extension>]
+    static member MoveUp(project: Project, file: FileTreeFile) : unit =
         let siblings = file.Parent.Children
         let folder_pos = siblings.IndexOf(File file)
 
@@ -221,7 +222,8 @@ module FileTreeOperations =
 
             project.Save()
 
-    let move_file_down (project: Project, file: FileTreeFile) : unit =
+    [<Extension>]
+    static member MoveDown(project: Project, file: FileTreeFile) : unit =
         let siblings = file.Parent.Children
         let folder_pos = siblings.IndexOf(File file)
 
@@ -244,7 +246,8 @@ module FileTreeOperations =
 
             project.Save()
 
-    let move_folder_up (project: Project, folder: FileTreeFolder) : unit =
+    [<Extension>]
+    static member MoveUp(project: Project, folder: FileTreeFolder) : unit =
         let siblings = folder.Parent.Children
         let folder_pos = siblings.IndexOf(Folder folder)
 
@@ -274,7 +277,8 @@ module FileTreeOperations =
 
             project.Save()
 
-    let move_folder_down (project: Project, folder: FileTreeFolder) : unit =
+    [<Extension>]
+    static member MoveDown(project: Project, folder: FileTreeFolder) : unit =
         let siblings = folder.Parent.Children
         let folder_pos = siblings.IndexOf(Folder folder)
 
