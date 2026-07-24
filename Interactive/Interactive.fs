@@ -5,11 +5,11 @@ open System
 module Interactive =
 
     let loop (config: string seq, solution: Solution) : unit =
-        let state = InteractiveState.Create(solution)
-        Commands.register_default_binds(state)
+        let rec state =
+            InteractiveState.Create(solution, fun c -> Commands.dispatch_internal_command(state, c))
 
-        state.Buffer <- String.concat InputBuffer.ENTER config + InputBuffer.ENTER
-        InputBuffer.dispatch_keybindings(state)
+        Commands.register_default_binds(state)
+        state.CommandBuffer.DispatchInitialCommands(config)
 
         let render = InteractiveDisplay(state)
         let input_thread = InputThread()
@@ -22,8 +22,8 @@ module Interactive =
 
             match input_thread.TryReadKey(2000) with
             | true, input ->
-                InputBuffer.add_input_to_buffer(input, state)
-                InputBuffer.dispatch_keybindings(state)
+                state.CommandBuffer.AddKey(input)
+                state.CommandBuffer.DispatchCommands()
             | false, _ ->
                 state.GitStatus <- GitStatus.Fetch()
 

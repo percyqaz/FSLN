@@ -230,4 +230,4 @@ type InteractiveDisplay(state: InteractiveState) =
             | None -> ""
 
         Console.WriteLine(git_status + state.StatusLine.ClearRestOfLine())
-        Console.Write(state.Buffer.ForeColor(0x88FF88).Bold().ClearRestOfLine())
+        Console.Write(state.CommandBuffer.ToString().ForeColor(0x88FF88).Bold().ClearRestOfLine())

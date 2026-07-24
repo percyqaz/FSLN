@@ -43,6 +43,10 @@ module Commands =
         Console.Write("\u001b[47l\u001b[?1049h")
 
     let dispatch_internal_command (state: InteractiveState, command: string) : unit =
+        if command.StartsWith('!') then
+            dispatch_shell_command(state, command.Substring(1))
+        else
+
         let split = command.Split(" ", 2, StringSplitOptions.TrimEntries)
         let args = apply_substitutions(state, if split.Length < 2 then "" else split.[1])
 
@@ -86,7 +90,7 @@ module Commands =
             let source, target = split.[0], if split.Length > 1 then split.[1] else ""
 
             if source.Length > 0 && target.Length > 0 && source <> target then
-                state.Bind(source, target)
+                state.CommandBuffer.Bind(source, target)
                 state.StatusLine <- "Binding set."
             else
                 state.StatusLine <- "Invalid binding."
@@ -94,28 +98,28 @@ module Commands =
         | _ -> ()
 
     let register_default_binds (state: InteractiveState) : unit =
-        state.Bind("<Esc>", ":q<Enter>")
-        state.Bind("h", ":collapse<Enter>")
-        state.Bind("j", ":down<Enter>")
-        state.Bind("k", ":up<Enter>")
-        state.Bind("l", ":expand<Enter>")
+        state.CommandBuffer.Bind("<Esc>", ":q<Enter>")
+        state.CommandBuffer.Bind("h", ":collapse<Enter>")
+        state.CommandBuffer.Bind("j", ":down<Enter>")
+        state.CommandBuffer.Bind("k", ":up<Enter>")
+        state.CommandBuffer.Bind("l", ":expand<Enter>")
 
-        state.Bind(".", ":!echo $<Enter>")
+        state.CommandBuffer.Bind(".", ":!echo $<Enter>")
 
-        state.Bind(
+        state.CommandBuffer.Bind(
             "<Enter>",
             ":!C:/Program^ Files/JetBrains/JetBrains^ Rider^ 2026.1/bin/rider64.exe nosplash $<Enter>"
         )
 
-        state.Bind("<A-k>", ":move_up<Enter>")
-        state.Bind("<A-j>", ":move_down<Enter>")
+        state.CommandBuffer.Bind("<A-k>", ":move_up<Enter>")
+        state.CommandBuffer.Bind("<A-j>", ":move_down<Enter>")
 
-        state.Bind("<Left>", "h")
-        state.Bind("<Down>", "j")
-        state.Bind("<Up>", "k")
-        state.Bind("<Right>", "l")
-        state.Bind("<A-Up>", "<A-k>")
-        state.Bind("<A-Down>", "<A-j>")
+        state.CommandBuffer.Bind("<Left>", "h")
+        state.CommandBuffer.Bind("<Down>", "j")
+        state.CommandBuffer.Bind("<Up>", "k")
+        state.CommandBuffer.Bind("<Right>", "l")
+        state.CommandBuffer.Bind("<A-Up>", "<A-k>")
+        state.CommandBuffer.Bind("<A-Down>", "<A-j>")
 
-        state.Bind("a", "lj")
+        state.CommandBuffer.Bind("a", "lj")
 // todo: [ ] to jump next/previous sibling

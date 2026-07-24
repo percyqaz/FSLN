@@ -9,9 +9,8 @@ type InteractiveState =
         mutable GitStatus: GitStatus option
         mutable Expanded: Set<string>
         mutable Selected: Selection
-        mutable Buffer: string
+        CommandBuffer: CommandBuffer
         mutable StatusLine: string
-        Keymap: ResizeArray<string * string>
         mutable Theme: Theme
     }
 
@@ -31,22 +30,20 @@ type InteractiveState =
             | false, _ -> default_status()
         | None -> default_status()
 
-    static member Create(solution: Solution) : InteractiveState =
+    static member Create(solution: Solution, dispatch_command: string -> unit) : InteractiveState =
         {
             Running = true
             Solution = solution
             GitStatus = GitStatus.Fetch()
             Expanded = Set.empty
             Selected = Selection.Solution(solution)
-            Buffer = ""
+            CommandBuffer =
+                { new CommandBuffer() with
+                    override this.DispatchCommand(cmd: string) : unit = dispatch_command(cmd)
+                }
             StatusLine = ""
-            Keymap = ResizeArray()
             Theme = Theme.Default
         }
-
-    member this.Bind(string: string, target: string) : unit =
-        let inline special (s: string) = s.Replace("<", "＜").Replace(">", "＞")
-        this.Keymap.Insert(0, (special string, special target))
 
 module InteractiveState =
 

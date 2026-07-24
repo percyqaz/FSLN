@@ -8,6 +8,8 @@
   <ItemGroup>
     <Compile Include="Path.fs" />
     <Compile Include="GitStatus.fs" />
+    <Compile Include="Input\InputThread.fs" />
+    <Compile Include="Input\CommandBuffer.fs" />
     <Compile Include="Tree\FileTree.fs" />
     <Compile Include="Tree\FileTreeFileOperations.fs" />
     <Compile Include="Tree\FileTreeReorderOperations.fs" />
@@ -18,8 +20,6 @@
     <Compile Include="State\InteractiveState.fs" />
     <Compile Include="Interactive\InteractiveDisplay.fs" />
     <Compile Include="Interactive\Commands.fs" />
-    <Compile Include="Interactive\InputBuffer.fs" />
-    <Compile Include="Interactive\InputThread.fs" />
     <Compile Include="Interactive\Interactive.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
