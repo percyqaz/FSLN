@@ -6,8 +6,8 @@ module Interactive =
 
     let loop (config: string seq, solution: Solution) : unit =
         let state = State.Create(solution)
-        
-        let dispatch_command(cmd: string) =
+
+        let dispatch_command (cmd: string) =
             Commands.dispatch_internal_command(state, cmd)
 
         Commands.register_default_binds(state)

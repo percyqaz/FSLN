@@ -52,49 +52,20 @@ module Commands =
 
         match split.[0] with
         | "q"
-        | "q!" -> state.Running <- false
-        | "up" -> state.Selected <- State.navigate_up(state)
-        | "down" -> state.Selected <- State.navigate_down(state)
-        | "expand" -> State.expand_selected(state)
-        | "collapse" -> State.collapse_selected(state)
-        | "move_up" -> State.move_selection_up(state)
-        | "move_down" -> State.move_selection_down(state)
-        | "echo" -> state.StatusLine <- args
-        | "refresh_git" -> state.GitStatus <- GitStatus.Fetch()
+        | "q!" -> state.Quit()
+        | "up" -> state.NavigateUp()
+        | "down" -> state.NavigateDown()
+        | "expand" -> state.ExpandSelection()
+        | "collapse" -> state.CollapseSelection()
+        | "move_up" -> state.MoveSelectionUp()
+        | "move_down" -> state.MoveSelectionDown()
+        | "refresh_git" -> state.RefreshGit()
         | "delete" -> () // todo: implement
-        | "add" when args <> "" ->
-            match state.Selected.ParentProject, state.Selected.ToParent() with
-            | Some project, Some parent ->
-                match project.TryAdd(parent, args) with
-                | Ok() -> state.StatusLine <- "Created file!"
-                | Error reason -> state.StatusLine <- reason
-            | _ -> ()
-        | "move" when args <> "" ->
-            match state.Selected with
-            | Selection.File file ->
-                match file.ParentProject.TryMove(file, args) with
-                | Ok() -> state.StatusLine <- "Moved file!"
-                | Error reason -> state.StatusLine <- reason
-            | _ -> ()
-        | "set" ->
-            let split = args.Split("=", 2, StringSplitOptions.TrimEntries)
-            let key, value = split.[0], if split.Length > 1 then split.[1] else ""
-
-            match state.Theme.Set(key, value) with
-            | Ok new_theme ->
-                state.Theme <- new_theme
-                state.StatusLine <- ""
-            | Error reason -> state.StatusLine <- reason
-        | "bind" ->
-            let split = args.Split("=", 2, StringSplitOptions.TrimEntries)
-            let source, target = split.[0], if split.Length > 1 then split.[1] else ""
-
-            if source.Length > 0 && target.Length > 0 && source <> target then
-                state.CommandBuffer.Bind(source, target)
-                state.StatusLine <- "Binding set."
-            else
-                state.StatusLine <- "Invalid binding."
-
+        | "add" when args <> "" -> state.AddFile(args)
+        | "move" when args <> "" -> state.RenameSelection(args)
+        | "set" when args <> "" -> state.SetConfig(args)
+        | "bind" when args <> "" -> state.SetBinding(args)
+        | "echo" -> state.Echo(args)
         | _ -> ()
 
     let register_default_binds (state: State) : unit =
@@ -103,6 +74,7 @@ module Commands =
         state.CommandBuffer.Bind("j", ":down<Enter>")
         state.CommandBuffer.Bind("k", ":up<Enter>")
         state.CommandBuffer.Bind("l", ":expand<Enter>")
+        // todo: [ ] to jump next/previous sibling
 
         state.CommandBuffer.Bind(".", ":!echo $<Enter>")
 
@@ -122,4 +94,3 @@ module Commands =
         state.CommandBuffer.Bind("<A-Down>", "<A-j>")
 
         state.CommandBuffer.Bind("a", "lj")
-// todo: [ ] to jump next/previous sibling
