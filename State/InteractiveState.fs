@@ -30,17 +30,14 @@ type InteractiveState =
             | false, _ -> default_status()
         | None -> default_status()
 
-    static member Create(solution: Solution, dispatch_command: string -> unit) : InteractiveState =
+    static member Create(solution: Solution) : InteractiveState =
         {
             Running = true
             Solution = solution
             GitStatus = GitStatus.Fetch()
             Expanded = Set.empty
             Selected = Selection.Solution(solution)
-            CommandBuffer =
-                { new CommandBuffer() with
-                    override this.DispatchCommand(cmd: string) : unit = dispatch_command(cmd)
-                }
+            CommandBuffer = CommandBuffer()
             StatusLine = ""
             Theme = Theme.Default
         }

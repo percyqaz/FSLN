@@ -4,7 +4,6 @@ open System
 
 exception BufferTooLongException of string
 
-[<AbstractClass>]
 type CommandBuffer() =
 
     [<Literal>]
@@ -29,8 +28,6 @@ type CommandBuffer() =
     member this.Bind(string: string, target: string) : unit =
         let inline special (s: string) = s.Replace("<", "＜").Replace(">", "＞")
         keymap.Insert(0, (special string, special target))
-
-    abstract member DispatchCommand: string -> unit
 
     member this.AddKey(input: ConsoleKeyInfo) : unit =
 
@@ -78,7 +75,7 @@ type CommandBuffer() =
         elif input.Key <> ConsoleKey.None then
             buffer <- buffer + format_special_key()
 
-    member this.DispatchCommands() : unit =
+    member this.DispatchCommands(dispatch_command: string -> unit) : unit =
 
         let inline consume_buffer (shorthand: string, target: string) : unit =
             if buffer.StartsWith(shorthand) then
@@ -94,7 +91,7 @@ type CommandBuffer() =
             elif buffer.StartsWith(":") && buffer.Contains(ENTER) then
                 let end_of_command = buffer.IndexOf(ENTER)
                 let command = buffer.Substring(1, end_of_command - 1)
-                this.DispatchCommand(command)
+                dispatch_command(command)
                 buffer <- buffer.Substring(end_of_command + ENTER.Length)
 
         let mutable previous_buffer = buffer
@@ -107,6 +104,6 @@ type CommandBuffer() =
                 previous_buffer <- buffer
                 handle_keymap_and_commands()
 
-    member this.DispatchInitialCommands(config: string seq) : unit =
+    member this.DispatchInitialCommands(config: string seq, dispatch_command: string -> unit) : unit =
         buffer <- String.concat ENTER config + ENTER
-        this.DispatchCommands()
+        this.DispatchCommands(dispatch_command)

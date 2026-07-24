@@ -61,7 +61,7 @@ module Commands =
         | "move_down" -> InteractiveState.move_selection_down(state)
         | "echo" -> state.StatusLine <- args
         | "refresh_git" -> state.GitStatus <- GitStatus.Fetch()
-        | "delete" -> ()
+        | "delete" -> () // todo: implement
         | "add" when args <> "" ->
             match state.Selected.ParentProject, state.Selected.ToParent() with
             | Some project, Some parent ->
