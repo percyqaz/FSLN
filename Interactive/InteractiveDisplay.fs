@@ -35,9 +35,9 @@ type ScreenBuffer(height: int) =
     let mutable cursor = 0
     let mutable scroll_position = 0
 
-    member val ScrollOff = 6
-    member val LinesBelow = 1
-    member val Height = height
+    member val ScrollOff = 6 with get, set
+    member val LinesBelow = 1 with get, set
+    member val Height = height with get, set
 
     member this.CursorHere() : unit = cursor <- lines.Count
 
@@ -203,6 +203,7 @@ type InteractiveDisplay(state: InteractiveState) =
             display_project(project)
 
     member this.Redraw() : unit =
+        view.Height <- Console.BufferHeight - 2
         this.RenderTree()
         view.Draw()
 
