@@ -28,8 +28,7 @@ module Interactive =
                 state.RefreshGit()
 
                 if state.Solution.HasExternalChange() then
-                    state.Solution <- SolutionLoader.read_solution_file(state.Solution.FullPath)
-                    state.Selected <- Selection.Solution(state.Solution)
+                    state.Reload()
 
         Console.Write("\u001b[?1049l")
 

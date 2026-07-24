@@ -55,3 +55,8 @@ type StateCommands =
 
     [<Extension>]
     static member Quit(state: State) : unit = state.Running <- false
+    
+    [<Extension>]
+    static member Reload(state: State) : unit =
+        state.Solution <- SolutionLoader.read_solution_file(state.Solution.FullPath)
+        state.Selected <- Selection.Solution(state.Solution)
