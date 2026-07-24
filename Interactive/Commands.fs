@@ -56,6 +56,7 @@ module Commands =
         | "move_up" -> InteractiveState.move_selection_up(state)
         | "move_down" -> InteractiveState.move_selection_down(state)
         | "echo" -> state.StatusLine <- args
+        | "refresh_git" -> state.GitStatus <- GitStatus.Fetch()
         | "delete" -> ()
         | "add" ->
             match state.Selected.ParentProject, state.Selected.ToParent() with
