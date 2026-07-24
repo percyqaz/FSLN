@@ -7,11 +7,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Path.fs" />
-    <Compile Include="FileTree.fs" />
     <Compile Include="GitStatus.fs" />
-    <Compile Include="Load.fs" />
-    <Compile Include="Operations.fs" />
+    <Compile Include="Tree\FileTree.fs" />
+    <Compile Include="Tree\Load.fs" />
+    <Compile Include="Tree\Operations.fs" />
     <Compile Include="Interactive\Theme.fs" />
+    <Compile Include="Interactive\Selection.fs" />
     <Compile Include="Interactive\InteractiveState.fs" />
     <Compile Include="Interactive\InteractiveDisplay.fs" />
     <Compile Include="Interactive\Commands.fs" />
