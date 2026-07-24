@@ -8,19 +8,19 @@
   <ItemGroup>
     <Compile Include="Path.fs" />
     <Compile Include="GitStatus.fs" />
-    <Compile Include="Input\InputThread.fs" />
-    <Compile Include="Input\CommandBuffer.fs" />
     <Compile Include="Tree\FileTree.fs" />
     <Compile Include="Tree\FileTreeFileOperations.fs" />
     <Compile Include="Tree\FileTreeReorderOperations.fs" />
     <Compile Include="Tree\Solution.fs" />
     <Compile Include="Tree\SolutionLoader.fs" />
+    <Compile Include="Input\InputThread.fs" />
+    <Compile Include="Input\CommandBuffer.fs" />
     <Compile Include="State\Theme.fs" />
     <Compile Include="State\Selection.fs" />
     <Compile Include="State\State.fs" />
     <Compile Include="State\StateCommands.fs" />
     <Compile Include="State\StateNavigationCommands.fs" />
-    <Compile Include="Interactive\InteractiveDisplay.fs" />
+    <Compile Include="UI\InteractiveDisplay.fs" />
     <Compile Include="Interactive\CommandDispatcher.fs" />
     <Compile Include="Interactive\Interactive.fs" />
     <Compile Include="Program.fs" />
