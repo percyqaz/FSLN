@@ -18,6 +18,8 @@
     <Compile Include="State\Theme.fs" />
     <Compile Include="State\Selection.fs" />
     <Compile Include="State\State.fs" />
+    <Compile Include="State\StateCommands.fs" />
+    <Compile Include="State\StateNavigationCommands.fs" />
     <Compile Include="Interactive\InteractiveDisplay.fs" />
     <Compile Include="Interactive\Commands.fs" />
     <Compile Include="Interactive\Interactive.fs" />
