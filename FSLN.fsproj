@@ -9,7 +9,8 @@
     <Compile Include="Path.fs" />
     <Compile Include="GitStatus.fs" />
     <Compile Include="Tree\FileTree.fs" />
-    <Compile Include="Tree\FileTreeOperations.fs" />
+    <Compile Include="Tree\FileTreeFileOperations.fs" />
+    <Compile Include="Tree\FileTreeReorderOperations.fs" />
     <Compile Include="Tree\Solution.fs" />
     <Compile Include="Tree\SolutionLoader.fs" />
     <Compile Include="Interactive\Theme.fs" />
