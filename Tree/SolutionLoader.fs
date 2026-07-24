@@ -2,6 +2,7 @@ namespace FSLN
 
 open System
 open System.IO
+open Microsoft.Build.Evaluation
 open Microsoft.Build.Construction
 open FSLN
 
@@ -11,6 +12,7 @@ module SolutionLoader =
 
         let project_path = Path.normalise(project_path)
         let project_containing_folder = Path.get_directory_name(project_path)
+        
         let project_file = ProjectRootElement.Open(project_path)
 
         let project =
@@ -107,6 +109,7 @@ module SolutionLoader =
     let read_solution_file (solution_path: string) : Solution =
         let solution_file = SolutionFile.Parse(solution_path)
 
+        ProjectCollection.GlobalProjectCollection.UnloadAllProjects()
         let projects_list = ResizeArray()
 
         for project in solution_file.ProjectsInOrder do
