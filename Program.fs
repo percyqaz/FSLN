@@ -28,7 +28,7 @@ let main (argv: string array) : int =
     | Some solution_path ->
         let solution = SolutionLoader.read_solution_file(solution_path)
         Directory.SetCurrentDirectory(Path.GetDirectoryName(solution_path))
-        Interactive.loop(get_fsln_config(), solution)
+        FSLN.loop(get_fsln_config(), solution)
         0
 
 // todo list:

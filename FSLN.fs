@@ -2,7 +2,7 @@ namespace FSLN
 
 open System
 
-module Interactive =
+module FSLN =
 
     let loop (config: string seq, solution: Solution) : unit =
         let state = State.Create(solution)

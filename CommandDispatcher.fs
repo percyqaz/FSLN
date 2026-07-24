@@ -71,6 +71,7 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
         | "echo" -> state.Echo(args)
         | _ -> ()
         
+    // todo: move to State creation
     static member RegisterDefaultBinds(state: State) : unit =
         
         state.CommandBuffer.Bind("<Esc>", ":q<Enter>")
