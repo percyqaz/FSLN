@@ -8,6 +8,7 @@ open FSLN
 module SolutionLoader =
 
     let read_project_file (name: string, project_path: string) : Project =
+
         let project_path = Path.normalise(project_path)
         let project_containing_folder = Path.get_directory_name(project_path)
         let project_file = ProjectRootElement.Open(project_path)
@@ -37,20 +38,13 @@ module SolutionLoader =
                 Parent = target
             }
 
-        let rec merge_trees
-            (
-                target: Parent,
-                remaining_segments: string list,
-                file_name: string,
-                file_path: string,
-                element: ProjectItemElement
-            ) =
-            match remaining_segments with
+        let rec merge_trees (target: Parent, segments: string list, file_path: string, element: ProjectItemElement) =
+            match segments with
             | [] ->
                 target.Children.Add(
                     File
                         {
-                            Name = file_name
+                            Name = Path.GetFileName(file_path)
                             FullPath = file_path
                             ProjectItemElement = element
                             Parent = target
@@ -61,24 +55,24 @@ module SolutionLoader =
 
                 match last with
                 | Folder merge_folder when merge_folder.Name = folder ->
-                    merge_trees(Parent.Folder(merge_folder), remaining, file_name, file_path, element)
+                    merge_trees(Parent.Folder(merge_folder), remaining, file_path, element)
                 | _ ->
                     let new_folder = create_folder(target, folder)
                     target.Children.Add(Folder new_folder)
-                    merge_trees(Parent.Folder(new_folder), remaining, file_name, file_path, element)
-                    
+                    merge_trees(Parent.Folder(new_folder), remaining, file_path, element)
+
             | folder :: remaining ->
                 let new_folder = create_folder(target, folder)
                 target.Children.Add(Folder new_folder)
-                merge_trees(Parent.Folder(new_folder), remaining, file_name, file_path, element)
-                
-        let inline is_relevant_element(property: ProjectItemElement) : bool =
+                merge_trees(Parent.Folder(new_folder), remaining, file_path, element)
+
+        let inline is_relevant_element (property: ProjectItemElement) : bool =
             property.ElementName = "Compile"
             || property.ElementName = "None"
             || property.ElementName = "EmbeddedResource"
-            
-        let inline add_element(element: ProjectItemElement) : unit =
-            
+
+        let inline add_element (element: ProjectItemElement) : unit =
+
             let inline ensure_trailing_slash (path: string) : string =
                 if path.EndsWith("/") then path else path + "/"
 
@@ -87,7 +81,7 @@ module SolutionLoader =
                 let child_path = ensure_trailing_slash(child_path)
 
                 child_path <> parent_path && child_path.StartsWith(parent_path)
-            
+
             let file_path =
                 Path.normalise(Path.Combine(project_containing_folder, element.Include))
 
@@ -99,8 +93,7 @@ module SolutionLoader =
                         .Split(Path.AltDirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries)
                     |> List.ofArray
 
-                let file_name = Path.GetFileName(file_path)
-                merge_trees(Parent.Project(project), relative_path_segments, file_name, file_path, element)
+                merge_trees(Parent.Project(project), relative_path_segments, file_path, element)
             else
                 printfn "'%s' is outside the project folder for '%s'!" file_path project_containing_folder
 

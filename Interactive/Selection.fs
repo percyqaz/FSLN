@@ -1,4 +1,4 @@
-﻿namespace FSLN
+namespace FSLN
 
 [<RequireQualifiedAccess>]
 type Selection =
