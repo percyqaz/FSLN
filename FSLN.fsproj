@@ -13,9 +13,9 @@
     <Compile Include="Tree\FileTreeReorderOperations.fs" />
     <Compile Include="Tree\Solution.fs" />
     <Compile Include="Tree\SolutionLoader.fs" />
-    <Compile Include="Interactive\Theme.fs" />
-    <Compile Include="Interactive\Selection.fs" />
-    <Compile Include="Interactive\InteractiveState.fs" />
+    <Compile Include="State\Theme.fs" />
+    <Compile Include="State\Selection.fs" />
+    <Compile Include="State\InteractiveState.fs" />
     <Compile Include="Interactive\InteractiveDisplay.fs" />
     <Compile Include="Interactive\Commands.fs" />
     <Compile Include="Interactive\InputBuffer.fs" />
