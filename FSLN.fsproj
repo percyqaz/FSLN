@@ -17,7 +17,7 @@
     <Compile Include="Tree\SolutionLoader.fs" />
     <Compile Include="State\Theme.fs" />
     <Compile Include="State\Selection.fs" />
-    <Compile Include="State\InteractiveState.fs" />
+    <Compile Include="State\State.fs" />
     <Compile Include="Interactive\InteractiveDisplay.fs" />
     <Compile Include="Interactive\Commands.fs" />
     <Compile Include="Interactive\Interactive.fs" />

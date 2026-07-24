@@ -5,7 +5,7 @@ open System.Diagnostics
 
 module Commands =
 
-    let inline apply_substitutions (state: InteractiveState, command: string) : string =
+    let inline apply_substitutions (state: State, command: string) : string =
         command
             .Replace("$$", '\uFFFD'.ToString())
             .Replace("$SOLUTION", state.Solution.FullPath)
@@ -18,7 +18,7 @@ module Commands =
             .Replace("$", state.Selected.FullPath)
             .Replace('\uFFFD', '$')
 
-    let dispatch_shell_command (state: InteractiveState, command: string) : unit =
+    let dispatch_shell_command (state: State, command: string) : unit =
 
         let shell, args =
 
@@ -42,7 +42,7 @@ module Commands =
 
         Console.Write("\u001b[47l\u001b[?1049h")
 
-    let dispatch_internal_command (state: InteractiveState, command: string) : unit =
+    let dispatch_internal_command (state: State, command: string) : unit =
         if command.StartsWith('!') then
             dispatch_shell_command(state, command.Substring(1))
         else
@@ -53,12 +53,12 @@ module Commands =
         match split.[0] with
         | "q"
         | "q!" -> state.Running <- false
-        | "up" -> state.Selected <- InteractiveState.navigate_up(state)
-        | "down" -> state.Selected <- InteractiveState.navigate_down(state)
-        | "expand" -> InteractiveState.expand_selected(state)
-        | "collapse" -> InteractiveState.collapse_selected(state)
-        | "move_up" -> InteractiveState.move_selection_up(state)
-        | "move_down" -> InteractiveState.move_selection_down(state)
+        | "up" -> state.Selected <- State.navigate_up(state)
+        | "down" -> state.Selected <- State.navigate_down(state)
+        | "expand" -> State.expand_selected(state)
+        | "collapse" -> State.collapse_selected(state)
+        | "move_up" -> State.move_selection_up(state)
+        | "move_down" -> State.move_selection_down(state)
         | "echo" -> state.StatusLine <- args
         | "refresh_git" -> state.GitStatus <- GitStatus.Fetch()
         | "delete" -> () // todo: implement
@@ -97,7 +97,7 @@ module Commands =
 
         | _ -> ()
 
-    let register_default_binds (state: InteractiveState) : unit =
+    let register_default_binds (state: State) : unit =
         state.CommandBuffer.Bind("<Esc>", ":q<Enter>")
         state.CommandBuffer.Bind("h", ":collapse<Enter>")
         state.CommandBuffer.Bind("j", ":down<Enter>")

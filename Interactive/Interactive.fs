@@ -5,7 +5,7 @@ open System
 module Interactive =
 
     let loop (config: string seq, solution: Solution) : unit =
-        let state = InteractiveState.Create(solution)
+        let state = State.Create(solution)
         
         let dispatch_command(cmd: string) =
             Commands.dispatch_internal_command(state, cmd)

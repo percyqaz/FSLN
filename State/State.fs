@@ -2,7 +2,7 @@ namespace FSLN
 
 open FSLN
 
-type InteractiveState =
+type State =
     {
         mutable Running: bool
         mutable Solution: Solution
@@ -30,7 +30,7 @@ type InteractiveState =
             | false, _ -> default_status()
         | None -> default_status()
 
-    static member Create(solution: Solution) : InteractiveState =
+    static member Create(solution: Solution) : State =
         {
             Running = true
             Solution = solution
@@ -42,7 +42,7 @@ type InteractiveState =
             Theme = Theme.Default
         }
 
-module InteractiveState =
+module State =
 
     let private previous<'T> (siblings: ResizeArray<'T>, child: 'T) : 'T option =
         let index = siblings.IndexOf(child)
@@ -52,7 +52,7 @@ module InteractiveState =
         let index = siblings.IndexOf(child)
         if index + 1 < siblings.Count then Some siblings.[index + 1] else None
 
-    let rec bottom_child_tree (state: InteractiveState, entry: FileTreeEntry) : Selection =
+    let rec bottom_child_tree (state: State, entry: FileTreeEntry) : Selection =
         match entry with
         | File file -> Selection.File(file)
         | Folder folder ->
@@ -61,14 +61,14 @@ module InteractiveState =
             else
                 Selection.Folder(folder)
 
-    let bottom_child_project (state: InteractiveState, project: Project) : Selection =
+    let bottom_child_project (state: State, project: Project) : Selection =
         if state.IsExpanded(project) then
             bottom_child_tree(state, project.Children.[project.Children.Count - 1])
         else
             Selection.Project(project)
 
     [<TailCall>]
-    let rec find_next_in_tree (state: InteractiveState, current: FileTreeEntry) : Selection option =
+    let rec find_next_in_tree (state: State, current: FileTreeEntry) : Selection option =
         match next(current.Parent.Children, current) with
         | Some(File file_below) -> Some(Selection.File(file_below))
         | Some(Folder folder_below) -> Some(Selection.Folder(folder_below))
@@ -80,7 +80,7 @@ module InteractiveState =
                 | None -> None
             | Parent.Folder folder -> find_next_in_tree(state, Folder folder)
 
-    let navigate_up (state: InteractiveState) : Selection =
+    let navigate_up (state: State) : Selection =
         match state.Selected with
         | Selection.Solution _ -> state.Selected
         | Selection.Project project ->
@@ -102,7 +102,7 @@ module InteractiveState =
                 | Parent.Folder parent_folder -> Selection.Folder(parent_folder)
                 | Parent.Project parent_project -> Selection.Project(parent_project)
 
-    let navigate_down (state: InteractiveState) : Selection =
+    let navigate_down (state: State) : Selection =
         match state.Selected with
         | Selection.Solution solution -> Selection.Project(solution.Projects.[0])
         | Selection.Project project ->
@@ -123,7 +123,7 @@ module InteractiveState =
                 find_next_in_tree(state, Folder folder) |> Option.defaultValue state.Selected
         | Selection.File file -> find_next_in_tree(state, File file) |> Option.defaultValue state.Selected
 
-    let navigate_out (state: InteractiveState) : Selection =
+    let navigate_out (state: State) : Selection =
         match state.Selected with
         | Selection.Solution solution -> Selection.Solution(solution)
         | Selection.Project _ -> Selection.Solution(state.Solution)
@@ -136,14 +136,14 @@ module InteractiveState =
             | Parent.Folder parent_folder -> Selection.Folder(parent_folder)
             | Parent.Project parent_project -> Selection.Project(parent_project)
 
-    let expand_selected (state: InteractiveState) : unit =
+    let expand_selected (state: State) : unit =
         match state.Selected with
         | Selection.Solution _ -> ()
         | Selection.Project project -> state.Expanded <- state.Expanded.Add(project.FullPath)
         | Selection.Folder folder -> state.Expanded <- state.Expanded.Add(folder.FullPath)
         | Selection.File _ -> ()
 
-    let rec collapse_selected (state: InteractiveState) : unit =
+    let rec collapse_selected (state: State) : unit =
         match state.Selected with
         | Selection.Solution _ -> ()
         | Selection.Project project ->
@@ -164,14 +164,14 @@ module InteractiveState =
             state.Selected <- navigate_out(state)
             collapse_selected(state)
 
-    let move_selection_up (state: InteractiveState) : unit =
+    let move_selection_up (state: State) : unit =
         match state.Selected with
         | Selection.Solution _ -> ()
         | Selection.Project _ -> ()
         | Selection.Folder folder -> folder.ParentProject.MoveUp(folder)
         | Selection.File file -> file.ParentProject.MoveUp(file)
 
-    let move_selection_down (state: InteractiveState) : unit =
+    let move_selection_down (state: State) : unit =
         match state.Selected with
         | Selection.Solution _ -> ()
         | Selection.Project _ -> ()

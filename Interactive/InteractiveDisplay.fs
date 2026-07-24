@@ -74,7 +74,7 @@ type ScreenBuffer(height: int) =
 
         lines.Clear()
 
-type InteractiveDisplay(state: InteractiveState) =
+type InteractiveDisplay(state: State) =
 
     let view = ScreenBuffer(Console.BufferHeight - 2)
 
