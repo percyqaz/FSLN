@@ -5,7 +5,7 @@ open System.IO
 open Microsoft.Build.Construction
 open FSLN
 
-module Operations =
+module FileTreeOperations =
 
     let inline private validate_name (name: string) : bool =
         name.Trim().TrimEnd('.').Replace("..", "") = name

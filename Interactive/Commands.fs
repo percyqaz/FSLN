@@ -58,17 +58,17 @@ module Commands =
         | "echo" -> state.StatusLine <- args
         | "refresh_git" -> state.GitStatus <- GitStatus.Fetch()
         | "delete" -> ()
-        | "add" ->
+        | "add" when args <> "" ->
             match state.Selected.ParentProject, state.Selected.ToParent() with
             | Some project, Some parent ->
-                match Operations.add_file(project, parent, args) with
+                match FileTreeOperations.add_file(project, parent, args) with
                 | Ok() -> state.StatusLine <- "Created file!"
                 | Error reason -> state.StatusLine <- reason
             | _ -> ()
-        | "move" ->
+        | "move" when args <> "" ->
             match state.Selected with
             | Selection.File file ->
-                match Operations.move_file(file.ParentProject, file, args) with
+                match FileTreeOperations.move_file(file.ParentProject, file, args) with
                 | Ok() -> state.StatusLine <- "Moved file!"
                 | Error reason -> state.StatusLine <- reason
             | _ -> ()
