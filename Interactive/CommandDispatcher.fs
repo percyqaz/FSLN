@@ -2,10 +2,11 @@ namespace FSLN
 
 open System
 open System.Diagnostics
+open System.Threading
 
-module Commands =
+type CommandDispatcher(state: State, input_thread: InputThread) =
 
-    let inline apply_substitutions (state: State, command: string) : string =
+    member private this.ApplySubstitutions(command: string) : string =
         command
             .Replace("$$", '\uFFFD'.ToString())
             .Replace("$SOLUTION", state.Solution.FullPath)
@@ -18,15 +19,15 @@ module Commands =
             .Replace("$", state.Selected.FullPath)
             .Replace('\uFFFD', '$')
 
-    let dispatch_shell_command (state: State, command: string) : unit =
+    member private this.DispatchShell(state: State, command: string) : unit =
 
         let shell, args =
 
             if OperatingSystem.IsWindows() then
-                "cmd.exe", "/c " + apply_substitutions(state, command)
+                "cmd.exe", "/c " + this.ApplySubstitutions(command)
 
             else
-                "/bin/sh", "-c \"" + apply_substitutions(state, command) + "\""
+                "/bin/sh", "-c \"" + this.ApplySubstitutions(command) + "\""
 
         let start_info = ProcessStartInfo(shell, args)
         Console.Write("\u001b[?1049l\u001b[47h\u001b[2J\u001b[H")
@@ -34,21 +35,22 @@ module Commands =
         proc.WaitForExit()
 
         if proc.ExitCode <> 0 then
-            Console.ReadKey(true) |> ignore
+            match input_thread.TryReadKey(Timeout.Infinite) with _ -> ()
             state.StatusLine <- sprintf "(%i)" proc.ExitCode
+            
         elif Console.GetCursorPosition() <> struct (0, 0) then
             Console.WriteLine("Press any key to return".ForeColor(0x666666))
-            Console.ReadKey(true) |> ignore
+            match input_thread.TryReadKey(Timeout.Infinite) with _ -> ()
 
         Console.Write("\u001b[47l\u001b[?1049h")
 
-    let dispatch_internal_command (state: State, command: string) : unit =
+    member this.DispatchCommand(command: string) : unit =
         if command.StartsWith('!') then
-            dispatch_shell_command(state, command.Substring(1))
+            this.DispatchShell(state, command.Substring(1))
         else
 
         let split = command.Split(" ", 2, StringSplitOptions.TrimEntries)
-        let args = apply_substitutions(state, if split.Length < 2 then "" else split.[1])
+        let args = this.ApplySubstitutions(if split.Length < 2 then "" else split.[1])
 
         match split.[0] with
         | "q"
@@ -67,8 +69,9 @@ module Commands =
         | "bind" when args <> "" -> state.SetBinding(args)
         | "echo" -> state.Echo(args)
         | _ -> ()
-
-    let register_default_binds (state: State) : unit =
+        
+    static member RegisterDefaultBinds(state: State) : unit =
+        
         state.CommandBuffer.Bind("<Esc>", ":q<Enter>")
         state.CommandBuffer.Bind("h", ":collapse<Enter>")
         state.CommandBuffer.Bind("j", ":down<Enter>")

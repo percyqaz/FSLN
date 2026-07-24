@@ -21,7 +21,7 @@
     <Compile Include="State\StateCommands.fs" />
     <Compile Include="State\StateNavigationCommands.fs" />
     <Compile Include="Interactive\InteractiveDisplay.fs" />
-    <Compile Include="Interactive\Commands.fs" />
+    <Compile Include="Interactive\CommandDispatcher.fs" />
     <Compile Include="Interactive\Interactive.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

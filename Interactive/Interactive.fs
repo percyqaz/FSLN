@@ -6,15 +6,13 @@ module Interactive =
 
     let loop (config: string seq, solution: Solution) : unit =
         let state = State.Create(solution)
+        let input_thread = InputThread()
+        let command_dispatcher = CommandDispatcher(state, input_thread)
 
-        let dispatch_command (cmd: string) =
-            Commands.dispatch_internal_command(state, cmd)
-
-        Commands.register_default_binds(state)
-        state.CommandBuffer.DispatchInitialCommands(config, dispatch_command)
+        CommandDispatcher.RegisterDefaultBinds(state)
+        state.CommandBuffer.DispatchInitialCommands(config, command_dispatcher.DispatchCommand)
 
         let render = InteractiveDisplay(state)
-        let input_thread = InputThread()
         input_thread.Start()
 
         Console.Write("\u001b[?1049h")
@@ -25,9 +23,9 @@ module Interactive =
             match input_thread.TryReadKey(2000) with
             | true, input ->
                 state.CommandBuffer.AddKey(input)
-                state.CommandBuffer.DispatchCommands(dispatch_command)
+                state.CommandBuffer.DispatchCommands(command_dispatcher.DispatchCommand)
             | false, _ ->
-                state.GitStatus <- GitStatus.Fetch()
+                state.RefreshGit()
 
                 if state.Solution.HasExternalChange() then
                     state.Solution <- SolutionLoader.read_solution_file(state.Solution.FullPath)
