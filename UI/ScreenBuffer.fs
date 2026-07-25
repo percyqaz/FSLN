@@ -24,7 +24,7 @@ type ScreenBuffer(height: int) =
         this.Line(line)
 
     member this.Draw() : unit =
-        let sb = StringBuilder().Append("\u001b[H")
+        let sb = StringBuilder().Append("\u001b[H\u001b[?25l")
 
         let top_of_requested_view = max 0 (cursor - this.ScrollOff)
 
@@ -45,5 +45,6 @@ type ScreenBuffer(height: int) =
             index <- index + 1
 
         Console.Write(sb.ToString())
+        Console.Write("\u001b[?25h")
 
         lines.Clear()
