@@ -13,6 +13,8 @@
     <Compile Include="Tree\FileTreeReorderOperations.fs" />
     <Compile Include="Tree\Solution.fs" />
     <Compile Include="Tree\SolutionLoader.fs" />
+    <Compile Include="FilteredTree\FilteredTree.fs" />
+    <Compile Include="FilteredTree\Filter.fs" />
     <Compile Include="Input\InputThread.fs" />
     <Compile Include="Input\CommandBuffer.fs" />
     <Compile Include="Input\TextBuffer.fs" />
