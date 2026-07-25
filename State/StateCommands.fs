@@ -60,3 +60,8 @@ type StateCommands =
     static member Reload(state: State) : unit =
         state.Solution <- SolutionLoader.read_solution_file(state.Solution.FullPath)
         state.Selected <- Selection.Solution(state.Solution)
+
+    [<Extension>]
+    static member AutoReload(state: State) : unit =
+        if state.Solution.HasExternalChange() then
+            state.Reload()

@@ -1,5 +1,6 @@
 namespace FSLN
 
+open System.Runtime.CompilerServices
 open FSLN
 
 type State =
@@ -30,6 +31,35 @@ type State =
             | false, _ -> default_status()
         | None -> default_status()
 
+    [<Extension>]
+    static member private RegisterDefaultBinds(buffer: CommandBuffer) : CommandBuffer =
+        buffer.Bind("<Esc>", ":q<Enter>")
+
+        buffer.Bind("h", ":collapse<Enter>")
+        buffer.Bind("j", ":down<Enter>")
+        buffer.Bind("k", ":up<Enter>")
+        buffer.Bind("l", ":expand<Enter>")
+        buffer.Bind("<A-k>", ":move_up<Enter>")
+        buffer.Bind("<A-j>", ":move_down<Enter>")
+        buffer.Bind(".", ":!echo $<Enter>")
+
+        buffer.Bind("<Left>", "h")
+        buffer.Bind("<Down>", "j")
+        buffer.Bind("<Up>", "k")
+        buffer.Bind("<Right>", "l")
+        buffer.Bind("<A-Up>", "<A-k>")
+        buffer.Bind("<A-Down>", "<A-j>")
+        // todo: [ ] to jump next/previous sibling
+
+        buffer.Bind(
+            "<Enter>",
+            ":!C:/Program^ Files/JetBrains/JetBrains^ Rider^ 2026.1/bin/rider64.exe nosplash $<Enter>"
+        )
+
+        buffer.Bind("a", "lj")
+
+        buffer
+
     static member Create(solution: Solution) : State =
         {
             Running = true
@@ -37,7 +67,7 @@ type State =
             GitStatus = GitStatus.Fetch()
             Expanded = Set.empty
             Selected = Selection.Solution(solution)
-            CommandBuffer = CommandBuffer()
+            CommandBuffer = CommandBuffer().RegisterDefaultBinds()
             StatusLine = ""
             Theme = Theme.Default
         }

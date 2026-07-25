@@ -9,7 +9,6 @@ module FSLN =
         let input_thread = InputThread()
         let command_dispatcher = CommandDispatcher(state, input_thread)
 
-        CommandDispatcher.RegisterDefaultBinds(state)
         state.CommandBuffer.DispatchInitialCommands(config, command_dispatcher.DispatchCommand)
 
         let render = Display(state)
@@ -26,9 +25,7 @@ module FSLN =
                 state.CommandBuffer.DispatchCommands(command_dispatcher.DispatchCommand)
             | false, _ ->
                 state.RefreshGit()
-
-                if state.Solution.HasExternalChange() then
-                    state.Reload()
+                state.AutoReload()
 
         Console.Write("\u001b[?1049l")
 

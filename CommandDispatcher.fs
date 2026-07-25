@@ -74,32 +74,3 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
         | "bind" when args <> "" -> state.SetBinding(args)
         | "echo" -> state.Echo(args)
         | _ -> ()
-
-    // todo: move to State creation
-    static member RegisterDefaultBinds(state: State) : unit =
-
-        state.CommandBuffer.Bind("<Esc>", ":q<Enter>")
-        state.CommandBuffer.Bind("h", ":collapse<Enter>")
-        state.CommandBuffer.Bind("j", ":down<Enter>")
-        state.CommandBuffer.Bind("k", ":up<Enter>")
-        state.CommandBuffer.Bind("l", ":expand<Enter>")
-        // todo: [ ] to jump next/previous sibling
-
-        state.CommandBuffer.Bind(".", ":!echo $<Enter>")
-
-        state.CommandBuffer.Bind(
-            "<Enter>",
-            ":!C:/Program^ Files/JetBrains/JetBrains^ Rider^ 2026.1/bin/rider64.exe nosplash $<Enter>"
-        )
-
-        state.CommandBuffer.Bind("<A-k>", ":move_up<Enter>")
-        state.CommandBuffer.Bind("<A-j>", ":move_down<Enter>")
-
-        state.CommandBuffer.Bind("<Left>", "h")
-        state.CommandBuffer.Bind("<Down>", "j")
-        state.CommandBuffer.Bind("<Up>", "k")
-        state.CommandBuffer.Bind("<Right>", "l")
-        state.CommandBuffer.Bind("<A-Up>", "<A-k>")
-        state.CommandBuffer.Bind("<A-Down>", "<A-j>")
-
-        state.CommandBuffer.Bind("a", "lj")
