@@ -3,6 +3,12 @@ namespace FSLN
 open System.Runtime.CompilerServices
 open FSLN
 
+[<RequireQualifiedAccess>]
+type Mode =
+    | Normal
+    | Search
+    | Git
+
 type State =
     {
         mutable Running: bool
@@ -10,6 +16,7 @@ type State =
         mutable GitStatus: GitStatus option
         mutable Expanded: Set<string>
         mutable Selected: Selection
+        mutable Mode: Mode
         Buffers: BufferManager
         mutable StatusLine: string
         mutable Theme: Theme
@@ -69,6 +76,7 @@ type State =
             GitStatus = GitStatus.Fetch()
             Expanded = Set.empty
             Selected = Selection.Solution(solution)
+            Mode = Mode.Normal
             Buffers = BufferManager.Create().RegisterDefaultBinds()
             StatusLine = ""
             Theme = Theme.Default
