@@ -14,7 +14,7 @@ module FSLN =
         let render = Display(state)
         input_thread.Start()
 
-        Console.Write("\u001b[?1049h")
+        Console.Write(AnsiCodes.ENTER_SECOND_SCREEN)
 
         while state.Running do
             render.Redraw()
@@ -27,6 +27,6 @@ module FSLN =
                 state.ReloadGit()
                 state.AutoReload()
 
-        Console.Write("\u001b[?1049l")
+        Console.Write(AnsiCodes.LEAVE_SECOND_SCREEN)
 
         input_thread.Dispose()

@@ -38,7 +38,7 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
                 "/bin/sh", "-c \"" + this.ApplySubstitutions(command) + "\""
 
         let start_info = ProcessStartInfo(shell, args)
-        Console.Write("\u001b[?1049l\u001b[47h\u001b[2J\u001b[H")
+        Console.Write(AnsiCodes.LEAVE_SECOND_SCREEN + AnsiCodes.SAVE_SCREEN + AnsiCodes.CLEAR_SCREEN + AnsiCodes.CURSOR_TO_ORIGIN)
         let proc = Process.Start(start_info)
         proc.WaitForExit()
 
@@ -54,7 +54,7 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
             match input_thread.TryReadKey(Timeout.Infinite) with
             | _ -> ()
 
-        Console.Write("\u001b[47l\u001b[?1049h")
+        Console.Write(AnsiCodes.RESTORE_SCREEN + AnsiCodes.ENTER_SECOND_SCREEN)
 
     member this.DispatchCommand(command: string) : unit =
         if command.StartsWith('!') then
