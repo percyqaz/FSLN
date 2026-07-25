@@ -161,4 +161,4 @@ type Display(state: State) =
         this.RenderTree()
         view.Draw()
         Console.WriteLine(this.StatusLine().ClearRestOfLine())
-        Console.Write(state.Buffers.CommandBuffer.ToString().ForeColor(0x88FF88).Bold().ClearRestOfLine())
+        Console.Write(state.Buffers.ToString().ForeColor(0x88FF88).Bold().ClearRestOfLine())

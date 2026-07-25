@@ -59,7 +59,7 @@ type State =
         )
 
         buffer.Bind("a", "lj")
-        
+
         buffers
 
     static member Create(solution: Solution) : State =

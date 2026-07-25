@@ -55,7 +55,7 @@ type StateCommands =
 
     [<Extension>]
     static member Quit(state: State) : unit = state.Running <- false
-            
+
     [<Extension>]
     static member Search(state: State) : unit = state.Buffers.StartSearch()
 
@@ -68,4 +68,3 @@ type StateCommands =
     static member AutoReload(state: State) : unit =
         if state.Solution.HasExternalChange() then
             state.Reload()
-
