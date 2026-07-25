@@ -15,8 +15,10 @@ type State =
     }
 
     member this.IsExpanded(folder: FileTreeFolder) : bool = this.Expanded.Contains(folder.FullPath)
-    member this.IsExpanded(project: Project) : bool = this.Expanded.Contains(project.FullPath)
-    
+
+    member this.IsExpanded(project: Project) : bool =
+        this.Expanded.Contains(project.FullPath)
+
     member this.IsSelected(file: FileTreeFile) : bool = this.Mode.Selection.Equals(file)
     member this.IsSelected(folder: FileTreeFolder) : bool = this.Mode.Selection.Equals(folder)
     member this.IsSelected(project: Project) : bool = this.Mode.Selection.Equals(project)
@@ -69,7 +71,7 @@ type State =
             Running = true
             GitStatus = GitStatus.Fetch()
             Expanded = Set.empty
-            Mode = Mode.Normal { Solution = solution; Selected = Selection.Solution(solution) }
+            Mode = Mode.Normal({ Solution = solution; Selected = Selection.Solution(solution) })
             Buffers = BufferManager.Create().RegisterDefaultBinds()
             StatusLine = ""
             Theme = Theme.Default

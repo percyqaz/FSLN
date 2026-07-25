@@ -158,9 +158,11 @@ type Display(state: State) =
 
     member this.Redraw() : unit =
         view.Height <- Console.BufferHeight - 2
+
         match state.Mode with
         | Mode.Normal nm -> this.RenderTree(nm)
         | _ -> ()
+
         view.Draw()
         Console.WriteLine(this.StatusLine().ClearRestOfLine())
         Console.Write(state.Buffers.ToString().ForeColor(0x88FF88).Bold().ClearRestOfLine())

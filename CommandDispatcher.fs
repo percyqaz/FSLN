@@ -25,20 +25,22 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
                 .Replace("$$", '\uFFFD'.ToString())
                 // todo: replacements in other modes
                 .Replace('\uFFFD', '$')
-            
+
 
     member private this.DispatchShell(state: State, command: string) : unit =
 
         let shell, args =
-
             if OperatingSystem.IsWindows() then
                 "cmd.exe", "/c " + this.ApplySubstitutions(command)
-
             else
                 "/bin/sh", "-c \"" + this.ApplySubstitutions(command) + "\""
 
         let start_info = ProcessStartInfo(shell, args)
-        Console.Write(AnsiCodes.LEAVE_SECOND_SCREEN + AnsiCodes.SAVE_SCREEN + AnsiCodes.CLEAR_SCREEN + AnsiCodes.CURSOR_TO_ORIGIN)
+
+        Console.Write(
+            AnsiCodes.LEAVE_SECOND_SCREEN + AnsiCodes.SAVE_SCREEN + AnsiCodes.CLEAR_SCREEN + AnsiCodes.CURSOR_TO_ORIGIN
+        )
+
         let proc = Process.Start(start_info)
         proc.WaitForExit()
 

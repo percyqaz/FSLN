@@ -26,7 +26,7 @@ type AnsiCodes =
 
     [<Extension>]
     static member ClearRestOfLine(text: string) : string = sprintf "%s\u001b[K" text
-    
+
     static member CURSOR_TO_ORIGIN = "\u001b[H"
     static member CURSOR_INVISIBLE = "\u001b[?25l"
     static member CURSOR_VISIBLE = "\u001b[?25h"

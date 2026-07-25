@@ -87,19 +87,19 @@ type StateCommands =
         match state.Mode with
         | Mode.Normal nm -> nm.MoveSelectionUp()
         | _ -> state.StatusLine <- "Tree cannot be reordered in this mode."
-        
+
     [<Extension>]
     static member MoveSelectionDown(state: State) : unit =
         match state.Mode with
         | Mode.Normal nm -> nm.MoveSelectionDown()
         | _ -> state.StatusLine <- "Tree cannot be reordered in this mode."
-        
+
     [<Extension>]
     static member AddFile(state: State, args: string) : unit =
         match state.Mode with
         | Mode.Normal nm -> nm.AddFile(state, args)
         | _ -> state.StatusLine <- "Files cannot be added in this mode."
-        
+
     [<Extension>]
     static member RenameSelection(state: State, args: string) : unit =
         match state.Mode with

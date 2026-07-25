@@ -24,7 +24,8 @@ type ScreenBuffer(height: int) =
         this.Line(line)
 
     member this.Draw() : unit =
-        let sb = StringBuilder().Append(AnsiCodes.CURSOR_TO_ORIGIN + AnsiCodes.CURSOR_INVISIBLE)
+        let sb =
+            StringBuilder().Append(AnsiCodes.CURSOR_TO_ORIGIN + AnsiCodes.CURSOR_INVISIBLE)
 
         let top_of_requested_view = max 0 (cursor - this.ScrollOff)
 
