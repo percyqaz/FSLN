@@ -68,6 +68,7 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
         | "move_up" -> state.MoveSelectionUp()
         | "move_down" -> state.MoveSelectionDown()
         | "search" -> state.Search()
+        | "git" -> state.ToggleGitMode()
         | "reload" -> state.Reload()
         | "reload_git" -> state.ReloadGit()
         | "reload_auto" -> state.AutoReload()

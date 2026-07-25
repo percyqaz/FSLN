@@ -48,7 +48,7 @@ type State =
         | ActiveBuffer.Command -> this.CommandBuffer.AddKey(input)
         | ActiveBuffer.Search ->
             if this.SearchBuffer.TryAddKey(input) then
-                this.Mode <- this.Mode.SearchUpdated(this.SearchBuffer.ToString())
+                this.Mode <- this.Mode.Update(this.SearchBuffer.ToString(), this.GitStatus)
             else
                 this.ActiveBuffer <- ActiveBuffer.Command
 

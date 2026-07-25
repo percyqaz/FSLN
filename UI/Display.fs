@@ -128,7 +128,7 @@ type Display(state: State) =
         for project in nm.Solution.Projects do
             display_project(project)
 
-    member this.RenderSearchTree(sm: SearchMode) : unit =
+    member this.RenderSearchTree(sm: ISearchMode) : unit =
 
         let rec display_entry (indent: string, icolor: Color, is_last: bool, entry: FilteredTreeEntry) : unit =
             match entry with
@@ -214,6 +214,7 @@ type Display(state: State) =
         match state.Mode with
         | Mode.Normal nm -> this.RenderNormalTree(nm)
         | Mode.Search sm -> this.RenderSearchTree(sm)
+        | Mode.Git gm -> this.RenderSearchTree(gm)
 
         view.Draw()
 

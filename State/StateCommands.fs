@@ -39,51 +39,54 @@ type StateCommands =
         state.ActiveBuffer <- ActiveBuffer.Search
 
     [<Extension>]
-    static member ReloadGit(state: State) : unit = state.GitStatus <- GitStatus.Fetch()
+    static member ToggleGitMode(state: State) : unit =
+        state.Mode <- state.Mode.ToggleGitMode(state.GitStatus)
 
     [<Extension>]
-    static member Reload(state: State) : unit =
-        state.Mode <-
-            match state.Mode with
-            | Mode.Normal nm -> Mode.Normal(nm.Reload())
-            | Mode.Search sm -> Mode.Search(sm.Reload())
+    static member ReloadGit(state: State) : unit =
+        state.GitStatus <- GitStatus.Fetch()
+        state.Mode <- state.Mode.Update(state.SearchBuffer.ToString(), state.GitStatus)
 
     [<Extension>]
-    static member AutoReload(state: State) : unit =
-        state.Mode <-
-            match state.Mode with
-            | Mode.Normal nm -> Mode.Normal(nm.AutoReload())
-            | Mode.Search sm -> Mode.Search(sm.AutoReload())
+    static member Reload(state: State) : unit = state.Mode <- state.Mode.Reload()
+
+    [<Extension>]
+    static member AutoReload(state: State) : unit = state.Mode <- state.Mode.AutoReload()
 
     [<Extension>]
     static member NavigateUp(state: State) : unit =
         match state.Mode with
         | Mode.Normal nm -> nm.NavigateUp(state)
         | Mode.Search sm -> sm.NavigateUp(state)
+        | Mode.Git gm -> gm.NavigateUp(state)
 
     [<Extension>]
     static member NavigateDown(state: State) : unit =
         match state.Mode with
         | Mode.Normal nm -> nm.NavigateDown(state)
         | Mode.Search sm -> sm.NavigateDown(state)
+        | Mode.Git gm -> gm.NavigateDown(state)
 
     [<Extension>]
     static member NavigateOut(state: State) : unit =
         match state.Mode with
         | Mode.Normal nm -> nm.NavigateOut()
         | Mode.Search sm -> sm.NavigateOut()
+        | Mode.Git gm -> gm.NavigateOut()
 
     [<Extension>]
     static member CollapseSelection(state: State) : unit =
         match state.Mode with
         | Mode.Normal nm -> nm.CollapseSelection(state)
         | Mode.Search sm -> sm.CollapseSelection(state)
+        | Mode.Git gm -> gm.CollapseSelection(state)
 
     [<Extension>]
     static member ExpandSelection(state: State) : unit =
         match state.Mode with
         | Mode.Normal nm -> nm.ExpandSelection(state)
         | Mode.Search sm -> sm.ExpandSelection(state)
+        | Mode.Git gm -> gm.ExpandSelection(state)
 
     [<Extension>]
     static member MoveSelectionUp(state: State) : unit =

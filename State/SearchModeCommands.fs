@@ -29,7 +29,7 @@ type SearchModeCommands =
             FSelection.FProject(project)
 
     [<TailCall>]
-    static let rec find_next_in_tree (sm: SearchMode, current: FilteredTreeEntry) : FSelection option =
+    static let rec find_next_in_tree (sm: ISearchMode, current: FilteredTreeEntry) : FSelection option =
         match next(current.Parent.Children, current) with
         | Some(FFile file_below) -> Some(FSelection.FFile(file_below))
         | Some(FFolder folder_below) -> Some(FSelection.FFolder(folder_below))
@@ -42,7 +42,7 @@ type SearchModeCommands =
             | FParent.FFolder folder -> find_next_in_tree(sm, FFolder folder)
 
     [<Extension>]
-    static member NavigateUp(nm: SearchMode, state: State) : unit =
+    static member NavigateUp(nm: ISearchMode, state: State) : unit =
         nm.Selected <-
             match nm.Selected with
             | FSelection.FSolution _ -> nm.Selected
@@ -66,7 +66,7 @@ type SearchModeCommands =
                     | FParent.FProject parent_project -> FSelection.FProject(parent_project)
 
     [<Extension>]
-    static member NavigateDown(sm: SearchMode, state: State) : unit =
+    static member NavigateDown(sm: ISearchMode, state: State) : unit =
         sm.Selected <-
             match sm.Selected with
             | FSelection.FSolution solution ->
@@ -93,7 +93,7 @@ type SearchModeCommands =
             | FSelection.FFile file -> find_next_in_tree(sm, FFile file) |> Option.defaultValue sm.Selected
 
     [<Extension>]
-    static member NavigateOut(sm: SearchMode) : unit =
+    static member NavigateOut(sm: ISearchMode) : unit =
         sm.Selected <-
             match sm.Selected with
             | FSelection.FSolution solution -> FSelection.FSolution(solution)
@@ -108,7 +108,7 @@ type SearchModeCommands =
                 | FParent.FProject parent_project -> FSelection.FProject(parent_project)
 
     [<Extension>]
-    static member ExpandSelection(sm: SearchMode, state: State) : unit =
+    static member ExpandSelection(sm: ISearchMode, state: State) : unit =
         match sm.Selected with
         | FSelection.FSolution _ -> ()
         | FSelection.FProject project -> state.Expanded <- state.Expanded.Add(project.Original.FullPath)
@@ -117,7 +117,7 @@ type SearchModeCommands =
 
     [<Extension>]
     [<TailCall>]
-    static member CollapseSelection(sm: SearchMode, state: State) : unit =
+    static member CollapseSelection(sm: ISearchMode, state: State) : unit =
         let rec collapse_selected () : unit =
             match sm.Selected with
             | FSelection.FSolution _ -> ()
