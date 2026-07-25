@@ -48,7 +48,9 @@ type State =
         match this.ActiveBuffer with
         | ActiveBuffer.Command -> this.CommandBuffer.AddKey(input)
         | ActiveBuffer.Search ->
-            if not(this.SearchBuffer.TryAddKey(input)) then
+            if this.SearchBuffer.TryAddKey(input) then
+                this.Mode <- this.Mode.SearchUpdated(this.SearchBuffer.ToString())
+            else
                 this.ActiveBuffer <- ActiveBuffer.Command
 
     static member Create(solution: Solution) : State =

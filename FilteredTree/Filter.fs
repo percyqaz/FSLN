@@ -10,16 +10,16 @@ type Filter() =
     member this.Apply(entry: FileTreeEntry) : FilteredTreeEntry option =
         match entry with
         | Folder folder ->
-            let filtered_children = folder.Children |> Seq.choose this.Apply |> List.ofSeq
-            if filtered_children <> [] then Some(FFolder { Original = folder; Children = filtered_children }) else None
+            let filtered_children = folder.Children |> Seq.choose this.Apply |> Array.ofSeq
+            if filtered_children.Length > 0 then Some(FFolder { Original = folder; Children = filtered_children }) else None
         | File file -> if this.Apply(file) then Some(FFile { Original = file }) else None
 
     member this.Apply(project: Project) : FilteredProject option =
-        let filtered_children = project.Children |> Seq.choose this.Apply |> List.ofSeq
-        if filtered_children <> [] then Some({ Original = project; Children = filtered_children }) else None
+        let filtered_children = project.Children |> Seq.choose this.Apply |> Array.ofSeq
+        if filtered_children.Length > 0 then Some({ Original = project; Children = filtered_children }) else None
 
     member this.Apply(solution: Solution) : FilteredSolution =
-        { Original = solution; Projects = solution.Projects |> Seq.choose this.Apply |> List.ofSeq }
+        { Original = solution; Projects = solution.Projects |> Seq.choose this.Apply |> Array.ofSeq }
 
 type FileNameFilter(search: string) =
     inherit Filter()

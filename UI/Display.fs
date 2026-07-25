@@ -79,7 +79,7 @@ type Display(state: State) =
 
         view.Line((if is_selected then line.BackColor(state.Theme.ColorSelection) else line), is_selected)
 
-    member this.RenderTree(nm: NormalMode) : unit =
+    member this.RenderNormalTree(nm: NormalMode) : unit =
 
         let rec display_entry (indent: string, icolor: Color, is_last: bool, entry: FileTreeEntry) : unit =
             match entry with
@@ -98,17 +98,14 @@ type Display(state: State) =
                     let mutable i = 0
 
                     while i < folder.Children.Count do
-                        display_entry(
-                            indent
-                            + (if is_last then
-                                   state.Theme.TreeConnectors.Empty
-                               else
-                                   state.Theme.TreeConnectors.Vertical.ForeColor(icolor)),
-                            inner_color,
-                            i + 1 = folder.Children.Count,
-                            folder.Children.[i]
-                        )
-
+                        let indent_symbol =
+                            if is_last then
+                                state.Theme.TreeConnectors.Empty
+                            else
+                                state.Theme.TreeConnectors.Vertical.ForeColor(icolor)
+                                
+                        let child_is_last = i + 1 = folder.Children.Count
+                        display_entry(indent + indent_symbol, inner_color, child_is_last, folder.Children.[i])
                         i <- i + 1
 
         let inline display_project (project: Project) : unit =
@@ -129,6 +126,55 @@ type Display(state: State) =
         this.RenderSolution(nm.Solution)
 
         for project in nm.Solution.Projects do
+            display_project(project)
+            
+    member this.RenderSearchTree(sm: SearchMode) : unit =
+
+        let rec display_entry (indent: string, icolor: Color, is_last: bool, entry: FilteredTreeEntry) : unit =
+            match entry with
+            | FFile file ->
+                let is_selected = state.IsSelected(file.Original)
+                this.RenderFile(indent, icolor, is_selected, is_last, file.Original)
+            | FFolder folder ->
+                let is_selected = state.IsSelected(folder.Original)
+                let is_expanded = state.IsExpanded(folder.Original)
+                this.RenderFolder(indent, icolor, is_selected, is_expanded, is_last, folder.Original)
+
+                if is_expanded then
+                    let inner_color =
+                        if is_selected then state.Theme.ColorConnectorsFolder else state.Theme.ColorConnectorsDefault
+
+                    let mutable i = 0
+
+                    while i < folder.Children.Length do
+                        let indent_symbol =
+                            if is_last then
+                                state.Theme.TreeConnectors.Empty
+                            else
+                                state.Theme.TreeConnectors.Vertical.ForeColor(icolor)
+                                
+                        let child_is_last = i + 1 = folder.Children.Length
+                        display_entry(indent + indent_symbol, inner_color, child_is_last, folder.Children.[i])
+                        i <- i + 1
+
+        let inline display_project (project: FilteredProject) : unit =
+            let is_selected = state.IsSelected(project.Original)
+            let is_expanded = state.IsExpanded(project.Original)
+            this.RenderProject(is_selected, is_expanded, project.Original)
+
+            if is_expanded then
+                let icolor =
+                    if is_selected then state.Theme.ColorConnectorsProject else state.Theme.ColorConnectorsDefault
+
+                let mutable i = 0
+
+                while i < project.Children.Length do
+                    display_entry("", icolor, i + 1 = project.Children.Length, project.Children.[i])
+                    i <- i + 1
+
+        this.RenderSolution(sm.Tree.Original)
+
+        for project in sm.Tree.Projects do
             display_project(project)
 
     member this.StatusLine() : string =
@@ -155,20 +201,19 @@ type Display(state: State) =
             | None -> ""
 
         git_status + state.StatusLine
+        
+    member this.BufferLine() : string =
+        match state.ActiveBuffer with
+        | ActiveBuffer.Command -> state.CommandBuffer.ToString().ForeColor(0x88FF88).Bold()
+        | ActiveBuffer.Search -> "SEARCH: " + state.SearchBuffer.ToString().ForeColor(0x8888FF).Bold()
 
     member this.Redraw() : unit =
+        
         view.Height <- Console.BufferHeight - 2
-
         match state.Mode with
-        | Mode.Normal nm -> this.RenderTree(nm)
-        | _ -> ()
-
+        | Mode.Normal nm -> this.RenderNormalTree(nm)
+        | Mode.Search sm -> this.RenderSearchTree(sm)
         view.Draw()
+        
         Console.WriteLine(this.StatusLine().ClearRestOfLine())
-
-        let buffer_line =
-            match state.ActiveBuffer with
-            | ActiveBuffer.Command -> state.CommandBuffer.ToString()
-            | ActiveBuffer.Search -> "SEARCH: " + state.SearchBuffer.ToString()
-
-        Console.Write(buffer_line.ForeColor(0x88FF88).Bold().ClearRestOfLine())
+        Console.Write(this.BufferLine().ClearRestOfLine())
