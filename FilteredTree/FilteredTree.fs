@@ -12,7 +12,30 @@ type FParent =
 
 and FilteredTreeFile = { Original: FileTreeFile; Parent: FParent }
 
-and FilteredTreeFolder = { Original: FileTreeFolder; Parent: FParent; Children: ResizeArray<FilteredTreeEntry> }
+and FilteredTreeFolder =
+    {
+        Original: FileTreeFolder
+        Parent: FParent
+        Children: ResizeArray<FilteredTreeEntry>
+    }
+
+    member this.EnumerateFiles() : FilteredTreeFile seq =
+        seq {
+            for child in this.Children do
+                match child with
+                | FFile file -> yield file
+                | FFolder folder -> yield! folder.EnumerateFiles()
+        }
+
+    member this.EnumerateSubfolders() : FilteredTreeFolder seq =
+        seq {
+            for child in this.Children do
+                match child with
+                | FFile _ -> ()
+                | FFolder folder ->
+                    yield folder
+                    yield! folder.EnumerateSubfolders()
+        }
 
 and FilteredTreeEntry =
     | FFile of FilteredTreeFile
@@ -24,6 +47,28 @@ and FilteredTreeEntry =
         | FFolder folder -> folder.Parent
 
 
-and FilteredProject = { Original: Project; Children: ResizeArray<FilteredTreeEntry> }
+and FilteredProject =
+    {
+        Original: Project
+        Children: ResizeArray<FilteredTreeEntry>
+    }
+
+    member this.EnumerateFiles() : FilteredTreeFile seq =
+        seq {
+            for child in this.Children do
+                match child with
+                | FFile file -> yield file
+                | FFolder folder -> yield! folder.EnumerateFiles()
+        }
+
+    member this.EnumerateSubfolders() : FilteredTreeFolder seq =
+        seq {
+            for child in this.Children do
+                match child with
+                | FFile _ -> ()
+                | FFolder folder ->
+                    yield folder
+                    yield! folder.EnumerateSubfolders()
+        }
 
 type FilteredSolution = { Original: Solution; Projects: ResizeArray<FilteredProject> }

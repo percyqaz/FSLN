@@ -26,14 +26,19 @@ type SearchMode =
             this
         else
             let filtered = FileNameFilter(search).Apply(this.Tree.Original)
-            { Query = search; Tree = FileNameFilter(search).Apply(this.Tree.Original); Selected = FSelection.FSolution(filtered) }
+
+            {
+                Query = search
+                Tree = FileNameFilter(search).Apply(this.Tree.Original)
+                Selected = FSelection.Find(this.Selected.ToSelection(), filtered)
+            }
 
     member this.ToNormalMode() : NormalMode =
         { Solution = this.Tree.Original; Selected = this.Selected.ToSelection() }
 
     static member Create(nm: NormalMode, query: string) : SearchMode =
         let filtered = FileNameFilter(query).Apply(nm.Solution)
-        { Query = query; Tree = filtered; Selected = FSelection.FSolution(filtered) }
+        { Query = query; Tree = filtered; Selected = FSelection.Find(nm.Selected, filtered) }
 
 [<RequireQualifiedAccess>]
 type Mode =
