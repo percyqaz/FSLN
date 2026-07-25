@@ -42,7 +42,7 @@ type StateCommands =
         let source, target = split.[0], if split.Length > 1 then split.[1] else ""
 
         if source.Length > 0 && target.Length > 0 && source <> target then
-            state.CommandBuffer.Bind(source, target)
+            state.Buffers.CommandBuffer.Bind(source, target)
             state.StatusLine <- "Binding set."
         else
             state.StatusLine <- "Invalid binding."
@@ -55,6 +55,9 @@ type StateCommands =
 
     [<Extension>]
     static member Quit(state: State) : unit = state.Running <- false
+            
+    [<Extension>]
+    static member Search(state: State) : unit = state.Buffers.StartSearch()
 
     [<Extension>]
     static member Reload(state: State) : unit =
@@ -65,3 +68,4 @@ type StateCommands =
     static member AutoReload(state: State) : unit =
         if state.Solution.HasExternalChange() then
             state.Reload()
+

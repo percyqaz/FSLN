@@ -9,7 +9,7 @@ module FSLN =
         let input_thread = InputThread()
         let command_dispatcher = CommandDispatcher(state, input_thread)
 
-        state.CommandBuffer.DispatchInitialCommands(config, command_dispatcher.DispatchCommand)
+        state.Buffers.CommandBuffer.DispatchInitialCommands(config, command_dispatcher.DispatchCommand)
 
         let render = Display(state)
         input_thread.Start()
@@ -21,8 +21,8 @@ module FSLN =
 
             match input_thread.TryReadKey(2000) with
             | true, input ->
-                state.CommandBuffer.AddKey(input)
-                state.CommandBuffer.DispatchCommands(command_dispatcher.DispatchCommand)
+                state.Buffers.AddKey(input)
+                state.Buffers.CommandBuffer.DispatchCommands(command_dispatcher.DispatchCommand)
             | false, _ ->
                 state.RefreshGit()
                 state.AutoReload()

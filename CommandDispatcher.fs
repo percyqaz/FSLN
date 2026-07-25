@@ -66,6 +66,7 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
         | "move_up" -> state.MoveSelectionUp()
         | "move_down" -> state.MoveSelectionDown()
         | "refresh_git" -> state.RefreshGit()
+        | "search" -> state.Search()
         | "reload" -> state.Reload()
         | "delete" -> () // todo: implement
         | "add" when args <> "" -> state.AddFile(args)

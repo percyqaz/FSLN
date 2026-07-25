@@ -10,7 +10,7 @@ type State =
         mutable GitStatus: GitStatus option
         mutable Expanded: Set<string>
         mutable Selected: Selection
-        CommandBuffer: CommandBuffer
+        Buffers: BufferManager
         mutable StatusLine: string
         mutable Theme: Theme
     }
@@ -32,7 +32,8 @@ type State =
         | None -> default_status()
 
     [<Extension>]
-    static member private RegisterDefaultBinds(buffer: CommandBuffer) : CommandBuffer =
+    static member private RegisterDefaultBinds(buffers: BufferManager) : BufferManager =
+        let buffer = buffers.CommandBuffer
         buffer.Bind("<Esc>", ":q<Enter>")
 
         buffer.Bind("h", ":collapse<Enter>")
@@ -41,7 +42,8 @@ type State =
         buffer.Bind("l", ":expand<Enter>")
         buffer.Bind("<A-k>", ":move_up<Enter>")
         buffer.Bind("<A-j>", ":move_down<Enter>")
-        buffer.Bind(".", ":!echo $<Enter>")
+        buffer.Bind("<Tab>", ":search<Enter>")
+        buffer.Bind(".", ":echo $<Enter>")
 
         buffer.Bind("<Left>", "h")
         buffer.Bind("<Down>", "j")
@@ -57,8 +59,8 @@ type State =
         )
 
         buffer.Bind("a", "lj")
-
-        buffer
+        
+        buffers
 
     static member Create(solution: Solution) : State =
         {
@@ -67,7 +69,7 @@ type State =
             GitStatus = GitStatus.Fetch()
             Expanded = Set.empty
             Selected = Selection.Solution(solution)
-            CommandBuffer = CommandBuffer().RegisterDefaultBinds()
+            Buffers = BufferManager.Create().RegisterDefaultBinds()
             StatusLine = ""
             Theme = Theme.Default
         }
