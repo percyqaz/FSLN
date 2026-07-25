@@ -18,10 +18,13 @@
     <Compile Include="Input\InputThread.fs" />
     <Compile Include="Input\CommandBuffer.fs" />
     <Compile Include="Input\TextBuffer.fs" />
+    <Compile Include="State\Modes\Selection.fs" />
+    <Compile Include="State\Modes\FSelection.fs" />
+    <Compile Include="State\Modes\NormalMode.fs" />
+    <Compile Include="State\Modes\SearchMode.fs" />
+    <Compile Include="State\Modes\GitMode.fs" />
+    <Compile Include="State\Modes\Mode.fs" />
     <Compile Include="State\Theme.fs" />
-    <Compile Include="State\Selection.fs" />
-    <Compile Include="State\FSelection.fs" />
-    <Compile Include="State\Mode.fs" />
     <Compile Include="State\State.fs" />
     <Compile Include="State\NormalModeCommands.fs" />
     <Compile Include="State\SearchModeCommands.fs" />

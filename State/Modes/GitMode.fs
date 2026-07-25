@@ -1,0 +1,58 @@
+namespace FSLN
+
+type GitMode =
+    {
+        Query: string
+        Status: GitStatus
+        Solution: FilteredSolution
+        mutable Selected: FSelection
+    }
+
+    member this.Reload() : GitMode =
+        let solution = SolutionLoader.read_solution_file(this.Solution.Original.FullPath)
+        let filtered = GitChangedFilter(this.Query, this.Status).Apply(solution)
+
+        {
+            Query = this.Query
+            Status = this.Status
+            Solution = filtered
+            Selected = FSelection.Find(this.Selected.ToSelection(), filtered)
+        }
+
+    member this.AutoReload() : GitMode =
+        if this.Solution.Original.HasExternalChange() then this.Reload() else this
+
+    member this.Update(query: string, git_status: GitStatus) : GitMode =
+        if
+            query = this.Query
+            && git_status.IndexDirty = this.Status.IndexDirty
+            && git_status.WorkingTreeDirty = this.Status.WorkingTreeDirty
+        then
+            this
+        else
+            let filtered = GitChangedFilter(query, git_status).Apply(this.Solution.Original)
+
+            {
+                Query = query
+                Status = git_status
+                Solution = filtered
+                Selected = FSelection.Find(this.Selected.ToSelection(), filtered)
+            }
+
+    member this.ToNormalMode() : NormalMode =
+        { Solution = this.Solution.Original; Selected = this.Selected.ToSelection() }
+
+    static member Create(nm: NormalMode, query: string, git_status: GitStatus) : GitMode =
+        let filtered = GitChangedFilter(query, git_status).Apply(nm.Solution)
+
+        {
+            Query = query
+            Status = git_status
+            Solution = filtered
+            Selected = FSelection.Find(nm.Selected, filtered)
+        }
+
+    interface ISearchMode with
+        member this.Selected: FSelection = this.Selected
+        member this.set_Selected(v: FSelection) : unit = this.Selected <- v
+        member this.Solution: FilteredSolution = this.Solution
