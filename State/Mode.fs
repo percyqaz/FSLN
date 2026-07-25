@@ -40,6 +40,11 @@ type Mode =
     | Normal of NormalMode
     | Search of SearchMode
 
+    member this.Solution: Solution =
+        match this with
+        | Normal nm -> nm.Solution
+        | Search sm -> sm.Tree.Original
+
     member this.Selection: Selection =
         match this with
         | Normal nm -> nm.Selected

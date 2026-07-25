@@ -7,24 +7,17 @@ open System.Threading
 type CommandDispatcher(state: State, input_thread: InputThread) =
 
     member private this.ApplySubstitutions(command: string) : string =
-        match state.Mode with
-        | Mode.Normal nm ->
-            command
-                .Replace("$$", '\uFFFD'.ToString())
-                .Replace("$SOLUTION", nm.Solution.FullPath)
-                .Replace(
-                    "$PROJECT",
-                    match nm.Selected.ParentProject with
-                    | Some project -> project.FullPath
-                    | None -> ""
-                )
-                .Replace("$", nm.Selected.FullPath)
-                .Replace('\uFFFD', '$')
-        | _ ->
-            command
-                .Replace("$$", '\uFFFD'.ToString())
-                // todo: replacements in other modes
-                .Replace('\uFFFD', '$')
+        command
+            .Replace("$$", '\uFFFD'.ToString())
+            .Replace("$SOLUTION", state.Mode.Solution.FullPath)
+            .Replace(
+                "$PROJECT",
+                match state.Mode.Selection.ParentProject with
+                | Some project -> project.FullPath
+                | None -> ""
+            )
+            .Replace("$", state.Mode.Selection.FullPath)
+            .Replace('\uFFFD', '$')
 
 
     member private this.DispatchShell(state: State, command: string) : unit =
