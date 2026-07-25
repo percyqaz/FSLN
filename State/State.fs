@@ -4,7 +4,6 @@ open System
 open System.Runtime.CompilerServices
 open FSLN
 
-
 [<RequireQualifiedAccess>]
 type ActiveBuffer =
     | Command

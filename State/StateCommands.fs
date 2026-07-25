@@ -43,15 +43,17 @@ type StateCommands =
 
     [<Extension>]
     static member Reload(state: State) : unit =
-        match state.Mode with
-        | Mode.Normal nm -> nm.Reload()
-        | _ -> state.StatusLine <- "Reload NYI"
+        state.Mode <-
+            match state.Mode with
+            | Mode.Normal nm -> Mode.Normal(nm.Reload())
+            | Mode.Search sm -> Mode.Search(sm.Reload())
 
     [<Extension>]
     static member AutoReload(state: State) : unit =
-        match state.Mode with
-        | Mode.Normal nm -> nm.AutoReload()
-        | _ -> state.StatusLine <- "Auto-reload NYI"
+        state.Mode <-
+            match state.Mode with
+            | Mode.Normal nm -> Mode.Normal(nm.AutoReload())
+            | Mode.Search sm -> Mode.Search(sm.AutoReload())
 
     [<Extension>]
     static member NavigateUp(state: State) : unit =

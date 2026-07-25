@@ -2,17 +2,16 @@ namespace FSLN
 
 type NormalMode =
     {
-        mutable Solution: Solution
+        Solution: Solution
         mutable Selected: Selection
     }
 
-    member this.Reload() : unit =
-        this.Solution <- SolutionLoader.read_solution_file(this.Solution.FullPath)
-        this.Selected <- Selection.Solution(this.Solution)
+    member this.Reload() : NormalMode =
+        let solution = SolutionLoader.read_solution_file(this.Solution.FullPath)
+        { Solution = solution; Selected = Selection.Solution(this.Solution) } // todo: recover selection
 
-    member this.AutoReload() : unit =
-        if this.Solution.HasExternalChange() then
-            this.Reload()
+    member this.AutoReload() : NormalMode =
+        if this.Solution.HasExternalChange() then this.Reload() else this
 
 type SearchMode =
     {
@@ -21,17 +20,22 @@ type SearchMode =
         mutable Selected: FSelection
     }
 
-    member this.Update(search: string) : SearchMode =
-        if search = this.Query then
+    member this.Reload() : SearchMode =
+        let solution = SolutionLoader.read_solution_file(this.Tree.Original.FullPath)
+        let filtered = FileNameFilter(this.Query).Apply(solution)
+
+        { Query = this.Query; Tree = filtered; Selected = FSelection.Find(this.Selected.ToSelection(), filtered) }
+
+    member this.AutoReload() : SearchMode =
+        if this.Tree.Original.HasExternalChange() then this.Reload() else this
+
+    member this.Update(query: string) : SearchMode =
+        if query = this.Query then
             this
         else
-            let filtered = FileNameFilter(search).Apply(this.Tree.Original)
+            let filtered = FileNameFilter(query).Apply(this.Tree.Original)
 
-            {
-                Query = search
-                Tree = FileNameFilter(search).Apply(this.Tree.Original)
-                Selected = FSelection.Find(this.Selected.ToSelection(), filtered)
-            }
+            { Query = query; Tree = filtered; Selected = FSelection.Find(this.Selected.ToSelection(), filtered) }
 
     member this.ToNormalMode() : NormalMode =
         { Solution = this.Tree.Original; Selected = this.Selected.ToSelection() }

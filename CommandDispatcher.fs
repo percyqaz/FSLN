@@ -19,7 +19,6 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
             .Replace("$", state.Mode.Selection.FullPath)
             .Replace('\uFFFD', '$')
 
-
     member private this.DispatchShell(state: State, command: string) : unit =
 
         let shell, args =
