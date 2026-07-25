@@ -3,7 +3,7 @@ namespace FSLN
 open System
 open System.Drawing
 
-type InteractiveDisplay(state: State) =
+type Display(state: State) =
 
     let view = ScreenBuffer(Console.BufferHeight - 2)
 

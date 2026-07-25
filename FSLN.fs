@@ -12,7 +12,7 @@ module FSLN =
         CommandDispatcher.RegisterDefaultBinds(state)
         state.CommandBuffer.DispatchInitialCommands(config, command_dispatcher.DispatchCommand)
 
-        let render = InteractiveDisplay(state)
+        let render = Display(state)
         input_thread.Start()
 
         Console.Write("\u001b[?1049h")

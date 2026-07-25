@@ -22,7 +22,7 @@
     <Compile Include="State\StateNavigationCommands.fs" />
     <Compile Include="UI\AnsiStringExtensions.fs" />
     <Compile Include="UI\ScreenBuffer.fs" />
-    <Compile Include="UI\InteractiveDisplay.fs" />
+    <Compile Include="UI\Display.fs" />
     <Compile Include="CommandDispatcher.fs" />
     <Compile Include="FSLN.fs" />
     <Compile Include="Program.fs" />
