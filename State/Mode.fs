@@ -25,7 +25,8 @@ type SearchMode =
         if search = this.Query then
             this
         else
-            { Query = search; Tree = FileNameFilter(search).Apply(this.Tree.Original); Selected = this.Selected }
+            let filtered = FileNameFilter(search).Apply(this.Tree.Original)
+            { Query = search; Tree = FileNameFilter(search).Apply(this.Tree.Original); Selected = FSelection.FSolution(filtered) }
 
     member this.ToNormalMode() : NormalMode =
         { Solution = this.Tree.Original; Selected = this.Selected.ToSelection() }
