@@ -14,7 +14,25 @@ type NormalMode =
         if this.Solution.HasExternalChange() then
             this.Reload()
 
-type SearchMode = { mutable Tree: FilteredSolution; mutable Selected: FSelection }
+type SearchMode =
+    {
+        Query: string
+        Tree: FilteredSolution
+        mutable Selected: FSelection
+    }
+
+    member this.Update(search: string) : SearchMode =
+        if search = this.Query then
+            this
+        else
+            { Query = search; Tree = FileNameFilter(search).Apply(this.Tree.Original); Selected = this.Selected }
+
+    member this.ToNormalMode() : NormalMode =
+        { Solution = this.Tree.Original; Selected = this.Selected.ToSelection() }
+
+    static member Create(nm: NormalMode, query: string) : SearchMode =
+        let filtered = FileNameFilter(query).Apply(nm.Solution)
+        { Query = query; Tree = filtered; Selected = FSelection.FSolution(filtered) }
 
 [<RequireQualifiedAccess>]
 type Mode =
@@ -25,3 +43,8 @@ type Mode =
         match this with
         | Normal nm -> nm.Selected
         | Search sm -> sm.Selected.ToSelection()
+
+    member this.SearchUpdated(query: string) : Mode =
+        match this with
+        | Normal nm -> if query <> "" then Search(SearchMode.Create(nm, query)) else Normal(nm)
+        | Search sm -> if query <> "" then Search(sm.Update(query)) else Normal(sm.ToNormalMode())
