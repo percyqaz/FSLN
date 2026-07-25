@@ -11,8 +11,8 @@ type Parent =
 
     member this.Children =
         match this with
-        | Project p -> p.Children
-        | Folder f -> f.Children
+        | Project project -> project.Children
+        | Folder folder -> folder.Children
 
     member this.AddChild(child: FileTreeEntry) : unit =
         this.Children.Add(child.WithParent(this))

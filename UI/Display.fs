@@ -103,7 +103,7 @@ type Display(state: State) =
                                 state.Theme.TreeConnectors.Empty
                             else
                                 state.Theme.TreeConnectors.Vertical.ForeColor(icolor)
-                                
+
                         let child_is_last = i + 1 = folder.Children.Count
                         display_entry(indent + indent_symbol, inner_color, child_is_last, folder.Children.[i])
                         i <- i + 1
@@ -127,7 +127,7 @@ type Display(state: State) =
 
         for project in nm.Solution.Projects do
             display_project(project)
-            
+
     member this.RenderSearchTree(sm: SearchMode) : unit =
 
         let rec display_entry (indent: string, icolor: Color, is_last: bool, entry: FilteredTreeEntry) : unit =
@@ -146,14 +146,14 @@ type Display(state: State) =
 
                     let mutable i = 0
 
-                    while i < folder.Children.Length do
+                    while i < folder.Children.Count do
                         let indent_symbol =
                             if is_last then
                                 state.Theme.TreeConnectors.Empty
                             else
                                 state.Theme.TreeConnectors.Vertical.ForeColor(icolor)
-                                
-                        let child_is_last = i + 1 = folder.Children.Length
+
+                        let child_is_last = i + 1 = folder.Children.Count
                         display_entry(indent + indent_symbol, inner_color, child_is_last, folder.Children.[i])
                         i <- i + 1
 
@@ -168,8 +168,8 @@ type Display(state: State) =
 
                 let mutable i = 0
 
-                while i < project.Children.Length do
-                    display_entry("", icolor, i + 1 = project.Children.Length, project.Children.[i])
+                while i < project.Children.Count do
+                    display_entry("", icolor, i + 1 = project.Children.Count, project.Children.[i])
                     i <- i + 1
 
         this.RenderSolution(sm.Tree.Original)
@@ -201,19 +201,21 @@ type Display(state: State) =
             | None -> ""
 
         git_status + state.StatusLine
-        
+
     member this.BufferLine() : string =
         match state.ActiveBuffer with
         | ActiveBuffer.Command -> state.CommandBuffer.ToString().ForeColor(0x88FF88).Bold()
         | ActiveBuffer.Search -> "SEARCH: " + state.SearchBuffer.ToString().ForeColor(0x8888FF).Bold()
 
     member this.Redraw() : unit =
-        
+
         view.Height <- Console.BufferHeight - 2
+
         match state.Mode with
         | Mode.Normal nm -> this.RenderNormalTree(nm)
         | Mode.Search sm -> this.RenderSearchTree(sm)
+
         view.Draw()
-        
+
         Console.WriteLine(this.StatusLine().ClearRestOfLine())
         Console.Write(this.BufferLine().ClearRestOfLine())

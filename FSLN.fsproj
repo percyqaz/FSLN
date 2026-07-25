@@ -24,6 +24,7 @@
     <Compile Include="State\Mode.fs" />
     <Compile Include="State\State.fs" />
     <Compile Include="State\NormalModeCommands.fs" />
+    <Compile Include="State\SearchModeCommands.fs" />
     <Compile Include="State\StateCommands.fs" />
     <Compile Include="UI\AnsiCodes.fs" />
     <Compile Include="UI\ScreenBuffer.fs" />

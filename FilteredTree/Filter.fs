@@ -7,19 +7,27 @@ type Filter() =
 
     abstract member Apply: FileTreeFile -> bool
 
-    member this.Apply(entry: FileTreeEntry) : FilteredTreeEntry option =
+    member private this.Apply(entry: FileTreeEntry, parent: FParent) : FilteredTreeEntry option =
         match entry with
         | Folder folder ->
-            let filtered_children = folder.Children |> Seq.choose this.Apply |> Array.ofSeq
-            if filtered_children.Length > 0 then Some(FFolder { Original = folder; Children = filtered_children }) else None
-        | File file -> if this.Apply(file) then Some(FFile { Original = file }) else None
+            let ffolder = { Original = folder; Parent = parent; Children = ResizeArray() }
+
+            for child in folder.Children |> Seq.choose(fun c -> this.Apply(c, FParent.FFolder(ffolder))) do
+                ffolder.Children.Add(child)
+
+            if ffolder.Children.Count > 0 then Some(FFolder ffolder) else None
+        | File file -> if this.Apply(file) then Some(FFile { Original = file; Parent = parent }) else None
 
     member this.Apply(project: Project) : FilteredProject option =
-        let filtered_children = project.Children |> Seq.choose this.Apply |> Array.ofSeq
-        if filtered_children.Length > 0 then Some({ Original = project; Children = filtered_children }) else None
+        let fproject = { Original = project; Children = ResizeArray() }
+
+        for child in project.Children |> Seq.choose(fun c -> this.Apply(c, FParent.FProject(fproject))) do
+            fproject.Children.Add(child)
+
+        if fproject.Children.Count > 0 then Some(fproject) else None
 
     member this.Apply(solution: Solution) : FilteredSolution =
-        { Original = solution; Projects = solution.Projects |> Seq.choose this.Apply |> Array.ofSeq }
+        { Original = solution; Projects = solution.Projects |> Seq.choose this.Apply |> ResizeArray }
 
 type FileNameFilter(search: string) =
     inherit Filter()

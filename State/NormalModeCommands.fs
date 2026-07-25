@@ -3,7 +3,7 @@ namespace FSLN
 open System.Runtime.CompilerServices
 open FSLN
 
-type StateNavigationCommands =
+type NormalModeCommands =
 
     static let previous (siblings: ResizeArray<'T>, child: 'T) : 'T option =
         let index = siblings.IndexOf(child)

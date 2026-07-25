@@ -45,43 +45,43 @@ type StateCommands =
     static member Reload(state: State) : unit =
         match state.Mode with
         | Mode.Normal nm -> nm.Reload()
-        | _ -> state.StatusLine <- "NYI"
+        | _ -> state.StatusLine <- "Reload NYI"
 
     [<Extension>]
     static member AutoReload(state: State) : unit =
         match state.Mode with
         | Mode.Normal nm -> nm.AutoReload()
-        | _ -> state.StatusLine <- "NYI"
+        | _ -> state.StatusLine <- "Auto-reload NYI"
 
     [<Extension>]
     static member NavigateUp(state: State) : unit =
         match state.Mode with
         | Mode.Normal nm -> nm.NavigateUp(state)
-        | _ -> state.StatusLine <- "NYI"
+        | Mode.Search sm -> sm.NavigateUp(state)
 
     [<Extension>]
     static member NavigateDown(state: State) : unit =
         match state.Mode with
         | Mode.Normal nm -> nm.NavigateDown(state)
-        | _ -> state.StatusLine <- "NYI"
+        | Mode.Search sm -> sm.NavigateDown(state)
 
     [<Extension>]
     static member NavigateOut(state: State) : unit =
         match state.Mode with
         | Mode.Normal nm -> nm.NavigateOut()
-        | _ -> state.StatusLine <- "NYI"
+        | Mode.Search sm -> sm.NavigateOut()
 
     [<Extension>]
     static member CollapseSelection(state: State) : unit =
         match state.Mode with
         | Mode.Normal nm -> nm.CollapseSelection(state)
-        | _ -> state.StatusLine <- "NYI"
+        | Mode.Search sm -> sm.CollapseSelection(state)
 
     [<Extension>]
     static member ExpandSelection(state: State) : unit =
         match state.Mode with
         | Mode.Normal nm -> nm.ExpandSelection(state)
-        | _ -> state.StatusLine <- "NYI"
+        | Mode.Search sm -> sm.ExpandSelection(state)
 
     [<Extension>]
     static member MoveSelectionUp(state: State) : unit =
