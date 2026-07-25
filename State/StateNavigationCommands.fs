@@ -1,4 +1,4 @@
-﻿namespace FSLN
+namespace FSLN
 
 open System.Runtime.CompilerServices
 open FSLN

@@ -12,7 +12,7 @@ module SolutionLoader =
 
         let project_path = Path.normalise(project_path)
         let project_containing_folder = Path.get_directory_name(project_path)
-        
+
         let project_file = ProjectRootElement.Open(project_path)
 
         let project =

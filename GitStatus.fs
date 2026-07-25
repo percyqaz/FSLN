@@ -60,6 +60,12 @@ type GitStatus =
         WorkingTreeDirty: int
     }
 
+    member this.Ahead: int option =
+        this.AheadBehind |> Option.map fst |> Option.filter((<>) 0)
+
+    member this.Behind: int option =
+        this.AheadBehind |> Option.map snd |> Option.filter((<>) 0)
+
     static member Parse(raw: string, root_path: string) : GitStatus =
         let mutable branch_head = ""
         let mutable branch_upstream: string option = None

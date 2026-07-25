@@ -131,32 +131,34 @@ type Display(state: State) =
         for project in state.Solution.Projects do
             display_project(project)
 
-    member this.Redraw() : unit =
-        view.Height <- Console.BufferHeight - 2
-        this.RenderTree()
-        view.Draw()
+    member this.StatusLine() : string =
+
+        let inline fmt_ahead_behind (leading_symbol: char, count: int option) =
+            match count with
+            | Some count -> (sprintf " %c%i" leading_symbol count)
+            | None -> ""
+
+        let inline dirty_files (status: GitStatus) : string =
+            if status.WorkingTreeDirty > 0 then sprintf " *%i" status.WorkingTreeDirty
+            elif status.IndexDirty > 0 then " *"
+            else ""
 
         let git_status =
             match state.GitStatus with
             | Some status ->
-                let inline ab lead pos (col: int) =
-                    match status.AheadBehind |> Option.map pos |> Option.filter((<>) 0) with
-                    | Some count -> (sprintf " %c%i" lead count).ForeColor(col)
-                    | None -> ""
-
-                let dirty_files =
-                    if status.WorkingTreeDirty > 0 then sprintf " *%i" status.WorkingTreeDirty
-                    elif status.IndexDirty > 0 then " *"
-                    else ""
-
                 sprintf
                     "[%s%s%s]%s "
                     (status.Branch.ForeColor(0x8888ff).Bold())
-                    (ab '+' fst 0x88ff88)
-                    (ab '-' snd 0xff8888)
-                    (dirty_files.ForeColor(state.Theme.ColorGitWorkingTreeDirty))
-
+                    (fmt_ahead_behind('+', status.Ahead).ForeColor(0x88FF88))
+                    (fmt_ahead_behind('-', status.Behind).ForeColor(0xFF8888))
+                    (dirty_files(status).ForeColor(state.Theme.ColorGitWorkingTreeDirty))
             | None -> ""
 
-        Console.WriteLine(git_status + state.StatusLine.ClearRestOfLine())
+        git_status + state.StatusLine
+
+    member this.Redraw() : unit =
+        view.Height <- Console.BufferHeight - 2
+        this.RenderTree()
+        view.Draw()
+        Console.WriteLine(this.StatusLine().ClearRestOfLine())
         Console.Write(state.CommandBuffer.ToString().ForeColor(0x88FF88).Bold().ClearRestOfLine())

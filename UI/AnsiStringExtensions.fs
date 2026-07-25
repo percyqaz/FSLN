@@ -1,4 +1,4 @@
-﻿namespace FSLN
+namespace FSLN
 
 open System.Drawing
 open System.Runtime.CompilerServices

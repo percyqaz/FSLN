@@ -35,12 +35,16 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
         proc.WaitForExit()
 
         if proc.ExitCode <> 0 then
-            match input_thread.TryReadKey(Timeout.Infinite) with _ -> ()
+            match input_thread.TryReadKey(Timeout.Infinite) with
+            | _ -> ()
+
             state.StatusLine <- sprintf "(%i)" proc.ExitCode
-            
+
         elif Console.GetCursorPosition() <> struct (0, 0) then
             Console.WriteLine("Press any key to return".ForeColor(0x666666))
-            match input_thread.TryReadKey(Timeout.Infinite) with _ -> ()
+
+            match input_thread.TryReadKey(Timeout.Infinite) with
+            | _ -> ()
 
         Console.Write("\u001b[47l\u001b[?1049h")
 
@@ -70,10 +74,10 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
         | "bind" when args <> "" -> state.SetBinding(args)
         | "echo" -> state.Echo(args)
         | _ -> ()
-        
+
     // todo: move to State creation
     static member RegisterDefaultBinds(state: State) : unit =
-        
+
         state.CommandBuffer.Bind("<Esc>", ":q<Enter>")
         state.CommandBuffer.Bind("h", ":collapse<Enter>")
         state.CommandBuffer.Bind("j", ":down<Enter>")
