@@ -87,7 +87,7 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
         | _ -> ()
 
     member this.DispatchCommandsOnState() : unit =
-        state.Buffers.CommandBuffer.DispatchCommands(this.DispatchCommand)
+        state.CommandBuffer.DispatchCommands(this.DispatchCommand)
 
     member this.DispatchInitialCommandsOnState(config: string seq) : unit =
-        state.Buffers.CommandBuffer.DispatchInitialCommands(config, this.DispatchCommand)
+        state.CommandBuffer.DispatchInitialCommands(config, this.DispatchCommand)

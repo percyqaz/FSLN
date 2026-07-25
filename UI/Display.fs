@@ -165,4 +165,10 @@ type Display(state: State) =
 
         view.Draw()
         Console.WriteLine(this.StatusLine().ClearRestOfLine())
-        Console.Write(state.Buffers.ToString().ForeColor(0x88FF88).Bold().ClearRestOfLine())
+
+        let buffer_line =
+            match state.ActiveBuffer with
+            | ActiveBuffer.Command -> state.CommandBuffer.ToString()
+            | ActiveBuffer.Search -> "SEARCH: " + state.SearchBuffer.ToString()
+
+        Console.Write(buffer_line.ForeColor(0x88FF88).Bold().ClearRestOfLine())

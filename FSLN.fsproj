@@ -18,7 +18,6 @@
     <Compile Include="Input\InputThread.fs" />
     <Compile Include="Input\CommandBuffer.fs" />
     <Compile Include="Input\TextBuffer.fs" />
-    <Compile Include="Input\BufferManager.fs" />
     <Compile Include="State\Theme.fs" />
     <Compile Include="State\Selection.fs" />
     <Compile Include="State\FSelection.fs" />

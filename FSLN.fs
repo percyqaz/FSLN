@@ -21,7 +21,7 @@ module FSLN =
 
             match input_thread.TryReadKey(2000) with
             | true, input ->
-                state.Buffers.AddKey(input)
+                state.AddKey(input)
                 command_dispatcher.DispatchCommandsOnState()
             | false, _ ->
                 state.ReloadGit()

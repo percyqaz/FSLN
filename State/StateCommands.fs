@@ -23,7 +23,7 @@ type StateCommands =
         let source, target = split.[0], if split.Length > 1 then split.[1] else ""
 
         if source.Length > 0 && target.Length > 0 && source <> target then
-            state.Buffers.CommandBuffer.Bind(source, target)
+            state.CommandBuffer.Bind(source, target)
             state.StatusLine <- "Binding set."
         else
             state.StatusLine <- "Invalid binding."
@@ -35,7 +35,8 @@ type StateCommands =
     static member Quit(state: State) : unit = state.Running <- false
 
     [<Extension>]
-    static member Search(state: State) : unit = state.Buffers.StartSearch()
+    static member Search(state: State) : unit =
+        state.ActiveBuffer <- ActiveBuffer.Search
 
     [<Extension>]
     static member ReloadGit(state: State) : unit = state.GitStatus <- GitStatus.Fetch()

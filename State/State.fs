@@ -1,7 +1,14 @@
 namespace FSLN
 
+open System
 open System.Runtime.CompilerServices
 open FSLN
+
+
+[<RequireQualifiedAccess>]
+type ActiveBuffer =
+    | Command
+    | Search
 
 type State =
     {
@@ -9,7 +16,9 @@ type State =
         mutable GitStatus: GitStatus option
         mutable Expanded: Set<string>
         mutable Mode: Mode
-        Buffers: BufferManager
+        CommandBuffer: CommandBuffer
+        SearchBuffer: TextBuffer
+        mutable ActiveBuffer: ActiveBuffer
         mutable StatusLine: string
         mutable Theme: Theme
     }
@@ -35,9 +44,28 @@ type State =
             | false, _ -> default_status()
         | None -> default_status()
 
+    member this.AddKey(input: ConsoleKeyInfo) : unit =
+        match this.ActiveBuffer with
+        | ActiveBuffer.Command -> this.CommandBuffer.AddKey(input)
+        | ActiveBuffer.Search ->
+            if not(this.SearchBuffer.TryAddKey(input)) then
+                this.ActiveBuffer <- ActiveBuffer.Command
+
+    static member Create(solution: Solution) : State =
+        {
+            Running = true
+            GitStatus = GitStatus.Fetch()
+            Expanded = Set.empty
+            Mode = Mode.Normal({ Solution = solution; Selected = Selection.Solution(solution) })
+            CommandBuffer = CommandBuffer().RegisterDefaultBinds()
+            SearchBuffer = TextBuffer()
+            ActiveBuffer = ActiveBuffer.Command
+            StatusLine = ""
+            Theme = Theme.Default
+        }
+
     [<Extension>]
-    static member private RegisterDefaultBinds(buffers: BufferManager) : BufferManager =
-        let buffer = buffers.CommandBuffer
+    static member private RegisterDefaultBinds(buffer: CommandBuffer) : CommandBuffer =
         buffer.Bind("<Esc>", ":q<Enter>")
 
         buffer.Bind("h", ":collapse<Enter>")
@@ -63,16 +91,4 @@ type State =
         )
 
         buffer.Bind("a", "lj")
-
-        buffers
-
-    static member Create(solution: Solution) : State =
-        {
-            Running = true
-            GitStatus = GitStatus.Fetch()
-            Expanded = Set.empty
-            Mode = Mode.Normal({ Solution = solution; Selected = Selection.Solution(solution) })
-            Buffers = BufferManager.Create().RegisterDefaultBinds()
-            StatusLine = ""
-            Theme = Theme.Default
-        }
+        buffer
