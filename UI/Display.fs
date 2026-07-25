@@ -72,22 +72,22 @@ type Display(state: State) =
         view.Line((if is_selected then line.BackColor(state.Theme.ColorSelection) else line), is_selected)
 
     member inline private this.RenderSolution(solution: Solution) : unit =
-        let is_selected = state.Selected = Selection.Solution(solution)
+        let is_selected = state.IsSelected(solution)
 
         let line =
             sprintf "%c %s " state.Theme.IconSolution (solution.Name.ForeColor(state.Theme.ColorSolution).Bold())
 
         view.Line((if is_selected then line.BackColor(state.Theme.ColorSelection) else line), is_selected)
 
-    member this.RenderTree() : unit =
+    member this.RenderTree(nm: NormalMode) : unit =
 
         let rec display_entry (indent: string, icolor: Color, is_last: bool, entry: FileTreeEntry) : unit =
             match entry with
             | File file ->
-                let is_selected = state.Selected = Selection.File(file)
+                let is_selected = state.IsSelected(file)
                 this.RenderFile(indent, icolor, is_selected, is_last, file)
             | Folder folder ->
-                let is_selected = state.Selected = Selection.Folder(folder)
+                let is_selected = state.IsSelected(folder)
                 let is_expanded = state.IsExpanded(folder)
                 this.RenderFolder(indent, icolor, is_selected, is_expanded, is_last, folder)
 
@@ -112,7 +112,7 @@ type Display(state: State) =
                         i <- i + 1
 
         let inline display_project (project: Project) : unit =
-            let is_selected = state.Selected = Selection.Project(project)
+            let is_selected = state.IsSelected(project)
             let is_expanded = state.IsExpanded(project)
             this.RenderProject(is_selected, is_expanded, project)
 
@@ -126,9 +126,9 @@ type Display(state: State) =
                     display_entry("", icolor, i + 1 = project.Children.Count, project.Children.[i])
                     i <- i + 1
 
-        this.RenderSolution(state.Solution)
+        this.RenderSolution(nm.Solution)
 
-        for project in state.Solution.Projects do
+        for project in nm.Solution.Projects do
             display_project(project)
 
     member this.StatusLine() : string =
@@ -158,7 +158,9 @@ type Display(state: State) =
 
     member this.Redraw() : unit =
         view.Height <- Console.BufferHeight - 2
-        this.RenderTree()
+        match state.Mode with
+        | Mode.Normal nm -> this.RenderTree(nm)
+        | _ -> ()
         view.Draw()
         Console.WriteLine(this.StatusLine().ClearRestOfLine())
         Console.Write(state.Buffers.ToString().ForeColor(0x88FF88).Bold().ClearRestOfLine())

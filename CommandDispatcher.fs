@@ -7,17 +7,25 @@ open System.Threading
 type CommandDispatcher(state: State, input_thread: InputThread) =
 
     member private this.ApplySubstitutions(command: string) : string =
-        command
-            .Replace("$$", '\uFFFD'.ToString())
-            .Replace("$SOLUTION", state.Solution.FullPath)
-            .Replace(
-                "$PROJECT",
-                match state.Selected.ParentProject with
-                | Some project -> project.FullPath
-                | None -> ""
-            )
-            .Replace("$", state.Selected.FullPath)
-            .Replace('\uFFFD', '$')
+        match state.Mode with
+        | Mode.Normal nm ->
+            command
+                .Replace("$$", '\uFFFD'.ToString())
+                .Replace("$SOLUTION", nm.Solution.FullPath)
+                .Replace(
+                    "$PROJECT",
+                    match nm.Selected.ParentProject with
+                    | Some project -> project.FullPath
+                    | None -> ""
+                )
+                .Replace("$", nm.Selected.FullPath)
+                .Replace('\uFFFD', '$')
+        | _ ->
+            command
+                .Replace("$$", '\uFFFD'.ToString())
+                // todo: replacements in other modes
+                .Replace('\uFFFD', '$')
+            
 
     member private this.DispatchShell(state: State, command: string) : unit =
 
@@ -65,10 +73,10 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
         | "collapse" -> state.CollapseSelection()
         | "move_up" -> state.MoveSelectionUp()
         | "move_down" -> state.MoveSelectionDown()
-        | "refresh_git" -> state.RefreshGit()
         | "search" -> state.Search()
         | "reload" -> state.Reload()
-        | "delete" -> () // todo: implement
+        | "reload_git" -> state.ReloadGit()
+        | "reload_auto" -> state.AutoReload()
         | "add" when args <> "" -> state.AddFile(args)
         | "move" when args <> "" -> state.RenameSelection(args)
         | "set" when args <> "" -> state.SetConfig(args)

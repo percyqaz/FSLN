@@ -3,19 +3,11 @@ namespace FSLN
 open System.Runtime.CompilerServices
 open FSLN
 
-[<RequireQualifiedAccess>]
-type Mode =
-    | Normal
-    | Search
-    | Git
-
 type State =
     {
         mutable Running: bool
-        mutable Solution: Solution
         mutable GitStatus: GitStatus option
         mutable Expanded: Set<string>
-        mutable Selected: Selection
         mutable Mode: Mode
         Buffers: BufferManager
         mutable StatusLine: string
@@ -23,9 +15,12 @@ type State =
     }
 
     member this.IsExpanded(folder: FileTreeFolder) : bool = this.Expanded.Contains(folder.FullPath)
-
-    member this.IsExpanded(project: Project) : bool =
-        this.Expanded.Contains(project.FullPath)
+    member this.IsExpanded(project: Project) : bool = this.Expanded.Contains(project.FullPath)
+    
+    member this.IsSelected(file: FileTreeFile) : bool = this.Mode.Selection.Equals(file)
+    member this.IsSelected(folder: FileTreeFolder) : bool = this.Mode.Selection.Equals(folder)
+    member this.IsSelected(project: Project) : bool = this.Mode.Selection.Equals(project)
+    member this.IsSelected(solution: Solution) : bool = this.Mode.Selection.Equals(solution)
 
     member this.GitFileStatus(file: string) : GitFileStatus =
         let inline default_status () =
@@ -72,11 +67,9 @@ type State =
     static member Create(solution: Solution) : State =
         {
             Running = true
-            Solution = solution
             GitStatus = GitStatus.Fetch()
             Expanded = Set.empty
-            Selected = Selection.Solution(solution)
-            Mode = Mode.Normal
+            Mode = Mode.Normal { Solution = solution; Selected = Selection.Solution(solution) }
             Buffers = BufferManager.Create().RegisterDefaultBinds()
             StatusLine = ""
             Theme = Theme.Default

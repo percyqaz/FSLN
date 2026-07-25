@@ -27,3 +27,8 @@ type Selection =
         | Folder folder -> Some(Parent.Folder(folder))
         | Project project -> Some(Parent.Project(project))
         | Solution _ -> None
+
+    member this.Equals(file: FileTreeFile) : bool = this = File file
+    member this.Equals(folder: FileTreeFolder) : bool = this = Folder folder
+    member this.Equals(project: Project) : bool = this = Project project
+    member this.Equals(solution: Solution) : bool = this = Solution solution

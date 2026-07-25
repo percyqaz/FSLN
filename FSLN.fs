@@ -24,7 +24,7 @@ module FSLN =
                 state.Buffers.AddKey(input)
                 command_dispatcher.DispatchCommandsOnState()
             | false, _ ->
-                state.RefreshGit()
+                state.ReloadGit()
                 state.AutoReload()
 
         Console.Write("\u001b[?1049l")

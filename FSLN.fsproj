@@ -21,9 +21,11 @@
     <Compile Include="Input\BufferManager.fs" />
     <Compile Include="State\Theme.fs" />
     <Compile Include="State\Selection.fs" />
+    <Compile Include="State\FSelection.fs" />
+    <Compile Include="State\Mode.fs" />
     <Compile Include="State\State.fs" />
+    <Compile Include="State\NormalModeCommands.fs" />
     <Compile Include="State\StateCommands.fs" />
-    <Compile Include="State\StateNavigationCommands.fs" />
     <Compile Include="UI\AnsiStringExtensions.fs" />
     <Compile Include="UI\ScreenBuffer.fs" />
     <Compile Include="UI\Display.fs" />

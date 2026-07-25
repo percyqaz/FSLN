@@ -29,27 +29,27 @@ type StateNavigationCommands =
             Selection.Project(project)
 
     [<TailCall>]
-    static let rec find_next_in_tree (state: State, current: FileTreeEntry) : Selection option =
+    static let rec find_next_in_tree (nm: NormalMode, current: FileTreeEntry) : Selection option =
         match next(current.Parent.Children, current) with
         | Some(File file_below) -> Some(Selection.File(file_below))
         | Some(Folder folder_below) -> Some(Selection.Folder(folder_below))
         | None ->
             match current.Parent with
             | Parent.Project project ->
-                match next(state.Solution.Projects, project) with
+                match next(nm.Solution.Projects, project) with
                 | Some project_below -> Some(Selection.Project(project_below))
                 | None -> None
-            | Parent.Folder folder -> find_next_in_tree(state, Folder folder)
+            | Parent.Folder folder -> find_next_in_tree(nm, Folder folder)
 
     [<Extension>]
-    static member NavigateUp(state: State) : unit =
-        state.Selected <-
-            match state.Selected with
-            | Selection.Solution _ -> state.Selected
+    static member NavigateUp(nm: NormalMode, state: State) : unit =
+        nm.Selected <-
+            match nm.Selected with
+            | Selection.Solution _ -> nm.Selected
             | Selection.Project project ->
-                match previous(state.Solution.Projects, project) with
+                match previous(nm.Solution.Projects, project) with
                 | Some project_above -> bottom_child_project(state, project_above)
-                | None -> Selection.Solution(state.Solution)
+                | None -> Selection.Solution(nm.Solution)
             | Selection.Folder folder ->
                 match previous(folder.Parent.Children, Folder folder) with
                 | Some entry_above -> bottom_child_tree(state, entry_above)
@@ -66,9 +66,9 @@ type StateNavigationCommands =
                     | Parent.Project parent_project -> Selection.Project(parent_project)
 
     [<Extension>]
-    static member NavigateDown(state: State) : unit =
-        state.Selected <-
-            match state.Selected with
+    static member NavigateDown(nm: NormalMode, state: State) : unit =
+        nm.Selected <-
+            match nm.Selected with
             | Selection.Solution solution -> Selection.Project(solution.Projects.[0])
             | Selection.Project project ->
                 if state.IsExpanded(project) then
@@ -76,7 +76,7 @@ type StateNavigationCommands =
                     | File child_file -> Selection.File(child_file)
                     | Folder child_folder -> Selection.Folder(child_folder)
                 else
-                    match next(state.Solution.Projects, project) with
+                    match next(nm.Solution.Projects, project) with
                     | Some project_below -> Selection.Project(project_below)
                     | None -> Selection.Project(project)
             | Selection.Folder folder ->
@@ -85,15 +85,15 @@ type StateNavigationCommands =
                     | File child_file -> Selection.File(child_file)
                     | Folder child_folder -> Selection.Folder(child_folder)
                 else
-                    find_next_in_tree(state, Folder folder) |> Option.defaultValue state.Selected
-            | Selection.File file -> find_next_in_tree(state, File file) |> Option.defaultValue state.Selected
+                    find_next_in_tree(nm, Folder folder) |> Option.defaultValue nm.Selected
+            | Selection.File file -> find_next_in_tree(nm, File file) |> Option.defaultValue nm.Selected
 
     [<Extension>]
-    static member NavigateOut(state: State) : unit =
-        state.Selected <-
-            match state.Selected with
+    static member NavigateOut(nm: NormalMode) : unit =
+        nm.Selected <-
+            match nm.Selected with
             | Selection.Solution solution -> Selection.Solution(solution)
-            | Selection.Project _ -> Selection.Solution(state.Solution)
+            | Selection.Project _ -> Selection.Solution(nm.Solution)
             | Selection.Folder folder ->
                 match folder.Parent with
                 | Parent.Folder parent_folder -> Selection.Folder(parent_folder)
@@ -104,8 +104,8 @@ type StateNavigationCommands =
                 | Parent.Project parent_project -> Selection.Project(parent_project)
 
     [<Extension>]
-    static member ExpandSelection(state: State) : unit =
-        match state.Selected with
+    static member ExpandSelection(nm: NormalMode, state: State) : unit =
+        match nm.Selected with
         | Selection.Solution _ -> ()
         | Selection.Project project -> state.Expanded <- state.Expanded.Add(project.FullPath)
         | Selection.Folder folder -> state.Expanded <- state.Expanded.Add(folder.FullPath)
@@ -113,9 +113,9 @@ type StateNavigationCommands =
 
     [<Extension>]
     [<TailCall>]
-    static member CollapseSelection(state: State) : unit =
+    static member CollapseSelection(nm: NormalMode, state: State) : unit =
         let rec collapse_selected () : unit =
-            match state.Selected with
+            match nm.Selected with
             | Selection.Solution _ -> ()
             | Selection.Project project ->
                 state.Expanded <- state.Expanded.Remove(project.FullPath)
@@ -129,26 +129,45 @@ type StateNavigationCommands =
                     for subfolder in folder.EnumerateSubfolders() do
                         state.Expanded <- state.Expanded.Remove(subfolder.FullPath)
                 else
-                    state.NavigateOut()
+                    nm.NavigateOut()
                     collapse_selected()
             | Selection.File _ ->
-                state.NavigateOut()
+                nm.NavigateOut()
                 collapse_selected()
 
         collapse_selected()
 
     [<Extension>]
-    static member MoveSelectionUp(state: State) : unit =
-        match state.Selected with
+    static member MoveSelectionUp(nm: NormalMode) : unit =
+        match nm.Selected with
         | Selection.Solution _ -> ()
         | Selection.Project _ -> ()
         | Selection.Folder folder -> folder.ParentProject.MoveUp(folder)
         | Selection.File file -> file.ParentProject.MoveUp(file)
 
     [<Extension>]
-    static member MoveSelectionDown(state: State) : unit =
-        match state.Selected with
+    static member MoveSelectionDown(nm: NormalMode) : unit =
+        match nm.Selected with
         | Selection.Solution _ -> ()
         | Selection.Project _ -> ()
         | Selection.Folder folder -> folder.ParentProject.MoveDown(folder)
         | Selection.File file -> file.ParentProject.MoveDown(file)
+
+    [<Extension>]
+    static member AddFile(nm: NormalMode, state: State, args: string) : unit =
+        match nm.Selected.ParentProject, nm.Selected.ToParent() with
+        | Some project, Some parent ->
+            match project.TryAdd(parent, args) with
+            | Ok() -> state.StatusLine <- "Created file!"
+            | Error reason -> state.StatusLine <- reason
+        | _ -> ()
+
+    [<Extension>]
+    static member RenameSelection(nm: NormalMode, state: State, args: string) : unit =
+        match nm.Selected with
+        | Selection.File file ->
+            match file.ParentProject.TryMove(file, args) with
+            | Ok() -> state.StatusLine <- "Moved file!"
+            | Error reason -> state.StatusLine <- reason
+        // todo: support moving folders
+        | _ -> ()
