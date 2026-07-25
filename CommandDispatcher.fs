@@ -75,3 +75,9 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
         | "bind" when args <> "" -> state.SetBinding(args)
         | "echo" -> state.Echo(args)
         | _ -> ()
+
+    member this.DispatchCommandsOnState() : unit =
+        state.Buffers.CommandBuffer.DispatchCommands(this.DispatchCommand)
+
+    member this.DispatchInitialCommandsOnState(config: string seq) : unit =
+        state.Buffers.CommandBuffer.DispatchInitialCommands(config, this.DispatchCommand)
