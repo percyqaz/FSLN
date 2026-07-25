@@ -63,6 +63,7 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
         | "q!" -> state.Quit()
         | "up" -> state.NavigateUp()
         | "down" -> state.NavigateDown()
+        | "expand_all" -> state.ExpandAll()
         | "expand" -> state.ExpandSelection()
         | "collapse" -> state.CollapseSelection()
         | "move_up" -> state.MoveSelectionUp()

@@ -172,9 +172,9 @@ type Display(state: State) =
                     display_entry("", icolor, i + 1 = project.Children.Count, project.Children.[i])
                     i <- i + 1
 
-        this.RenderSolution(sm.Tree.Original)
+        this.RenderSolution(sm.Solution.Original)
 
-        for project in sm.Tree.Projects do
+        for project in sm.Solution.Projects do
             display_project(project)
 
     member this.StatusLine() : string =

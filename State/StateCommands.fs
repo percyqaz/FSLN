@@ -82,6 +82,13 @@ type StateCommands =
         | Mode.Git gm -> gm.CollapseSelection(state)
 
     [<Extension>]
+    static member ExpandAll(state: State) : unit =
+        match state.Mode with
+        | Mode.Normal nm -> nm.ExpandAll(state)
+        | Mode.Search sm -> sm.ExpandAll(state)
+        | Mode.Git gm -> gm.ExpandAll(state)
+
+    [<Extension>]
     static member ExpandSelection(state: State) : unit =
         match state.Mode with
         | Mode.Normal nm -> nm.ExpandSelection(state)

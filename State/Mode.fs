@@ -15,65 +15,65 @@ type NormalMode =
 
 [<Interface>]
 type ISearchMode =
-    abstract member Tree: FilteredSolution with get
+    abstract member Solution: FilteredSolution with get
     abstract member Selected: FSelection with get, set
 
 type SearchMode =
     {
         Query: string
-        Tree: FilteredSolution
+        Solution: FilteredSolution
         mutable Selected: FSelection
     }
 
     member this.Reload() : SearchMode =
-        let solution = SolutionLoader.read_solution_file(this.Tree.Original.FullPath)
+        let solution = SolutionLoader.read_solution_file(this.Solution.Original.FullPath)
         let filtered = FileNameFilter(this.Query).Apply(solution)
 
-        { Query = this.Query; Tree = filtered; Selected = FSelection.Find(this.Selected.ToSelection(), filtered) }
+        { Query = this.Query; Solution = filtered; Selected = FSelection.Find(this.Selected.ToSelection(), filtered) }
 
     member this.AutoReload() : SearchMode =
-        if this.Tree.Original.HasExternalChange() then this.Reload() else this
+        if this.Solution.Original.HasExternalChange() then this.Reload() else this
 
     member this.Update(query: string) : SearchMode =
         if query = this.Query then
             this
         else
-            let filtered = FileNameFilter(query).Apply(this.Tree.Original)
-            { Query = query; Tree = filtered; Selected = FSelection.Find(this.Selected.ToSelection(), filtered) }
+            let filtered = FileNameFilter(query).Apply(this.Solution.Original)
+            { Query = query; Solution = filtered; Selected = FSelection.Find(this.Selected.ToSelection(), filtered) }
 
     member this.ToNormalMode() : NormalMode =
-        { Solution = this.Tree.Original; Selected = this.Selected.ToSelection() }
+        { Solution = this.Solution.Original; Selected = this.Selected.ToSelection() }
 
     static member Create(nm: NormalMode, query: string) : SearchMode =
         let filtered = FileNameFilter(query).Apply(nm.Solution)
-        { Query = query; Tree = filtered; Selected = FSelection.Find(nm.Selected, filtered) }
+        { Query = query; Solution = filtered; Selected = FSelection.Find(nm.Selected, filtered) }
 
     interface ISearchMode with
-        member this.Selected = this.Selected
-        member this.set_Selected v = this.Selected <- v
-        member this.Tree = this.Tree
+        member this.Selected: FSelection = this.Selected
+        member this.set_Selected(v: FSelection) : unit = this.Selected <- v
+        member this.Solution: FilteredSolution = this.Solution
 
 type GitMode =
     {
         Query: string
         Status: GitStatus
-        Tree: FilteredSolution
+        Solution: FilteredSolution
         mutable Selected: FSelection
     }
 
     member this.Reload() : GitMode =
-        let solution = SolutionLoader.read_solution_file(this.Tree.Original.FullPath)
+        let solution = SolutionLoader.read_solution_file(this.Solution.Original.FullPath)
         let filtered = GitChangedFilter(this.Query, this.Status).Apply(solution)
 
         {
             Query = this.Query
             Status = this.Status
-            Tree = filtered
+            Solution = filtered
             Selected = FSelection.Find(this.Selected.ToSelection(), filtered)
         }
 
     member this.AutoReload() : GitMode =
-        if this.Tree.Original.HasExternalChange() then this.Reload() else this
+        if this.Solution.Original.HasExternalChange() then this.Reload() else this
 
     member this.Update(query: string, git_status: GitStatus) : GitMode =
         if
@@ -83,17 +83,17 @@ type GitMode =
         then
             this
         else
-            let filtered = GitChangedFilter(query, git_status).Apply(this.Tree.Original)
+            let filtered = GitChangedFilter(query, git_status).Apply(this.Solution.Original)
 
             {
                 Query = query
                 Status = git_status
-                Tree = filtered
+                Solution = filtered
                 Selected = FSelection.Find(this.Selected.ToSelection(), filtered)
             }
 
     member this.ToNormalMode() : NormalMode =
-        { Solution = this.Tree.Original; Selected = this.Selected.ToSelection() }
+        { Solution = this.Solution.Original; Selected = this.Selected.ToSelection() }
 
     static member Create(nm: NormalMode, query: string, git_status: GitStatus) : GitMode =
         let filtered = GitChangedFilter(query, git_status).Apply(nm.Solution)
@@ -101,14 +101,14 @@ type GitMode =
         {
             Query = query
             Status = git_status
-            Tree = filtered
+            Solution = filtered
             Selected = FSelection.Find(nm.Selected, filtered)
         }
 
     interface ISearchMode with
-        member this.Selected = this.Selected
-        member this.set_Selected v = this.Selected <- v
-        member this.Tree = this.Tree
+        member this.Selected: FSelection = this.Selected
+        member this.set_Selected(v: FSelection) : unit = this.Selected <- v
+        member this.Solution: FilteredSolution = this.Solution
 
 [<RequireQualifiedAccess>]
 type Mode =
@@ -119,8 +119,8 @@ type Mode =
     member this.Solution: Solution =
         match this with
         | Normal nm -> nm.Solution
-        | Search sm -> sm.Tree.Original
-        | Git gm -> gm.Tree.Original
+        | Search sm -> sm.Solution.Original
+        | Git gm -> gm.Solution.Original
 
     member this.Selection: Selection =
         match this with

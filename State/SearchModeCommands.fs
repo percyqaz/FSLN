@@ -36,7 +36,7 @@ type SearchModeCommands =
         | None ->
             match current.Parent with
             | FParent.FProject project ->
-                match next(sm.Tree.Projects, project) with
+                match next(sm.Solution.Projects, project) with
                 | Some project_below -> Some(FSelection.FProject(project_below))
                 | None -> None
             | FParent.FFolder folder -> find_next_in_tree(sm, FFolder folder)
@@ -47,9 +47,9 @@ type SearchModeCommands =
             match nm.Selected with
             | FSelection.FSolution _ -> nm.Selected
             | FSelection.FProject project ->
-                match previous(nm.Tree.Projects, project) with
+                match previous(nm.Solution.Projects, project) with
                 | Some project_above -> bottom_child_project(state, project_above)
-                | None -> FSelection.FSolution(nm.Tree)
+                | None -> FSelection.FSolution(nm.Solution)
             | FSelection.FFolder folder ->
                 match previous(folder.Parent.Children, FFolder folder) with
                 | Some entry_above -> bottom_child_tree(state, entry_above)
@@ -80,7 +80,7 @@ type SearchModeCommands =
                     | FFile child_file -> FSelection.FFile(child_file)
                     | FFolder child_folder -> FSelection.FFolder(child_folder)
                 else
-                    match next(sm.Tree.Projects, project) with
+                    match next(sm.Solution.Projects, project) with
                     | Some project_below -> FSelection.FProject(project_below)
                     | None -> FSelection.FProject(project)
             | FSelection.FFolder folder ->
@@ -97,7 +97,7 @@ type SearchModeCommands =
         sm.Selected <-
             match sm.Selected with
             | FSelection.FSolution solution -> FSelection.FSolution(solution)
-            | FSelection.FProject _ -> FSelection.FSolution(sm.Tree)
+            | FSelection.FProject _ -> FSelection.FSolution(sm.Solution)
             | FSelection.FFolder folder ->
                 match folder.Parent with
                 | FParent.FFolder parent_folder -> FSelection.FFolder(parent_folder)
@@ -106,6 +106,14 @@ type SearchModeCommands =
                 match file.Parent with
                 | FParent.FFolder parent_folder -> FSelection.FFolder(parent_folder)
                 | FParent.FProject parent_project -> FSelection.FProject(parent_project)
+
+    [<Extension>]
+    static member ExpandAll(sm: ISearchMode, state: State) : unit =
+        for project in sm.Solution.Projects do
+            state.Expanded <- state.Expanded.Add(project.Original.FullPath)
+
+            for folder in project.EnumerateSubfolders() do
+                state.Expanded <- state.Expanded.Add(folder.Original.FullPath)
 
     [<Extension>]
     static member ExpandSelection(sm: ISearchMode, state: State) : unit =

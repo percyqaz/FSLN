@@ -104,6 +104,14 @@ type NormalModeCommands =
                 | Parent.Project parent_project -> Selection.Project(parent_project)
 
     [<Extension>]
+    static member ExpandAll(nm: NormalMode, state: State) : unit =
+        for project in nm.Solution.Projects do
+            state.Expanded <- state.Expanded.Add(project.FullPath)
+
+            for folder in project.EnumerateSubfolders() do
+                state.Expanded <- state.Expanded.Add(folder.FullPath)
+
+    [<Extension>]
     static member ExpandSelection(nm: NormalMode, state: State) : unit =
         match nm.Selected with
         | Selection.Solution _ -> ()
