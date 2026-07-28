@@ -72,12 +72,26 @@ type Display(state: State) =
         view.Line((if is_selected then line.BackColor(state.Theme.ColorSelection) else line), is_selected)
 
     member inline private this.RenderSolution(solution: Solution) : unit =
+        let search_tagline =
+            match state.Mode with
+            | Mode.Search sm -> (sprintf " Displaying results for '%s' " sm.Query).BackColor(0x003300)
+            | Mode.Git gm when gm.Query <> "" -> (sprintf " Displaying results for '%s' " gm.Query).BackColor(0x003300)
+            | _ -> ""
+
+        let git_tagline =
+            match state.Mode with
+            | Mode.Git _ -> (" Git changes only ").BackColor(0x330000)
+            | _ -> ""
+
         let is_selected = state.IsSelected(solution)
 
         let line =
             sprintf "%c %s " state.Theme.IconSolution (solution.Name.ForeColor(state.Theme.ColorSolution).Bold())
 
-        view.Line((if is_selected then line.BackColor(state.Theme.ColorSelection) else line), is_selected)
+        view.Line(
+            (if is_selected then line.BackColor(state.Theme.ColorSelection) else line) + search_tagline + git_tagline,
+            is_selected
+        )
 
     member this.RenderNormalTree(nm: NormalMode) : unit =
 
