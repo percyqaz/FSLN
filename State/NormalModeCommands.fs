@@ -149,7 +149,7 @@ type NormalModeCommands =
     static member MoveSelectionUp(nm: NormalMode) : unit =
         match nm.Selected with
         | Selection.Solution _ -> ()
-        | Selection.Project _ -> ()
+        | Selection.Project project -> nm.Solution.MoveUp(project)
         | Selection.Folder folder -> folder.ParentProject.MoveUp(folder)
         | Selection.File file -> file.ParentProject.MoveUp(file)
 
@@ -157,7 +157,7 @@ type NormalModeCommands =
     static member MoveSelectionDown(nm: NormalMode) : unit =
         match nm.Selected with
         | Selection.Solution _ -> ()
-        | Selection.Project _ -> ()
+        | Selection.Project project -> nm.Solution.MoveDown(project)
         | Selection.Folder folder -> folder.ParentProject.MoveDown(folder)
         | Selection.File file -> file.ParentProject.MoveDown(file)
 

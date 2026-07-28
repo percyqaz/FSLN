@@ -9,7 +9,9 @@ type GitMode =
     }
 
     member this.Reload() : GitMode =
-        let solution = SolutionLoader.read_solution_file(this.Solution.Original.FullPath)
+        let solution =
+            SolutionLoader.read_solution_file(this.Solution.Original.Ordering, this.Solution.Original.FullPath)
+
         let filtered = GitChangedFilter(this.Query, this.Status).Apply(solution)
 
         {

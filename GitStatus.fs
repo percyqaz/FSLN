@@ -1,5 +1,6 @@
 namespace FSLN
 
+open System.IO
 open System.Diagnostics
 
 [<Struct>]
@@ -108,7 +109,7 @@ type GitStatus =
         }
 
     static member Fetch() : GitStatus option =
-        match Path.find_git_repo() with
+        match Path.find_git_repo_root() with
         | None -> None
         | Some path_to_repo ->
 

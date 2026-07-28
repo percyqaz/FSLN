@@ -26,8 +26,11 @@ let main (argv: string array) : int =
     match sln with
     | None -> 1
     | Some solution_path ->
-        let solution = SolutionLoader.read_solution_file(solution_path)
-        Directory.SetCurrentDirectory(Path.GetDirectoryName(solution_path))
+        let solution_folder = Path.GetDirectoryName(solution_path)
+        Directory.SetCurrentDirectory(solution_folder)
+
+        let workspace = Workspace.Create(solution_folder)
+        let solution = SolutionLoader.read_solution_file(workspace.Ordering, solution_path)
         FSLN.loop(get_fsln_config(), solution)
         0
 

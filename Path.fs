@@ -11,14 +11,6 @@ module Path =
     let get_directory_name (path: string) : string =
         Path.GetDirectoryName(path).Replace('\\', Path.AltDirectorySeparatorChar)
 
-    let find_git_repo () : string option =
-        let mutable current_path = Path.GetFullPath(".")
-
-        while current_path <> null && not(Directory.Exists(Path.Combine(current_path, ".git"))) do
-            current_path <- Path.GetDirectoryName(current_path)
-
-        if current_path = null then None else Some(current_path)
-
     let walk_tree_specific_file (target: string) : string option =
         let mutable current_path = Path.GetFullPath(".")
 
@@ -26,6 +18,17 @@ module Path =
             current_path <- Path.GetDirectoryName(current_path)
 
         if current_path = null then None else Some(Path.Combine(current_path, target))
+
+    let inline walk_tree_specific_folder (target: string) : string option =
+        let mutable current_path = Path.GetFullPath(".")
+
+        while current_path <> null && not(Directory.Exists(Path.Combine(current_path, target))) do
+            current_path <- Path.GetDirectoryName(current_path)
+
+        if current_path = null then None else Some(current_path)
+
+    let find_git_repo_root () = walk_tree_specific_folder(".git")
+    let find_fsln_workspace_root () = walk_tree_specific_folder(".fsln")
 
     let walk_tree_specific_filetypes (targets: string array) : string option =
         let mutable current_path = Path.GetFullPath(".")

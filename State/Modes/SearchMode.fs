@@ -13,7 +13,9 @@ type SearchMode =
     }
 
     member this.Reload() : SearchMode =
-        let solution = SolutionLoader.read_solution_file(this.Solution.Original.FullPath)
+        let solution =
+            SolutionLoader.read_solution_file(this.Solution.Original.Ordering, this.Solution.Original.FullPath)
+
         let filtered = FileNameFilter(this.Query).Apply(solution)
 
         { Query = this.Query; Solution = filtered; Selected = FSelection.Find(this.Selected.ToSelection(), filtered) }

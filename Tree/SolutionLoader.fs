@@ -106,7 +106,7 @@ module SolutionLoader =
 
         project
 
-    let read_solution_file (solution_path: string) : Solution =
+    let read_solution_file (ordering: OrderFile, solution_path: string) : Solution =
         let solution_file = SolutionFile.Parse(solution_path)
 
         ProjectCollection.GlobalProjectCollection.UnloadAllProjects()
@@ -118,9 +118,12 @@ module SolutionLoader =
             else
                 printfn "'%s' could not be found!" project.AbsolutePath
 
+        ordering.Sort(projects_list, _.FullPath)
+
         {
             Name = Path.GetFileNameWithoutExtension(solution_path)
             FullPath = solution_path
+            Ordering = ordering
             SolutionFile = solution_file
             Projects = projects_list
             LastSeenUtc = DateTimeOffset.UtcNow.ToUnixTimeSeconds()

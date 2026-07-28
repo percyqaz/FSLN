@@ -1,4 +1,4 @@
-﻿namespace FSLN
+namespace FSLN
 
 open System.Runtime.CompilerServices
 open Microsoft.Build.Construction
@@ -132,3 +132,29 @@ type FileTreeReorderOperations =
                 merge_folders_if_needed(siblings.[folder_pos - 1], siblings.[folder_pos], siblings)
 
             project.Save()
+
+    [<Extension>]
+    static member MoveUp(solution: Solution, project: Project) : unit =
+        let siblings = solution.Projects
+        let pos = siblings.IndexOf(project)
+
+        if pos > 0 then
+            siblings.RemoveAt(pos)
+            siblings.Insert(pos - 1, project)
+
+            solution.Ordering.StorePreservingOrder(siblings |> Seq.map _.FullPath)
+            solution.Ordering.PlaceBefore([ project.FullPath ], siblings.[pos].FullPath)
+            solution.Ordering.Save()
+
+    [<Extension>]
+    static member MoveDown(solution: Solution, project: Project) : unit =
+        let siblings = solution.Projects
+        let pos = siblings.IndexOf(project)
+
+        if pos + 1 < siblings.Count then
+            siblings.RemoveAt(pos)
+            siblings.Insert(pos + 1, project)
+
+            solution.Ordering.StorePreservingOrder(siblings |> Seq.map _.FullPath)
+            solution.Ordering.PlaceAfter([ project.FullPath ], siblings.[pos].FullPath)
+            solution.Ordering.Save()
