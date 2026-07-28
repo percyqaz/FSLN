@@ -33,9 +33,3 @@ let main (argv: string array) : int =
         let solution = SolutionLoader.read_solution_file(workspace.Ordering, solution_path)
         FSLN.loop(get_fsln_config(), solution)
         0
-
-// todo list:
-// file search showing a filtered view
-// -- GIT MODE --, filter tree to just git changed files, keys to stage files, quick-commit, hotkey to show git log
-// -- ERROR MODE --, run programs and parse their MSBuild-style output, ability to browse this list and hit enter to open editor on these files
-// -- FILE MODE --, general purpose file tree browser ? or too big an endeavour

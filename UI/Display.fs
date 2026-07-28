@@ -80,7 +80,7 @@ type Display(state: State) =
 
         let git_tagline =
             match state.Mode with
-            | Mode.Git _ -> (" Git changes only ").BackColor(0x330000)
+            | Mode.Git _ -> " Git changes only ".BackColor(0x330000)
             | _ -> ""
 
         let is_selected = state.IsSelected(solution)
