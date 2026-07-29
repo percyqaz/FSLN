@@ -81,6 +81,11 @@ and FileTreeEntry =
     | File of FileTreeFile
     | Folder of FileTreeFolder
 
+    member this.FullPath =
+        match this with
+        | File f -> f.FullPath
+        | Folder f -> f.FullPath
+
     member this.Parent =
         match this with
         | File f -> f.Parent

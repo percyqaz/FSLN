@@ -38,13 +38,14 @@ type WorkspaceLoader =
                     recurse_folder(Parent.Folder(folder), subfolder)
 
                     if folder.Children.Count > 0 then
+                        workspace.Ordering.Sort(folder.Children, _.FullPath)
                         parent.Children.Add(Folder folder)
 
             for file_path in Directory.EnumerateFiles(path) do
                 let file: FileTreeFile =
                     {
                         Name = Path.GetFileName(file_path)
-                        FullPath = path.Replace('\\', '/')
+                        FullPath = file_path.Replace('\\', '/')
                         ProjectItemElement = None
                         Parent = parent
                     }

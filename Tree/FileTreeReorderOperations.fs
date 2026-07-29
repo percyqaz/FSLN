@@ -1,18 +1,9 @@
 namespace FSLN
 
 open System.Runtime.CompilerServices
-open Microsoft.Build.Construction
 open FSLN
 
 type FileTreeReorderOperations =
-
-    static let swap_files_in_project (above_files: ProjectItemElement seq, below_files: ProjectItemElement seq) : unit =
-        let first_above_file = Seq.head above_files
-        let parent = first_above_file.Parent
-
-        for file in below_files do
-            parent.RemoveChild(file)
-            parent.InsertBeforeChild(file, first_above_file)
 
     static let merge_folders_if_needed
         (entry_one: FileTreeEntry, entry_two: FileTreeEntry, siblings: ResizeArray<FileTreeEntry>)
@@ -22,6 +13,31 @@ type FileTreeReorderOperations =
             a.Children.AddRange(b.Children |> Seq.map _.WithParent(Parent.Folder(a)))
             siblings.Remove(entry_two) |> ignore
         | _ -> ()
+
+    static let swap_fsharp_order (above: FileTreeFile seq, below: FileTreeFile seq) : unit =
+        let first_above_file = (Seq.head above).ProjectItemElement.Value
+        let parent = first_above_file.Parent
+
+        for file in below |> Seq.map _.ProjectItemElement.Value do
+            parent.RemoveChild(file)
+            parent.InsertBeforeChild(file, first_above_file)
+
+    static let swap_file_system_order (ordering: OrderFile, above: FileTreeEntry, below: FileTreeEntry) : unit =
+        let siblings = above.Parent.Children
+        ordering.StorePreservingOrder(siblings |> Seq.map _.FullPath)
+        ordering.PlaceBefore([ below.FullPath ], above.FullPath)
+
+    [<Extension>]
+    static member private SwapOrder(project: Project, above: FileTreeEntry, below: FileTreeEntry) : unit =
+        match project.Guts with
+        | FileSystem fs -> swap_file_system_order(fs.Ordering, above, below)
+        | FSharp _ ->
+            let inline as_file_seq (entry: FileTreeEntry) : FileTreeFile seq =
+                match entry with
+                | File file -> [ file ]
+                | Folder folder -> folder.EnumerateFiles()
+
+            swap_fsharp_order(as_file_seq(above), as_file_seq(below))
 
     [<Extension>]
     static member MoveUp(project: Project, file: FileTreeFile) : unit =
@@ -33,15 +49,7 @@ type FileTreeReorderOperations =
             siblings.Insert(folder_pos - 1, File file)
 
             let swapped_with = siblings.[folder_pos]
-
-            match swapped_with with
-            | Folder other_folder ->
-                swap_files_in_project(
-                    other_folder.EnumerateFiles() |> Seq.map _.ProjectItemElement.Value,
-                    [ file.ProjectItemElement.Value ]
-                )
-            | File other_file ->
-                swap_files_in_project([ other_file.ProjectItemElement.Value ], [ file.ProjectItemElement.Value ])
+            project.SwapOrder(swapped_with, File file)
 
             if folder_pos + 1 < siblings.Count then
                 merge_folders_if_needed(siblings.[folder_pos], siblings.[folder_pos + 1], siblings)
@@ -58,15 +66,7 @@ type FileTreeReorderOperations =
             siblings.Insert(folder_pos + 1, File file)
 
             let swapped_with = siblings.[folder_pos]
-
-            match swapped_with with
-            | Folder other_folder ->
-                swap_files_in_project(
-                    [ file.ProjectItemElement.Value ],
-                    other_folder.EnumerateFiles() |> Seq.map _.ProjectItemElement.Value
-                )
-            | File other_file ->
-                swap_files_in_project([ file.ProjectItemElement.Value ], [ other_file.ProjectItemElement.Value ])
+            project.SwapOrder(File file, swapped_with)
 
             if folder_pos >= 1 then
                 merge_folders_if_needed(siblings.[folder_pos - 1], siblings.[folder_pos], siblings)
@@ -83,18 +83,7 @@ type FileTreeReorderOperations =
             siblings.Insert(folder_pos - 1, Folder folder)
 
             let swapped_with = siblings.[folder_pos]
-
-            match swapped_with with
-            | Folder other_folder ->
-                swap_files_in_project(
-                    other_folder.EnumerateFiles() |> Seq.map _.ProjectItemElement.Value,
-                    folder.EnumerateFiles() |> Seq.map _.ProjectItemElement.Value
-                )
-            | File other_file ->
-                swap_files_in_project(
-                    [ other_file.ProjectItemElement.Value ],
-                    folder.EnumerateFiles() |> Seq.map _.ProjectItemElement.Value
-                )
+            project.SwapOrder(swapped_with, Folder folder)
 
             if folder_pos >= 2 then
                 merge_folders_if_needed(siblings.[folder_pos - 1], siblings.[folder_pos - 2], siblings)
@@ -114,18 +103,7 @@ type FileTreeReorderOperations =
             siblings.Insert(folder_pos + 1, Folder folder)
 
             let swapped_with = siblings.[folder_pos]
-
-            match swapped_with with
-            | Folder other_folder ->
-                swap_files_in_project(
-                    folder.EnumerateFiles() |> Seq.map _.ProjectItemElement.Value,
-                    other_folder.EnumerateFiles() |> Seq.map _.ProjectItemElement.Value
-                )
-            | File other_file ->
-                swap_files_in_project(
-                    folder.EnumerateFiles() |> Seq.map _.ProjectItemElement.Value,
-                    [ other_file.ProjectItemElement.Value ]
-                )
+            project.SwapOrder(Folder folder, swapped_with)
 
             if folder_pos + 2 < siblings.Count then
                 merge_folders_if_needed(siblings.[folder_pos + 1], siblings.[folder_pos + 2], siblings)

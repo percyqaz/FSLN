@@ -8,5 +8,5 @@ type ProjectGuts =
 
     member this.Save() : unit =
         match this with
-        | FSharp d -> d.RootElement.Save()
-        | FileSystem _ -> ()
+        | FSharp fs -> fs.RootElement.Save()
+        | FileSystem fs -> fs.Ordering.Save()
