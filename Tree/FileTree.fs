@@ -37,7 +37,7 @@ and FileTreeFile =
     {
         Name: string
         FullPath: string
-        ProjectItemElement: ProjectItemElement
+        ProjectItemElement: ProjectItemElement option
         Parent: Parent
     }
 
@@ -95,13 +95,13 @@ and Project =
     {
         Name: string
         FullPath: string
-        ProjectRootElement: ProjectRootElement
+        Guts: ProjectGuts
         Children: ResizeArray<FileTreeEntry>
         mutable LastSeenUtc: int64
     }
 
     member this.Save() : unit =
-        this.ProjectRootElement.Save()
+        this.Guts.Save()
         this.LastSeenUtc <- DateTimeOffset.UtcNow.ToUnixTimeSeconds()
 
     member this.HasExternalChange() : bool =

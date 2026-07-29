@@ -46,7 +46,7 @@ type FileTreeFileOperations =
 
         | [] -> Error "empty parts passed!"
 
-    static let rec find_lowest_neighbor (parent: Parent) : ProjectItemElement =
+    static let rec find_lowest_neighbor (parent: Parent) : FileTreeFile =
         let children = parent.Children
 
         if children.Count = 0 then
@@ -57,17 +57,20 @@ type FileTreeFileOperations =
             let last_child = children.[children.Count - 1]
 
             match last_child with
-            | FileTreeEntry.File file -> file.ProjectItemElement
+            | FileTreeEntry.File file -> file
             | FileTreeEntry.Folder folder -> find_lowest_neighbor(Parent.Folder(folder))
 
     static let insert_after_neighbor
-        (project: Project, relative_path: string, neighbor: ProjectItemElement)
-        : ProjectItemElement =
-        let added_item = project.ProjectRootElement.AddItem("Compile", relative_path)
-        let parent = added_item.Parent
-        parent.RemoveChild(added_item)
-        parent.InsertAfterChild(added_item, neighbor)
-        added_item
+        (project: Project, relative_path: string, neighbor: FileTreeFile)
+        : ProjectItemElement option =
+        match project.Guts with
+        | FileSystem _ -> failwith "nyi"
+        | FSharp fs ->
+            let added_item = fs.RootElement.AddItem("Compile", relative_path)
+            let parent = added_item.Parent
+            parent.RemoveChild(added_item)
+            parent.InsertAfterChild(added_item, neighbor.ProjectItemElement.Value)
+            Some added_item
 
     static let rec connect_to_tree (parent: Parent, item: FileTreeEntry) : unit =
         let children = parent.Children
@@ -156,12 +159,12 @@ type FileTreeFileOperations =
                     .Replace('/', '\\')
 
             let insertion_neighbor =
-                if new_parent = file.Parent then file.ProjectItemElement else find_lowest_neighbor(new_parent)
+                if new_parent = file.Parent then file else find_lowest_neighbor(new_parent)
 
             let new_project_item =
                 insert_after_neighbor(project, moved_item_relative_path, insertion_neighbor)
 
-            file.ProjectItemElement.Parent.RemoveChild(file.ProjectItemElement)
+            file.ProjectItemElement.Value.Parent.RemoveChild(file.ProjectItemElement.Value)
 
             let new_tree_file =
                 File

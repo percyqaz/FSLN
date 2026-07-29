@@ -10,6 +10,9 @@
     <Compile Include="GitStatus.fs" />
     <Compile Include="Workspace\OrderFile.fs" />
     <Compile Include="Workspace\Workspace.fs" />
+    <Compile Include="Workspace\FileSystemProject.fs" />
+    <Compile Include="Workspace\FSharpProject.fs" />
+    <Compile Include="Workspace\ProjectGuts.fs" />
     <Compile Include="Tree\FileTree.fs" />
     <Compile Include="Tree\Solution.fs" />
     <Compile Include="Tree\SolutionLoader.fs" />

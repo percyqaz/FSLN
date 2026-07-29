@@ -37,10 +37,11 @@ type FileTreeReorderOperations =
             match swapped_with with
             | Folder other_folder ->
                 swap_files_in_project(
-                    other_folder.EnumerateFiles() |> Seq.map _.ProjectItemElement,
-                    [ file.ProjectItemElement ]
+                    other_folder.EnumerateFiles() |> Seq.map _.ProjectItemElement.Value,
+                    [ file.ProjectItemElement.Value ]
                 )
-            | File other_file -> swap_files_in_project([ other_file.ProjectItemElement ], [ file.ProjectItemElement ])
+            | File other_file ->
+                swap_files_in_project([ other_file.ProjectItemElement.Value ], [ file.ProjectItemElement.Value ])
 
             if folder_pos + 1 < siblings.Count then
                 merge_folders_if_needed(siblings.[folder_pos], siblings.[folder_pos + 1], siblings)
@@ -61,10 +62,11 @@ type FileTreeReorderOperations =
             match swapped_with with
             | Folder other_folder ->
                 swap_files_in_project(
-                    [ file.ProjectItemElement ],
-                    other_folder.EnumerateFiles() |> Seq.map _.ProjectItemElement
+                    [ file.ProjectItemElement.Value ],
+                    other_folder.EnumerateFiles() |> Seq.map _.ProjectItemElement.Value
                 )
-            | File other_file -> swap_files_in_project([ file.ProjectItemElement ], [ other_file.ProjectItemElement ])
+            | File other_file ->
+                swap_files_in_project([ file.ProjectItemElement.Value ], [ other_file.ProjectItemElement.Value ])
 
             if folder_pos >= 1 then
                 merge_folders_if_needed(siblings.[folder_pos - 1], siblings.[folder_pos], siblings)
@@ -85,13 +87,13 @@ type FileTreeReorderOperations =
             match swapped_with with
             | Folder other_folder ->
                 swap_files_in_project(
-                    other_folder.EnumerateFiles() |> Seq.map _.ProjectItemElement,
-                    folder.EnumerateFiles() |> Seq.map _.ProjectItemElement
+                    other_folder.EnumerateFiles() |> Seq.map _.ProjectItemElement.Value,
+                    folder.EnumerateFiles() |> Seq.map _.ProjectItemElement.Value
                 )
             | File other_file ->
                 swap_files_in_project(
-                    [ other_file.ProjectItemElement ],
-                    folder.EnumerateFiles() |> Seq.map _.ProjectItemElement
+                    [ other_file.ProjectItemElement.Value ],
+                    folder.EnumerateFiles() |> Seq.map _.ProjectItemElement.Value
                 )
 
             if folder_pos >= 2 then
@@ -116,13 +118,13 @@ type FileTreeReorderOperations =
             match swapped_with with
             | Folder other_folder ->
                 swap_files_in_project(
-                    folder.EnumerateFiles() |> Seq.map _.ProjectItemElement,
-                    other_folder.EnumerateFiles() |> Seq.map _.ProjectItemElement
+                    folder.EnumerateFiles() |> Seq.map _.ProjectItemElement.Value,
+                    other_folder.EnumerateFiles() |> Seq.map _.ProjectItemElement.Value
                 )
             | File other_file ->
                 swap_files_in_project(
-                    folder.EnumerateFiles() |> Seq.map _.ProjectItemElement,
-                    [ other_file.ProjectItemElement ]
+                    folder.EnumerateFiles() |> Seq.map _.ProjectItemElement.Value,
+                    [ other_file.ProjectItemElement.Value ]
                 )
 
             if folder_pos + 2 < siblings.Count then

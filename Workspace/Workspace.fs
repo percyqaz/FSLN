@@ -4,11 +4,12 @@ open System.IO
 
 type Workspace =
     {
+        RootPath: string
         Ordering: OrderFile
     }
 
     static member private FromPath(workspace_root: string) : Workspace =
-        { Ordering = OrderFile(Path.Combine(workspace_root, ".fsln", ".fslnorder")) }
+        { RootPath = workspace_root; Ordering = OrderFile(Path.Combine(workspace_root, ".fsln", ".fslnorder")) }
 
     static member Create(solution_folder: string) : Workspace =
         let workspace_root =

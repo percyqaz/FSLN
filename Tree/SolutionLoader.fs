@@ -11,15 +11,13 @@ module SolutionLoader =
     let read_project_file (name: string, project_path: string) : Project =
 
         let project_path = Path.normalise(project_path)
-        let project_containing_folder = Path.get_directory_name(project_path)
-
-        let project_file = ProjectRootElement.Open(project_path)
+        let project_guts = FSharpProject.Create(project_path)
 
         let project =
             {
                 Name = name
                 FullPath = project_path
-                ProjectRootElement = project_file
+                Guts = FSharp project_guts
                 Children = ResizeArray<FileTreeEntry>()
                 LastSeenUtc = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             }
@@ -27,7 +25,7 @@ module SolutionLoader =
         let inline create_folder (target: Parent, folder_name: string) =
             let parent_path =
                 match target with
-                | Parent.Project _ -> project_containing_folder
+                | Parent.Project _ -> project_guts.BaseDirectory
                 | Parent.Folder folder -> folder.FullPath
 
             let new_folder_path =
@@ -48,7 +46,7 @@ module SolutionLoader =
                         {
                             Name = Path.GetFileName(file_path)
                             FullPath = file_path
-                            ProjectItemElement = element
+                            ProjectItemElement = Some element
                             Parent = target
                         }
                 )
@@ -85,21 +83,21 @@ module SolutionLoader =
                 child_path <> parent_path && child_path.StartsWith(parent_path)
 
             let file_path =
-                Path.normalise(Path.Combine(project_containing_folder, element.Include))
+                Path.normalise(Path.Combine(project_guts.BaseDirectory, element.Include))
 
-            if is_subdirectory(project_containing_folder, file_path) then
+            if is_subdirectory(project_guts.BaseDirectory, file_path) then
                 let relative_path_segments =
                     Path
                         .get_directory_name(file_path)
-                        .Replace(project_containing_folder, "")
+                        .Replace(project_guts.BaseDirectory, "")
                         .Split(Path.AltDirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries)
                     |> List.ofArray
 
                 merge_trees(Parent.Project(project), relative_path_segments, file_path, element)
             else
-                printfn "'%s' is outside the project folder for '%s'!" file_path project_containing_folder
+                printfn "'%s' is outside the project folder for '%s'!" file_path project_guts.BaseDirectory
 
-        for item_group in project_file.ItemGroups do
+        for item_group in project_guts.RootElement.ItemGroups do
             for element in item_group.Items do
                 if is_relevant_element(element) then
                     add_element(element)
