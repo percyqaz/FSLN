@@ -40,14 +40,14 @@ type Mode =
             | Some git_status -> Git(gm.Update(query, git_status))
             | None -> Normal(gm.ToNormalMode())
 
-    member this.Reload() : Mode =
+    member this.Reload(workspace: Workspace) : Mode =
         match this with
-        | Mode.Normal nm -> Mode.Normal(nm.Reload())
-        | Mode.Search sm -> Mode.Search(sm.Reload())
-        | Mode.Git gm -> Mode.Git(gm.Reload())
+        | Mode.Normal nm -> Mode.Normal(nm.Reload(workspace))
+        | Mode.Search sm -> Mode.Search(sm.Reload(workspace))
+        | Mode.Git gm -> Mode.Git(gm.Reload(workspace))
 
-    member this.AutoReload() : Mode =
+    member this.AutoReload(workspace: Workspace) : Mode =
         match this with
-        | Mode.Normal nm -> Mode.Normal(nm.AutoReload())
-        | Mode.Search sm -> Mode.Search(sm.AutoReload())
-        | Mode.Git gm -> Mode.Git(gm.AutoReload())
+        | Mode.Normal nm -> Mode.Normal(nm.AutoReload(workspace))
+        | Mode.Search sm -> Mode.Search(sm.AutoReload(workspace))
+        | Mode.Git gm -> Mode.Git(gm.AutoReload(workspace))

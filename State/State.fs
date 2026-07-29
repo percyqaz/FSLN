@@ -12,6 +12,7 @@ type ActiveBuffer =
 type State =
     {
         mutable Running: bool
+        Workspace: Workspace
         mutable GitStatus: GitStatus option
         mutable Expanded: Set<string>
         mutable Mode: Mode
@@ -52,9 +53,12 @@ type State =
             else
                 this.ActiveBuffer <- ActiveBuffer.Command
 
-    static member Create(solution: Solution) : State =
+    static member Create(workspace: Workspace) : State =
+        let solution = workspace.ReloadSolution()
+
         {
             Running = true
+            Workspace = workspace
             GitStatus = GitStatus.Fetch()
             Expanded = Set.empty
             Mode = Mode.Normal({ Solution = solution; Selected = Selection.Solution(solution) })

@@ -8,10 +8,8 @@ type GitMode =
         mutable Selected: FSelection
     }
 
-    member this.Reload() : GitMode =
-        let solution =
-            SolutionLoader.read_solution_file(this.Solution.Original.Ordering, this.Solution.Original.FullPath)
-
+    member this.Reload(workspace: Workspace) : GitMode =
+        let solution = workspace.ReloadSolution()
         let filtered = GitChangedFilter(this.Query, this.Status).Apply(solution)
 
         {
@@ -21,8 +19,8 @@ type GitMode =
             Selected = FSelection.Find(this.Selected.ToSelection(), filtered)
         }
 
-    member this.AutoReload() : GitMode =
-        if this.Solution.Original.HasExternalChange() then this.Reload() else this
+    member this.AutoReload(workspace: Workspace) : GitMode =
+        if this.Solution.Original.HasExternalChange() then this.Reload(workspace) else this
 
     member this.Update(query: string, git_status: GitStatus) : GitMode =
         if

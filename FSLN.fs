@@ -4,8 +4,8 @@ open System
 
 module FSLN =
 
-    let loop (config: string seq, solution: Solution) : unit =
-        let state = State.Create(solution)
+    let loop (config: string seq, workspace: Workspace) : unit =
+        let state = State.Create(workspace)
         let input_thread = InputThread()
         let command_dispatcher = CommandDispatcher(state, input_thread)
 

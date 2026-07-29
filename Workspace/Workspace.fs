@@ -4,18 +4,21 @@ open System.IO
 
 type Workspace =
     {
+        SolutionFile: string
         RootPath: string
         Ordering: OrderFile
     }
 
-    static member private FromPath(workspace_root: string) : Workspace =
-        { RootPath = workspace_root; Ordering = OrderFile(Path.Combine(workspace_root, ".fsln", ".fslnorder")) }
-
-    static member Create(solution_folder: string) : Workspace =
+    static member Create(solution_file: string) : Workspace =
         let workspace_root =
             match Path.find_fsln_workspace_root() with
-            | None -> solution_folder
+            | None -> Path.GetDirectoryName(solution_file)
             | Some path -> path
 
         Directory.CreateDirectory(Path.Combine(workspace_root, ".fsln")) |> ignore
-        Workspace.FromPath(workspace_root)
+
+        {
+            SolutionFile = solution_file
+            RootPath = workspace_root
+            Ordering = OrderFile(Path.Combine(workspace_root, ".fsln", ".fslnorder"))
+        }

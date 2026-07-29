@@ -27,9 +27,7 @@ let main (argv: string array) : int =
     | None -> 1
     | Some solution_path ->
         let solution_folder = Path.GetDirectoryName(solution_path)
+        let workspace = Workspace.Create(solution_path)
         Directory.SetCurrentDirectory(solution_folder)
-
-        let workspace = Workspace.Create(solution_folder)
-        let solution = SolutionLoader.read_solution_file(workspace.Ordering, solution_path)
-        FSLN.loop(get_fsln_config(), solution)
+        FSLN.loop(get_fsln_config(), workspace)
         0

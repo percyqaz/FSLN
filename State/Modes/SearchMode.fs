@@ -12,16 +12,13 @@ type SearchMode =
         mutable Selected: FSelection
     }
 
-    member this.Reload() : SearchMode =
-        let solution =
-            SolutionLoader.read_solution_file(this.Solution.Original.Ordering, this.Solution.Original.FullPath)
-
+    member this.Reload(workspace: Workspace) : SearchMode =
+        let solution = workspace.ReloadSolution()
         let filtered = FileNameFilter(this.Query).Apply(solution)
-
         { Query = this.Query; Solution = filtered; Selected = FSelection.Find(this.Selected.ToSelection(), filtered) }
 
-    member this.AutoReload() : SearchMode =
-        if this.Solution.Original.HasExternalChange() then this.Reload() else this
+    member this.AutoReload(workspace: Workspace) : SearchMode =
+        if this.Solution.Original.HasExternalChange() then this.Reload(workspace) else this
 
     member this.Update(query: string) : SearchMode =
         if query = this.Query then

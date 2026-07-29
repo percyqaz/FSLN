@@ -48,10 +48,12 @@ type StateCommands =
         state.Mode <- state.Mode.Update(state.SearchBuffer.ToString(), state.GitStatus)
 
     [<Extension>]
-    static member Reload(state: State) : unit = state.Mode <- state.Mode.Reload()
+    static member Reload(state: State) : unit =
+        state.Mode <- state.Mode.Reload(state.Workspace)
 
     [<Extension>]
-    static member AutoReload(state: State) : unit = state.Mode <- state.Mode.AutoReload()
+    static member AutoReload(state: State) : unit =
+        state.Mode <- state.Mode.AutoReload(state.Workspace)
 
     [<Extension>]
     static member NavigateUp(state: State) : unit =

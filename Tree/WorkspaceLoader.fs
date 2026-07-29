@@ -2,13 +2,14 @@ namespace FSLN
 
 open System
 open System.IO
+open System.Runtime.CompilerServices
 open Microsoft.Build.Evaluation
 open Microsoft.Build.Construction
 open FSLN
 
-module SolutionLoader =
+type WorkspaceLoader =
 
-    let read_project_file (name: string, project_path: string) : Project =
+    static member LoadDotnetProject(name: string, project_path: string) : Project =
 
         let project_path = Path.normalise(project_path)
         let project_guts = FSharpProject.Create(project_path)
@@ -104,24 +105,25 @@ module SolutionLoader =
 
         project
 
-    let read_solution_file (ordering: OrderFile, solution_path: string) : Solution =
-        let solution_file = SolutionFile.Parse(solution_path)
+    [<Extension>]
+    static member ReloadSolution(workspace: Workspace) : Solution =
+        let solution_file = SolutionFile.Parse(workspace.SolutionFile)
 
         ProjectCollection.GlobalProjectCollection.UnloadAllProjects()
         let projects_list = ResizeArray()
 
         for project in solution_file.ProjectsInOrder do
             if File.Exists(project.AbsolutePath) then
-                projects_list.Add(read_project_file(project.ProjectName, project.AbsolutePath))
+                projects_list.Add(WorkspaceLoader.LoadDotnetProject(project.ProjectName, project.AbsolutePath))
             else
                 printfn "'%s' could not be found!" project.AbsolutePath
 
-        ordering.Sort(projects_list, _.FullPath)
+        workspace.Ordering.Sort(projects_list, _.FullPath)
 
         {
-            Name = Path.GetFileNameWithoutExtension(solution_path)
-            FullPath = solution_path
-            Ordering = ordering
+            Name = Path.GetFileNameWithoutExtension(workspace.SolutionFile)
+            FullPath = workspace.SolutionFile
+            Ordering = workspace.Ordering
             SolutionFile = solution_file
             Projects = projects_list
             LastSeenUtc = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
