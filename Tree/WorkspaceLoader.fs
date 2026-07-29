@@ -9,7 +9,55 @@ open FSLN
 
 type WorkspaceLoader =
 
-    static member LoadDotnetProject(name: string, project_path: string) : Project =
+    static member LoadCsproj(workspace: Workspace, name: string, project_path: string) : Project =
+        let project_path = Path.normalise(project_path)
+        let project_guts = FileSystemProject.CreateFromCsproj(workspace, project_path)
+
+        let project =
+            {
+                Name = name
+                FullPath = project_path
+                Guts = FileSystem project_guts
+                Children = ResizeArray<FileTreeEntry>()
+                LastSeenUtc = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+            }
+
+        let rec recurse_folder (parent: Parent, path: string) =
+
+            for subfolder in Directory.EnumerateDirectories(path) do
+                let folder: FileTreeFolder =
+                    {
+                        Name = Path.GetFileName(subfolder)
+                        FullPath = subfolder.Replace('\\', '/')
+                        Children = ResizeArray()
+                        Parent = parent
+                    }
+
+                // todo: filter by ignore file, for now:
+                if folder.Name <> "bin" && folder.Name <> "obj" then
+                    recurse_folder(Parent.Folder(folder), subfolder)
+
+                    if folder.Children.Count > 0 then
+                        parent.Children.Add(Folder folder)
+
+            for file_path in Directory.EnumerateFiles(path) do
+                let file: FileTreeFile =
+                    {
+                        Name = Path.GetFileName(file_path)
+                        FullPath = path.Replace('\\', '/')
+                        ProjectItemElement = None
+                        Parent = parent
+                    }
+
+                // todo: filter by ignore file
+                if file.FullPath <> project.FullPath then
+                    parent.Children.Add(File file)
+
+        recurse_folder(Parent.Project(project), project_guts.BaseDirectory)
+
+        project
+
+    static member LoadFsproj(name: string, project_path: string) : Project =
 
         let project_path = Path.normalise(project_path)
         let project_guts = FSharpProject.Create(project_path)
@@ -114,7 +162,13 @@ type WorkspaceLoader =
 
         for project in solution_file.ProjectsInOrder do
             if File.Exists(project.AbsolutePath) then
-                projects_list.Add(WorkspaceLoader.LoadDotnetProject(project.ProjectName, project.AbsolutePath))
+                let ext = Path.GetExtension(project.AbsolutePath).ToLower()
+
+                match ext with
+                | ".fsproj" -> projects_list.Add(WorkspaceLoader.LoadFsproj(project.ProjectName, project.AbsolutePath))
+                | ".csproj" ->
+                    projects_list.Add(WorkspaceLoader.LoadCsproj(workspace, project.ProjectName, project.AbsolutePath))
+                | _ -> printfn "'%s' is unrecognised project type!" project.AbsolutePath
             else
                 printfn "'%s' could not be found!" project.AbsolutePath
 
