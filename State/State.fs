@@ -85,11 +85,7 @@ type State =
         buffer.Bind("<A-Up>", "<A-k>")
         buffer.Bind("<A-Down>", "<A-j>")
         // todo: [ ] to jump next/previous sibling
-
-        buffer.Bind(
-            "<Enter>",
-            ":!C:/Program^ Files/JetBrains/JetBrains^ Rider^ 2026.1/bin/rider64.exe nosplash $<Enter>"
-        )
-
+        buffer.Bind("<Enter>", ":!rider64 nosplash $<Enter>")
         buffer.Bind("a", "lj")
+
         buffer
