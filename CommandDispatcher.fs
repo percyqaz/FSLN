@@ -2,6 +2,7 @@ namespace FSLN
 
 open System
 open System.Diagnostics
+open System.IO
 open System.Threading
 
 type CommandDispatcher(state: State, input_thread: InputThread) =
@@ -10,6 +11,12 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
         command
             .Replace("$$", '\uFFFD'.ToString())
             .Replace("$SOLUTION", state.Mode.Solution.FullPath)
+            .Replace(
+                "$GITPATH",
+                match state.GitStatus with
+                | Some gs -> Path.GetRelativePath(gs.RootPath, state.Mode.Selection.FullPath)
+                | None -> ""
+            )
             .Replace(
                 "$PROJECT",
                 match state.Mode.Selection.ParentProject with
@@ -59,7 +66,7 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
         else
 
         let split = command.Split(" ", 2, StringSplitOptions.TrimEntries)
-        let args = this.ApplySubstitutions(if split.Length < 2 then "" else split.[1])
+        let args = if split.Length < 2 then "" else split.[1]
 
         match split.[0] with
         | "q"
