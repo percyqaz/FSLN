@@ -55,6 +55,7 @@ type WorkspaceLoader =
                     parent.Children.Add(File file)
 
         recurse_folder(Parent.Project(project), project_guts.BaseDirectory)
+        workspace.Ordering.Sort(project.Children, _.FullPath)
 
         project
 
