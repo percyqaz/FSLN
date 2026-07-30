@@ -1,6 +1,5 @@
 namespace FSLN
 
-open System.IO
 open System.Diagnostics
 
 [<Struct>]

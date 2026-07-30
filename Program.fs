@@ -21,13 +21,10 @@ let get_fsln_config () : string seq =
 [<EntryPoint>]
 let main (argv: string array) : int =
     ignore argv
-    let sln = Path.walk_tree_specific_filetypes [| ".slnx"; ".sln" |]
 
-    match sln with
-    | None -> 1
-    | Some solution_path ->
-        let solution_folder = Path.GetDirectoryName(solution_path)
-        let workspace = Workspace.Create(solution_path)
-        Directory.SetCurrentDirectory(solution_folder)
+    match Workspace.TryDetect() with
+    | Some workspace ->
+        Directory.SetCurrentDirectory(workspace.RootPath)
         FSLN.loop(get_fsln_config(), workspace)
         0
+    | None -> 1

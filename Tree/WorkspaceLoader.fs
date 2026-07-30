@@ -31,7 +31,7 @@ type WorkspaceLoader =
                     }
 
                 // todo: filter by ignore file, for now:
-                if folder.Name <> "bin" && folder.Name <> "obj" then
+                if folder.Name <> "bin" && folder.Name <> "obj" && folder.Name <> ".git" && folder.Name <> ".fsln" then
                     recurse_folder(Parent.Folder(folder), subfolder)
 
                     if folder.Children.Count > 0 then
@@ -151,45 +151,58 @@ type WorkspaceLoader =
 
     [<Extension>]
     static member ReloadSolution(workspace: Workspace) : Solution =
-        let solution_file = SolutionFile.Parse(workspace.SolutionFile)
-
-        ProjectCollection.GlobalProjectCollection.UnloadAllProjects()
         let projects_list = ResizeArray()
 
-        for project in solution_file.ProjectsInOrder do
-            if File.Exists(project.AbsolutePath) then
-                let ext = Path.GetExtension(project.AbsolutePath).ToLower()
+        let inline load_dotnet_projects (solution_path: string) : unit =
+            ProjectCollection.GlobalProjectCollection.UnloadAllProjects()
+            let solution_file = SolutionFile.Parse(solution_path)
 
-                match ext with
-                | ".fsproj" ->
-                    projects_list.Add(WorkspaceLoader.LoadFSharpProject(project.ProjectName, project.AbsolutePath))
-                | ".csproj" ->
-                    let file_system_project =
-                        FileSystemProject.CreateFromCsproj(workspace, project.AbsolutePath)
+            for project in solution_file.ProjectsInOrder do
+                if File.Exists(project.AbsolutePath) then
+                    let ext = Path.GetExtension(project.AbsolutePath).ToLower()
 
-                    projects_list.Add(
-                        WorkspaceLoader.LoadFileSystemProject(workspace, project.ProjectName, file_system_project)
+                    match ext with
+                    | ".fsproj" ->
+                        projects_list.Add(WorkspaceLoader.LoadFSharpProject(project.ProjectName, project.AbsolutePath))
+                    | ".csproj" ->
+                        let file_system_project =
+                            FileSystemProject.CreateFromCsproj(workspace, project.AbsolutePath)
+
+                        projects_list.Add(
+                            WorkspaceLoader.LoadFileSystemProject(workspace, project.ProjectName, file_system_project)
+                        )
+                    | _ -> printfn "'%s' is unrecognised project type!" project.AbsolutePath
+                else
+                    printfn "'%s' could not be found!" project.AbsolutePath
+
+        let inline load_virtual_projects () =
+            for project in workspace.ProjectFiles() do
+                let file_system_project = FileSystemProject.CreateFromFslnproj(workspace, project)
+
+                projects_list.Add(
+                    WorkspaceLoader.LoadFileSystemProject(
+                        workspace,
+                        Path.GetFileNameWithoutExtension(project),
+                        file_system_project
                     )
-                | _ -> printfn "'%s' is unrecognised project type!" project.AbsolutePath
-            else
-                printfn "'%s' could not be found!" project.AbsolutePath
-
-        for project in workspace.ProjectFiles() do
-            let file_system_project = FileSystemProject.CreateFromFslnproj(workspace, project)
-
-            projects_list.Add(
-                WorkspaceLoader.LoadFileSystemProject(
-                    workspace,
-                    Path.GetFileNameWithoutExtension(project),
-                    file_system_project
                 )
-            )
 
+        match workspace.Solution with
+        | Dotnet sln -> load_dotnet_projects(sln)
+        | Virtual -> ()
+
+        load_virtual_projects()
         workspace.Ordering.Sort(projects_list, _.FullPath)
 
+        let name, fullpath =
+            match workspace.Solution with
+            | Dotnet sln -> Path.GetFileNameWithoutExtension(sln), sln.Replace('\\', '/')
+            | Virtual ->
+                Path.GetFileName(workspace.RootPath), Path.normalise(Path.Combine(workspace.RootPath, ".fsln", ".fsln"))
+
         {
-            Name = Path.GetFileNameWithoutExtension(workspace.SolutionFile)
-            FullPath = workspace.SolutionFile.Replace('\\', '/')
+            Name = name
+            FullPath = fullpath
             Ordering = workspace.Ordering
             Projects = projects_list
             LastSeenUtc = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
