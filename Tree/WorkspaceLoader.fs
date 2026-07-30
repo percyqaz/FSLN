@@ -9,15 +9,12 @@ open FSLN
 
 type WorkspaceLoader =
 
-    static member LoadCsproj(workspace: Workspace, name: string, project_path: string) : Project =
-        let project_path = Path.normalise(project_path)
-        let project_guts = FileSystemProject.CreateFromCsproj(workspace, project_path)
+    static member LoadFileSystemProject(workspace: Workspace, name: string, project_guts: FileSystemProject) : Project =
 
         let project =
             {
                 Name = name
-                FullPath = project_path
-                Guts = FileSystem project_guts
+                Guts = FileSystem(project_guts)
                 Children = ResizeArray<FileTreeEntry>()
                 LastSeenUtc = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             }
@@ -59,15 +56,13 @@ type WorkspaceLoader =
 
         project
 
-    static member LoadFsproj(name: string, project_path: string) : Project =
+    static member LoadFSharpProject(name: string, project_path: string) : Project =
 
-        let project_path = Path.normalise(project_path)
         let project_guts = FSharpProject.Create(project_path)
 
         let project =
             {
                 Name = name
-                FullPath = project_path
                 Guts = FSharp project_guts
                 Children = ResizeArray<FileTreeEntry>()
                 LastSeenUtc = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
@@ -79,8 +74,7 @@ type WorkspaceLoader =
                 | Parent.Project _ -> project_guts.BaseDirectory
                 | Parent.Folder folder -> folder.FullPath
 
-            let new_folder_path =
-                Path.Combine(parent_path, folder_name).Replace('\\', Path.AltDirectorySeparatorChar)
+            let new_folder_path = Path.Combine(parent_path, folder_name).Replace('\\', '/')
 
             {
                 Name = folder_name
@@ -167,12 +161,29 @@ type WorkspaceLoader =
                 let ext = Path.GetExtension(project.AbsolutePath).ToLower()
 
                 match ext with
-                | ".fsproj" -> projects_list.Add(WorkspaceLoader.LoadFsproj(project.ProjectName, project.AbsolutePath))
+                | ".fsproj" ->
+                    projects_list.Add(WorkspaceLoader.LoadFSharpProject(project.ProjectName, project.AbsolutePath))
                 | ".csproj" ->
-                    projects_list.Add(WorkspaceLoader.LoadCsproj(workspace, project.ProjectName, project.AbsolutePath))
+                    let file_system_project =
+                        FileSystemProject.CreateFromCsproj(workspace, project.AbsolutePath)
+
+                    projects_list.Add(
+                        WorkspaceLoader.LoadFileSystemProject(workspace, project.ProjectName, file_system_project)
+                    )
                 | _ -> printfn "'%s' is unrecognised project type!" project.AbsolutePath
             else
                 printfn "'%s' could not be found!" project.AbsolutePath
+
+        for project in workspace.ProjectFiles() do
+            let file_system_project = FileSystemProject.CreateFromFslnproj(workspace, project)
+
+            projects_list.Add(
+                WorkspaceLoader.LoadFileSystemProject(
+                    workspace,
+                    Path.GetFileNameWithoutExtension(project),
+                    file_system_project
+                )
+            )
 
         workspace.Ordering.Sort(projects_list, _.FullPath)
 
@@ -180,7 +191,6 @@ type WorkspaceLoader =
             Name = Path.GetFileNameWithoutExtension(workspace.SolutionFile)
             FullPath = workspace.SolutionFile.Replace('\\', '/')
             Ordering = workspace.Ordering
-            SolutionFile = solution_file
             Projects = projects_list
             LastSeenUtc = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
         }

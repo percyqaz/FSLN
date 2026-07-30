@@ -2,14 +2,12 @@ namespace FSLN
 
 open System
 open System.IO
-open Microsoft.Build.Construction
 
 type Solution =
     {
         Name: string
         FullPath: string
         Ordering: OrderFile
-        SolutionFile: SolutionFile
         Projects: ResizeArray<Project>
         mutable LastSeenUtc: int64
     }

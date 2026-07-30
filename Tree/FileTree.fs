@@ -99,11 +99,12 @@ and FileTreeEntry =
 and Project =
     {
         Name: string
-        FullPath: string
         Guts: ProjectGuts
         Children: ResizeArray<FileTreeEntry>
         mutable LastSeenUtc: int64
     }
+
+    member this.FullPath: string = this.Guts.ProjectFilePath
 
     member this.Save() : unit =
         this.Guts.Save()

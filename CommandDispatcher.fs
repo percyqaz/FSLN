@@ -51,26 +51,7 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
         Console.Write(AnsiCodes.RESTORE_SCREEN + AnsiCodes.ENTER_SECOND_SCREEN)
 
     member private this.OpenEditor(editor: string) : unit =
-        if editor.Contains(" $ ") then
-            this.DispatchShell(editor)
-        else
-
-        let start_info = ProcessStartInfo(editor, state.Mode.Selection.FullPath)
-
-        Console.Write(
-            AnsiCodes.LEAVE_SECOND_SCREEN + AnsiCodes.SAVE_SCREEN + AnsiCodes.CLEAR_SCREEN + AnsiCodes.CURSOR_TO_ORIGIN
-        )
-
-        let proc = Process.Start(start_info)
-        proc.WaitForExit()
-
-        if proc.ExitCode <> 0 then
-            match input_thread.TryReadKey(Timeout.Infinite) with
-            | _ -> ()
-
-            state.StatusLine <- sprintf "(%i)" proc.ExitCode
-
-        Console.Write(AnsiCodes.RESTORE_SCREEN + AnsiCodes.ENTER_SECOND_SCREEN)
+        if editor.Contains(" $") then this.DispatchShell(editor) else this.DispatchShell(editor + " $")
 
     member this.DispatchCommand(command: string) : unit =
         if command.StartsWith('!') then
