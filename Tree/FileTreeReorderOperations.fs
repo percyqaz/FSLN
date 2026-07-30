@@ -25,7 +25,7 @@ type FileTreeReorderOperations =
     static let swap_file_system_order (ordering: OrderFile, above: FileTreeEntry, below: FileTreeEntry) : unit =
         let siblings = above.Parent.Children
         ordering.StorePreservingOrder(siblings |> Seq.map _.FullPath)
-        ordering.PlaceBefore([ below.FullPath ], above.FullPath)
+        ordering.PlaceAfter([ above.FullPath ], below.FullPath)
 
     [<Extension>]
     static member private SwapOrder(project: Project, above: FileTreeEntry, below: FileTreeEntry) : unit =
@@ -38,6 +38,8 @@ type FileTreeReorderOperations =
                 | Folder folder -> folder.EnumerateFiles()
 
             swap_fsharp_order(as_file_seq(above), as_file_seq(below))
+
+        project.Save()
 
     [<Extension>]
     static member MoveUp(project: Project, file: FileTreeFile) : unit =
@@ -54,8 +56,6 @@ type FileTreeReorderOperations =
             if folder_pos + 1 < siblings.Count then
                 merge_folders_if_needed(siblings.[folder_pos], siblings.[folder_pos + 1], siblings)
 
-            project.Save()
-
     [<Extension>]
     static member MoveDown(project: Project, file: FileTreeFile) : unit =
         let siblings = file.Parent.Children
@@ -70,8 +70,6 @@ type FileTreeReorderOperations =
 
             if folder_pos >= 1 then
                 merge_folders_if_needed(siblings.[folder_pos - 1], siblings.[folder_pos], siblings)
-
-            project.Save()
 
     [<Extension>]
     static member MoveUp(project: Project, folder: FileTreeFolder) : unit =
@@ -91,8 +89,6 @@ type FileTreeReorderOperations =
             if folder_pos + 1 < siblings.Count then
                 merge_folders_if_needed(siblings.[folder_pos], siblings.[folder_pos + 1], siblings)
 
-            project.Save()
-
     [<Extension>]
     static member MoveDown(project: Project, folder: FileTreeFolder) : unit =
         let siblings = folder.Parent.Children
@@ -111,8 +107,6 @@ type FileTreeReorderOperations =
             if folder_pos >= 1 then
                 merge_folders_if_needed(siblings.[folder_pos - 1], siblings.[folder_pos], siblings)
 
-            project.Save()
-
     [<Extension>]
     static member MoveUp(solution: Solution, project: Project) : unit =
         let siblings = solution.Projects
@@ -123,7 +117,7 @@ type FileTreeReorderOperations =
             siblings.Insert(pos - 1, project)
 
             solution.Ordering.StorePreservingOrder(siblings |> Seq.map _.FullPath)
-            solution.Ordering.PlaceBefore([ project.FullPath ], siblings.[pos].FullPath)
+            solution.Ordering.PlaceAfter([ siblings.[pos].FullPath ], project.FullPath)
             solution.Ordering.Save()
 
     [<Extension>]

@@ -23,17 +23,6 @@ type OrderFile(path: string) =
 
         entries.AddRange(ids)
 
-    member this.PlaceBefore(ids: string seq, relative_to: string) : unit =
-        let index = entries.IndexOf(relative_to)
-
-        if index = -1 then
-            failwith "Should have ensured .Contains(relative_to) was true before use"
-
-        for id in ids do
-            entries.Remove(id) |> ignore
-
-        entries.InsertRange(index, ids)
-
     member this.PlaceAfter(ids: string seq, relative_to: string) : unit =
         let index = entries.IndexOf(relative_to)
 
