@@ -64,7 +64,7 @@ type FileTreeFileOperations =
         (project: Project, relative_path: string, neighbor: FileTreeFile)
         : ProjectItemElement option =
         match project.Guts with
-        | FileSystem _ -> failwith "nyi"
+        | FileSystem _ -> None
         | FSharp fs ->
             let added_item = fs.RootElement.AddItem("Compile", relative_path)
             let parent = added_item.Parent
@@ -164,7 +164,9 @@ type FileTreeFileOperations =
             let new_project_item =
                 insert_after_neighbor(project, moved_item_relative_path, insertion_neighbor)
 
-            file.ProjectItemElement.Value.Parent.RemoveChild(file.ProjectItemElement.Value)
+            match file.ProjectItemElement with
+            | Some p -> p.Parent.RemoveChild(p)
+            | None -> ()
 
             let new_tree_file =
                 File
