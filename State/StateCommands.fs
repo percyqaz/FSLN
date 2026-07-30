@@ -1,6 +1,7 @@
 namespace FSLN
 
 open System
+open System.IO
 open System.Runtime.CompilerServices
 open FSLN
 
@@ -18,6 +19,16 @@ type StateCommands =
         | Error reason -> state.StatusLine <- reason
 
     [<Extension>]
+    static member SetEditor(state: State, args: string) : unit =
+        let split = args.Split("=", 2, StringSplitOptions.TrimEntries)
+        let filetype, value = split.[0], if split.Length > 1 then split.[1] else ""
+
+        if filetype.Length > 0 && value.Length > 0 then
+            match state.Editors.Set(filetype, value) with
+            | Ok() -> state.StatusLine <- ""
+            | Error reason -> state.StatusLine <- reason
+
+    [<Extension>]
     static member SetBinding(state: State, args: string) : unit =
         let split = args.Split("=", 2, StringSplitOptions.TrimEntries)
         let source, target = split.[0], if split.Length > 1 then split.[1] else ""
@@ -27,6 +38,40 @@ type StateCommands =
             state.StatusLine <- "Binding set."
         else
             state.StatusLine <- "Invalid binding."
+
+    [<Extension>]
+    static member SetCommandBinding(state: State, args: string) : unit =
+        let split = args.Split("=", 2, StringSplitOptions.TrimEntries)
+        let source, target = split.[0], if split.Length > 1 then split.[1] else ""
+
+        if source.Length > 0 && target.Length > 0 && source <> target then
+            state.CommandBuffer.Bind(source, sprintf ":%s<Enter>" target)
+            state.StatusLine <- "Binding set."
+        else
+            state.StatusLine <- "Invalid binding."
+
+    [<Extension>]
+    static member SetShellBinding(state: State, args: string) : unit =
+        let split = args.Split("=", 2, StringSplitOptions.TrimEntries)
+        let source, target = split.[0], if split.Length > 1 then split.[1] else ""
+
+        if source.Length > 0 && target.Length > 0 && source <> target then
+            state.CommandBuffer.Bind(source, sprintf ":!%s<Enter>" target)
+            state.StatusLine <- "Binding set."
+        else
+            state.StatusLine <- "Invalid binding."
+
+    [<Extension>]
+    static member Edit(state: State, callback: string -> unit) : unit =
+        let filetype =
+            match state.Mode.Selection with
+            | Selection.Folder _ -> "/"
+            | Selection.File file -> Path.GetExtension(file.FullPath).ToLower()
+            | Selection.Project project -> Path.GetExtension(project.FullPath).ToLower()
+            | Selection.Solution sln -> Path.GetExtension(sln.FullPath).ToLower()
+
+        let editor = state.Editors.Get(filetype)
+        callback(editor)
 
     [<Extension>]
     static member Echo(state: State, args: string) : unit = state.StatusLine <- args

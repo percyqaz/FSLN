@@ -178,7 +178,7 @@ type WorkspaceLoader =
 
         {
             Name = Path.GetFileNameWithoutExtension(workspace.SolutionFile)
-            FullPath = workspace.SolutionFile
+            FullPath = workspace.SolutionFile.Replace('\\', '/')
             Ordering = workspace.Ordering
             SolutionFile = solution_file
             Projects = projects_list

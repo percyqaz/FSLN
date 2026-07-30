@@ -30,6 +30,7 @@
     <Compile Include="State\Modes\GitMode.fs" />
     <Compile Include="State\Modes\Mode.fs" />
     <Compile Include="State\Theme.fs" />
+    <Compile Include="State\Editors.fs" />
     <Compile Include="State\State.fs" />
     <Compile Include="State\NormalModeCommands.fs" />
     <Compile Include="State\SearchModeCommands.fs" />

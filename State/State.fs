@@ -21,6 +21,7 @@ type State =
         mutable ActiveBuffer: ActiveBuffer
         mutable StatusLine: string
         mutable Theme: Theme
+        Editors: Editors
     }
 
     member this.IsExpanded(folder: FileTreeFolder) : bool = this.Expanded.Contains(folder.FullPath)
@@ -67,6 +68,7 @@ type State =
             ActiveBuffer = ActiveBuffer.Command
             StatusLine = ""
             Theme = Theme.Default
+            Editors = Editors.Default
         }
 
     [<Extension>]
@@ -88,8 +90,7 @@ type State =
         buffer.Bind("<Right>", "l")
         buffer.Bind("<A-Up>", "<A-k>")
         buffer.Bind("<A-Down>", "<A-j>")
-        // todo: [ ] to jump next/previous sibling
-        buffer.Bind("<Enter>", ":!rider64 nosplash $<Enter>")
+        buffer.Bind("<Enter>", ":edit<Enter>")
         buffer.Bind("a", "lj")
 
         buffer
