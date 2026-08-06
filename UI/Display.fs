@@ -59,19 +59,48 @@ type Display(state: State) =
         view.Line(indent + (if is_selected then line.BackColor(state.Theme.ColorSelection) else line), is_selected)
 
     member inline private this.RenderProject(is_selected: bool, is_expanded: bool, project: Project) : unit =
+        let git_status = state.GitFileStatus(project.FullPath)
+        let wt = git_status.WorkingTree <> Unchanged
+        let status = if wt then git_status.WorkingTree else git_status.Index
+
+        let color =
+            match status with
+            | Added
+            | Untracked -> state.Theme.ColorsGit.Added
+            | Deleted -> state.Theme.ColorsGit.Deleted
+            | Unchanged -> state.Theme.ColorProject
+            | _ -> state.Theme.ColorsGit.Modified
+
+        let dirty_icon = if wt then state.Theme.IconGitWorkingTreeDirty.ToString() else ""
+
         let expand_marker =
             if is_expanded then state.Theme.ExpandMarkers.Open else state.Theme.ExpandMarkers.Closed
 
         let line =
             sprintf
-                "%c %s %s"
+                "%c %s %s %s"
                 state.Theme.IconProject
-                (project.Name.ForeColor(state.Theme.ColorProject).Bold())
+                (project.Name.ForeColor(color).Bold())
                 (expand_marker.ToString().ForeColor(state.Theme.ColorExpandIcon))
+                (dirty_icon.ForeColor(state.Theme.ColorGitWorkingTreeDirty))
 
         view.Line((if is_selected then line.BackColor(state.Theme.ColorSelection) else line), is_selected)
 
     member inline private this.RenderSolution(solution: Solution) : unit =
+        let git_status = state.GitFileStatus(solution.FullPath)
+        let wt = git_status.WorkingTree <> Unchanged
+        let status = if wt then git_status.WorkingTree else git_status.Index
+
+        let color =
+            match status with
+            | Added
+            | Untracked -> state.Theme.ColorsGit.Added
+            | Deleted -> state.Theme.ColorsGit.Deleted
+            | Unchanged -> state.Theme.ColorSolution
+            | _ -> state.Theme.ColorsGit.Modified
+
+        let dirty_icon = if wt then state.Theme.IconGitWorkingTreeDirty.ToString() else ""
+
         let search_tagline =
             match state.Mode with
             | Mode.Search sm -> (sprintf " Displaying results for '%s' " sm.Query).BackColor(0x003300)
@@ -86,7 +115,11 @@ type Display(state: State) =
         let is_selected = state.IsSelected(solution)
 
         let line =
-            sprintf "%c %s " state.Theme.IconSolution (solution.Name.ForeColor(state.Theme.ColorSolution).Bold())
+            sprintf
+                "%c %s %s"
+                state.Theme.IconSolution
+                (solution.Name.ForeColor(color).Bold())
+                (dirty_icon.ForeColor(state.Theme.ColorGitWorkingTreeDirty))
 
         view.Line(
             (if is_selected then line.BackColor(state.Theme.ColorSelection) else line) + search_tagline + git_tagline,

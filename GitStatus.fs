@@ -40,12 +40,6 @@ type GitStatusType =
         | '?' -> Untracked
         | other -> failwithf "Unrecognised GitStatusType '%c'" other
 
-    static member FromString(value: string) : GitStatusType =
-        if value.Length <> 1 then
-            failwith "Invalid length for GitStatusType"
-
-        GitStatusType.FromChar(value.[0])
-
 [<Struct>]
 type GitFileStatus = { Index: GitStatusType; WorkingTree: GitStatusType }
 
