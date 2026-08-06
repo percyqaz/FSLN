@@ -49,3 +49,9 @@ type Workspace =
             let workspace = Workspace.CreateBasedOnFslnFolder(path)
             Some(workspace)
         | _ -> None
+
+    static member Init() : unit =
+        Directory.CreateDirectory(".fsln") |> ignore
+        let containing_folder = Path.GetFileName(Directory.GetCurrentDirectory())
+        File.WriteAllText(Path.Combine(".fsln", containing_folder + ".fslnproj"), "")
+        File.WriteAllText(Path.Combine(".fsln", ".fsln"), "")

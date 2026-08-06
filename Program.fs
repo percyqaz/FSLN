@@ -20,11 +20,20 @@ let get_fsln_config () : string seq =
 
 [<EntryPoint>]
 let main (argv: string array) : int =
-    ignore argv
+    let init = argv.Length > 0 && argv.[0].ToLower() = "init"
 
     match Workspace.TryDetect() with
+    | Some _ when init ->
+        printfn "Cannot init, a solution or workspace already exists here!"
+        1
     | Some workspace ->
         Directory.SetCurrentDirectory(workspace.RootPath)
         FSLN.loop(get_fsln_config(), workspace)
         0
-    | None -> 1
+    | None when init ->
+        Workspace.Init()
+        printfn "Initialised a workspace here!"
+        0
+    | None ->
+        printfn "No solution or workspace detected here!"
+        1
