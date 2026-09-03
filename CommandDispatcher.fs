@@ -41,7 +41,17 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
         )
 
         let proc = Process.Start(start_info)
+
+        let ctrl_c_handler =
+            Console.CancelKeyPress.Subscribe(fun ev ->
+                if not(command.StartsWith("vim")) then
+                    ev.Cancel <- true
+                    proc.Kill()
+                    Console.WriteLine("Process force-killed!".ForeColor(0xFF8888))
+            )
+
         proc.WaitForExit()
+        ctrl_c_handler.Dispose()
 
         if proc.ExitCode <> 0 then
             match input_thread.TryReadKey(Timeout.Infinite) with
