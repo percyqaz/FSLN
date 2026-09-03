@@ -105,11 +105,24 @@ type NormalModeCommands =
 
     [<Extension>]
     static member ExpandAll(nm: NormalMode, state: State) : unit =
-        for project in nm.Solution.Projects do
+        match nm.Selected with
+        | Selection.Solution _ ->
+            for project in nm.Solution.Projects do
+                state.Expanded <- state.Expanded.Add(project.FullPath)
+
+                for folder in project.EnumerateSubfolders() do
+                    state.Expanded <- state.Expanded.Add(folder.FullPath)
+        | Selection.Project project ->
             state.Expanded <- state.Expanded.Add(project.FullPath)
 
             for folder in project.EnumerateSubfolders() do
                 state.Expanded <- state.Expanded.Add(folder.FullPath)
+        | Selection.Folder folder ->
+            state.Expanded <- state.Expanded.Add(folder.FullPath)
+
+            for folder in folder.EnumerateSubfolders() do
+                state.Expanded <- state.Expanded.Add(folder.FullPath)
+        | Selection.File _ -> ()
 
     [<Extension>]
     static member ExpandSelection(nm: NormalMode, state: State) : unit =

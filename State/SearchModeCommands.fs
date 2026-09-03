@@ -109,11 +109,24 @@ type SearchModeCommands =
 
     [<Extension>]
     static member ExpandAll(sm: ISearchMode, state: State) : unit =
-        for project in sm.Solution.Projects do
+        match sm.Selected with
+        | FSelection.FSolution _ ->
+            for project in sm.Solution.Projects do
+                state.Expanded <- state.Expanded.Add(project.Original.FullPath)
+
+                for folder in project.EnumerateSubfolders() do
+                    state.Expanded <- state.Expanded.Add(folder.Original.FullPath)
+        | FSelection.FProject project ->
             state.Expanded <- state.Expanded.Add(project.Original.FullPath)
 
             for folder in project.EnumerateSubfolders() do
                 state.Expanded <- state.Expanded.Add(folder.Original.FullPath)
+        | FSelection.FFolder folder ->
+            state.Expanded <- state.Expanded.Add(folder.Original.FullPath)
+
+            for folder in folder.EnumerateSubfolders() do
+                state.Expanded <- state.Expanded.Add(folder.Original.FullPath)
+        | FSelection.FFile _ -> ()
 
     [<Extension>]
     static member ExpandSelection(sm: ISearchMode, state: State) : unit =

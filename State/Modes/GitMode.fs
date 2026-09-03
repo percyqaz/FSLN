@@ -53,6 +53,8 @@ type GitMode =
         }
 
     interface ISearchMode with
-        member this.Selected: FSelection = this.Selected
-        member this.set_Selected(v: FSelection) : unit = this.Selected <- v
+        member this.Selected
+            with get (): FSelection = this.Selected
+            and set (v: FSelection) = this.Selected <- v
+
         member this.Solution: FilteredSolution = this.Solution
