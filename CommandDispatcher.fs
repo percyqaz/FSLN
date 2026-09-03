@@ -90,7 +90,7 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
         | "bind_c" when args <> "" -> state.SetCommandBinding(args)
         | "bind_s" when args <> "" -> state.SetShellBinding(args)
         | "editor" when args <> "" -> state.SetEditor(args)
-        | "echo" -> state.Echo(args)
+        | "echo" -> state.Echo(this.ApplySubstitutions(args))
         | "edit" -> state.Edit(this.OpenEditor)
         | _ -> ()
 

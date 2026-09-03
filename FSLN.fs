@@ -12,7 +12,6 @@ module FSLN =
         command_dispatcher.DispatchInitialCommandsOnState(config)
 
         let render = Display(state)
-        input_thread.Start()
 
         Console.Write(AnsiCodes.ENTER_SECOND_SCREEN)
 
@@ -28,5 +27,3 @@ module FSLN =
                 state.AutoReload()
 
         Console.Write(AnsiCodes.LEAVE_SECOND_SCREEN)
-
-        input_thread.Dispose()
