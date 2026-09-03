@@ -26,10 +26,18 @@ Features:
   
 It it made specifically for me, your mileage may vary
 
-I daily drive this, current workflow for F# projects is:
-- Open project in FSLN, it has my todo list, formatting on commit, other doodads
-- Hit enter on any file to open JetBrains Rider where I do my editing as normal
-- `WIN+BACKTICK` brings up my terminal at any time for reordering/moving folders/etc, I write my commits in here, update todo list, re-enter Rider
+Overall I now use my terminal + FSLN to:
+- Open projects
+- Manage my todo lists
+- Write all git commits, view diffs, history, etc
+- Reorder F# files
+- Several other script doodads for formatting and refactoring
+
+And then I use JetbrainsRider to:
+- Act as my main code editor when I "open" a file
+- Navigate between files when faster (jump to definition, etc)
+- Debug
+- Do any complicated git merges
 
 ## Installing
 
