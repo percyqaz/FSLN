@@ -1,7 +1,9 @@
 namespace Fernglas
 
 open System
+open System.IO
 open System.Runtime.CompilerServices
+open Microsoft.VisualBasic.FileIO
 
 type StateCommands =
 
@@ -50,6 +52,45 @@ type StateCommands =
         state.SearchBufferFocused <- not state.SearchBufferFocused
 
     [<Extension>]
+    static member Left(state: State) : unit = state.SplitPaneFocused <- false
+
+    [<Extension>]
+    static member Right(state: State) : unit =
+        if state.SplitPane.IsSome then
+            state.SplitPaneFocused <- true
+
+    [<Extension>]
+    static member MoveRight(state: State) : unit =
+        match state.SplitPane with
+        | None ->
+            match state.MainPane.Selected with
+            | Some(Folder f) ->
+                state.SplitPane <- Some(Pane.Create(Path.Combine(state.MainPane.Directory, f), false))
+                state.SplitPaneFocused <- true
+            | _ -> ()
+        | Some pane when not state.SplitPaneFocused ->
+            try
+                match state.MainPane.Selected with
+                | Some(Folder folder) ->
+                    FileSystem.MoveDirectory(
+                        Path.Combine(state.MainPane.Directory, folder),
+                        Path.Combine(pane.Directory, folder)
+                    )
+
+                    state.StatusLine <- sprintf "Moved '%s'" folder
+                | Some(File file) ->
+                    FileSystem.MoveFile(
+                        Path.Combine(state.MainPane.Directory, file),
+                        Path.Combine(pane.Directory, file)
+                    )
+
+                    state.StatusLine <- sprintf "Moved '%s'" file
+                | None -> ()
+            with err ->
+                state.StatusLine <- err.Message
+        | _ -> ()
+
+    [<Extension>]
     static member DispatchCommand(state: State, command: string) : unit =
         if command.StartsWith('!') then
             state.DispatchShell(command.Substring(1))
@@ -74,6 +115,9 @@ type StateCommands =
         | "refresh" -> state.ActivePane.Refresh()
         | "up" -> state.ActivePane.NavigateUp()
         | "down" -> state.ActivePane.NavigateDown()
+        | "left" -> state.Left()
+        | "right" -> state.Right()
+        | "move_right" -> state.MoveRight()
         | "ascend" -> state.ActivePane.Ascend()
         | "descend" -> state.ActivePane.Descend()
         | "go" -> pane_cmd(_.Go(args))

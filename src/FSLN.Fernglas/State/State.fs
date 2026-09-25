@@ -6,7 +6,7 @@ type State =
     {
         mutable Running: bool
         MainPane: Pane
-        SplitPane: Pane option
+        mutable SplitPane: Pane option
         CommandBuffer: CommandBuffer
         mutable SearchBufferFocused: bool
         mutable SplitPaneFocused: bool
