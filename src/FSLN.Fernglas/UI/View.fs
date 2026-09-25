@@ -97,7 +97,7 @@ type View(state: State) =
         if is_focused then line.BackColor(0x333322) else line.BackColor(0x222222)
 
     member this.RenderPane(pane: Pane) : unit =
-        let is_focused = pane.IsMain <> state.SidePaneFocused
+        let is_focused = pane.IsMain <> state.SplitPaneFocused
         let transform = this.Transform(pane)
         Console.Write(transform(this.PaneHeader(pane, is_focused)))
         this.RenderEntries(pane)
@@ -106,10 +106,10 @@ type View(state: State) =
     member this.Redraw() : unit =
         Console.Write(AnsiCodes.CursorInvisible + AnsiCodes.CursorToOrigin)
 
-        pane_width <- if state.SidePane.IsSome then Console.BufferWidth / 2 else Console.BufferWidth
+        pane_width <- if state.SplitPane.IsSome then Console.BufferWidth / 2 else Console.BufferWidth
         this.RenderPane(state.MainPane)
 
-        match state.SidePane with
+        match state.SplitPane with
         | Some side_pane ->
             Console.Write(AnsiCodes.CursorToOrigin)
             this.RenderPane(side_pane)
