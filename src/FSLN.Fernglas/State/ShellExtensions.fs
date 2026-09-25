@@ -8,7 +8,7 @@ open System.Runtime.CompilerServices
 type private ShellExtensions =
 
     [<Extension>]
-    static member private ApplySubstitutions(state: State, command: string) : string =
+    static member ApplySubstitutions(state: State, command: string) : string =
         let full_path =
             match state.Selected with
             | Some(File f)

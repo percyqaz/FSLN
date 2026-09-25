@@ -11,6 +11,10 @@ type StateCommands =
     static member Exit(state: State) : unit = state.Running <- false
 
     [<Extension>]
+    static member Echo(state: State, args: string) : unit =
+        state.StatusLine <- state.ApplySubstitutions(args)
+
+    [<Extension>]
     static member Alias(state: State, args: string) : unit =
         let split = args.Split("=", 2, StringSplitOptions.TrimEntries)
         let source, target = split.[0], if split.Length > 1 then split.[1] else ""
@@ -192,6 +196,7 @@ type StateCommands =
         | "q"
         | "q!"
         | "exit" -> state.Exit()
+        | "echo" -> state.Echo(args)
         | "bind" -> state.Alias(args)
         | "bind_c" -> state.BindCommand(args)
         | "bind_s" -> state.BindShellCommand(args)
