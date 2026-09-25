@@ -61,16 +61,19 @@ type CommandBuffer() =
 
     member this.Dispatch(handle_message: string -> unit, keymap: Keymap) : unit =
 
-        let inline consume_buffer (shorthand: string, target: string) : unit =
-            if buffer.StartsWith(shorthand) then
-                buffer <- target + buffer.Substring(shorthand.Length)
+        let inline consume_keymap (keymap: Keymap) : bool =
+            let mutable unfold_made = false
 
-        let inline consume_keymap (keymap: Keymap) : unit =
             for bind_source, bind_target in keymap do
-                consume_buffer(bind_source, bind_target)
+                if buffer.StartsWith(bind_source) then
+                    buffer <- bind_target + buffer.Substring(bind_source.Length)
+                    unfold_made <- true
+
+            unfold_made
 
         let inline handle_keymap_and_messages () : unit =
-            consume_keymap(keymap)
+            while consume_keymap(keymap) && buffer.Length <= ARBITRARY_BUFFER_LIMIT do
+                ()
 
             if buffer.EndsWith(Keymap.ESC) then
                 buffer <- ""
