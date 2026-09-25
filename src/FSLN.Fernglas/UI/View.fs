@@ -7,13 +7,13 @@ type View(state: State) =
 
     let view = ScreenBuffer(Console.BufferHeight - 3)
 
-    do State.DirectoryChanged.Publish.Add(fun () -> view.ScrollToTop())
+    do Pane.MainDirectoryChanged.Publish.Add(fun () -> view.ScrollToTop())
 
-    member this.RenderEntry(entry: FileSystemEntry) : string =
+    member this.RenderEntry(pane: Pane, entry: FileSystemEntry) : string =
         match entry with
         | Folder f -> (f + "/").ForeColor(0xFFFF88).Bold()
         | File f ->
-            let git_status = state.GitFileStatus(Path.Combine(state.Directory, f))
+            let git_status = pane.GitFileStatus(Path.Combine(pane.Directory, f))
             let wt = git_status.WorkingTree <> Unchanged
             let status = if wt then git_status.WorkingTree else git_status.Index
 
@@ -29,19 +29,19 @@ type View(state: State) =
 
             f.ForeColor(color) + dirty_icon
 
-    member this.RenderEntries() : unit =
+    member this.RenderEntries(pane: Pane) : unit =
         view.Height <- Console.BufferHeight - 3
-        let selected = state.Selected
+        let selected = pane.Selected
 
-        for entry in state.FilteredEntries do
+        for entry in pane.FilteredEntries do
             let is_selected = selected = Some entry
-            let line = this.RenderEntry(entry)
+            let line = this.RenderEntry(pane, entry)
             let fmt_line = if is_selected then line.BackColor(0x666633) else line
             view.Line(fmt_line.ClearRestOfLine(), is_selected)
 
         view.Draw()
 
-    member this.StatusLine() : string =
+    member this.PaneTitle(pane: Pane) : string =
 
         let inline fmt_ahead_behind (leading_symbol: char, count: int option) =
             match count with
@@ -54,7 +54,7 @@ type View(state: State) =
             else ""
 
         let git_status =
-            match state.GitStatus with
+            match pane.GitStatus with
             | Some status ->
                 sprintf
                     "[%s%s%s]%s "
@@ -64,25 +64,28 @@ type View(state: State) =
                     (dirty_files(status).ForeColor(0x444444))
             | None -> ""
 
-        git_status + state.StatusLine.ForeColor(0x444444)
-
-    member this.Redraw() : unit =
-        let search_query = state.SearchBuffer.ToString()
+        let search_query = pane.SearchBuffer.ToString()
 
         let entries =
             if search_query <> "" then
-                (sprintf "[%s: %i results]" search_query state.FilteredEntries.Length).ForeColor(0x8888FF)
+                (sprintf "[%s: %i results]" search_query pane.FilteredEntries.Length).ForeColor(0x8888FF)
             else
-                sprintf "[%i entries]" state.FilteredEntries.Length
+                sprintf "[%i entries]" pane.FilteredEntries.Length
 
         let location =
-            state.Directory.Replace("\\", " > ").Replace("/", " > ").ForeColor(0x88FFFF)
+            pane.Directory.Replace("\\", " > ").Replace("/", " > ").ForeColor(0x88FFFF)
 
-        let tagline = sprintf "%s %s" location entries
+        sprintf "%s %s %s" location git_status entries
+
+    member this.Redraw() : unit =
 
         Console.Write(AnsiCodes.CursorInvisible + AnsiCodes.CursorToOrigin)
-        Console.WriteLine(tagline.ClearRestOfLine())
-        this.RenderEntries()
-        Console.WriteLine("Fernglas ".ForeColor(0xFFCC88).Bold() + this.StatusLine().ClearRestOfLine())
+        Console.WriteLine(this.PaneTitle(state.MainPane).ClearRestOfLine())
+        this.RenderEntries(state.MainPane)
+
+        Console.WriteLine(
+            "Fernglas ".ForeColor(0xFFCC88).Bold() + state.StatusLine.ForeColor(0x444444).ClearRestOfLine()
+        )
+
         Console.Write(state.CommandBuffer.ToString().ForeColor(0x88FF88).Bold().ClearRestOfLine())
         Console.Write(AnsiCodes.CursorVisible)

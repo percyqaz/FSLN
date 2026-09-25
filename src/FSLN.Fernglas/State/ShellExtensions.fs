@@ -10,13 +10,13 @@ type private ShellExtensions =
     [<Extension>]
     static member ApplySubstitutions(state: State, command: string) : string =
         let full_path =
-            match state.Selected with
+            match state.ActivePane.Selected with
             | Some(File f)
-            | Some(Folder f) -> Path.Combine(state.Directory, f)
-            | None -> state.Directory
+            | Some(Folder f) -> Path.Combine(state.ActivePane.Directory, f)
+            | None -> state.ActivePane.Directory
 
         let name =
-            match state.Selected with
+            match state.ActivePane.Selected with
             | Some(File f)
             | Some(Folder f) -> f
             | None -> ""
