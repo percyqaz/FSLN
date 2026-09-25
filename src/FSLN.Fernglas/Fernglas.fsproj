@@ -6,6 +6,7 @@
     <ToolCommandName>fernglas</ToolCommandName>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="GitStatus.fs" />
     <Compile Include="CLI\AnsiCodes.fs" />
     <Compile Include="CLI\ScreenBuffer.fs" />
     <Compile Include="CLI\InputThread.fs" />

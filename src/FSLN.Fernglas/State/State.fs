@@ -16,6 +16,7 @@ type State =
     {
         mutable Running: bool
         mutable Directory: string
+        mutable GitStatus: GitStatus option
         mutable Entries: FileSystemEntry array
         mutable FilteredEntries: FileSystemEntry array
         mutable Selection: int
@@ -27,6 +28,17 @@ type State =
 
     member this.Selected: FileSystemEntry option =
         if this.Selection < 0 then None else Some this.FilteredEntries.[this.Selection]
+
+    member this.GitFileStatus(file: string) : GitFileStatus =
+        let inline default_status () =
+            { Index = Unchanged; WorkingTree = Unchanged }
+
+        match this.GitStatus with
+        | Some status ->
+            match status.Files.TryGetValue(file) with
+            | true, result -> result
+            | false, _ -> default_status()
+        | None -> default_status()
 
     member this.TrySelectByName(name: string) : unit =
         match this.FilteredEntries |> Array.tryFindIndex(fun f -> f.Name = name) with
@@ -47,6 +59,7 @@ type State =
         {
             Running = true
             Directory = path
+            GitStatus = GitStatus.Fetch()
             Entries = entries
             FilteredEntries = entries
             Selection = -1
@@ -67,10 +80,13 @@ type State =
             | Some s -> Array.IndexOf(this.FilteredEntries, s)
             | None -> -1
 
+    member this.RefreshGit() : unit = this.GitStatus <- GitStatus.Fetch()
+
     member this.Refresh() : unit =
         let previous_selection = this.Selected
 
         Directory.SetCurrentDirectory(this.Directory)
+        this.RefreshGit()
 
         this.Entries <-
             seq {
