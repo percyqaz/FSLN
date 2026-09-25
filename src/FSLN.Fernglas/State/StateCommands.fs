@@ -166,6 +166,33 @@ type StateCommands =
         | None -> ()
 
     [<Extension>]
+    static member Copy(state: State, new_name: string) : unit =
+        match state.Selected with
+        | Some(File file) ->
+            let path = Path.Combine(state.Directory, file)
+
+            try
+                FileSystem.CopyFile(path, new_name)
+                state.Refresh()
+                state.TrySelectByName(new_name)
+                state.StatusLine <- sprintf "Copied '%s' -> '%s'" file new_name
+            with err ->
+                state.StatusLine <- err.Message
+
+        | Some(Folder folder) ->
+            let path = Path.Combine(state.Directory, folder)
+
+            try
+                FileSystem.CopyDirectory(path, new_name)
+                state.Refresh()
+                state.TrySelectByName(new_name + "/")
+                state.StatusLine <- sprintf "Copied '%s' -> '%s'" folder new_name
+            with err ->
+                state.StatusLine <- err.Message
+
+        | None -> ()
+
+    [<Extension>]
     static member Add(state: State, name: string) : unit =
         try
             if name.EndsWith('/') then
@@ -208,6 +235,7 @@ type StateCommands =
         | "descend" -> state.Descend()
         | "delete" -> state.Delete()
         | "rename" -> state.Rename(args)
+        | "copy" -> state.Copy(args)
         | "add" -> state.Add(args)
         | "search" -> state.Search()
         | _ -> state.StatusLine <- sprintf "Unrecognised command '%s'" split.[0]
