@@ -28,6 +28,11 @@ type State =
     member this.Selected: FileSystemEntry option =
         if this.Selection < 0 then None else Some this.FilteredEntries.[this.Selection]
 
+    member this.TrySelectByName(name: string) : unit =
+        match this.FilteredEntries |> Array.tryFindIndex(fun f -> f.Name = name) with
+        | Some i -> this.Selection <- i
+        | None -> ()
+
     static member Create(path: string) : State =
         let entries =
             seq {

@@ -3,6 +3,7 @@ namespace Fernglas
 open System
 open System.IO
 open System.Runtime.CompilerServices
+open Microsoft.VisualBasic.FileIO
 
 type StateCommands =
 
@@ -28,8 +29,8 @@ type StateCommands =
     [<Extension>]
     static member Open(state: State) : unit =
         match state.Selected with
-        | Some(Folder f) ->
-            state.Directory <- Path.Combine(state.Directory, f)
+        | Some(Folder folder) ->
+            state.Directory <- Path.Combine(state.Directory, folder)
             state.Refresh()
         | Some(File _) -> state.StatusLine <- "Opening files not yet supported"
         | None -> ()
@@ -45,10 +46,101 @@ type StateCommands =
     [<Extension>]
     static member Descend(state: State) : unit =
         match state.Selected with
-        | Some(Folder f) ->
-            state.Directory <- Path.Combine(state.Directory, f)
+        | Some(Folder folder) ->
+            state.Directory <- Path.Combine(state.Directory, folder)
             state.Refresh()
         | _ -> ()
+
+    [<Extension>]
+    static member Delete(state: State) : unit =
+        let has_git_repo = false
+        let delete_to_recycle_bin = OperatingSystem.IsWindows() && not has_git_repo
+
+        let inline delete_file (path: string) : unit =
+            if delete_to_recycle_bin then
+                FileSystem.DeleteFile(
+                    path,
+                    UIOption.OnlyErrorDialogs,
+                    RecycleOption.SendToRecycleBin,
+                    UICancelOption.ThrowException
+                )
+            else
+                File.Delete(path)
+
+        let inline delete_folder (path: string) : unit =
+            if delete_to_recycle_bin then
+                FileSystem.DeleteDirectory(
+                    path,
+                    UIOption.OnlyErrorDialogs,
+                    RecycleOption.SendToRecycleBin,
+                    UICancelOption.ThrowException
+                )
+            else
+                Directory.Delete(path, true)
+
+        match state.Selected with
+        | Some(File file) ->
+            let path = Path.Combine(state.Directory, file)
+
+            try
+                delete_file(path)
+                state.Refresh()
+                state.StatusLine <- sprintf "Deleted '%s'" file
+            with err ->
+                state.StatusLine <- err.Message
+
+        | Some(Folder folder) ->
+            let path = Path.Combine(state.Directory, folder)
+
+            try
+                delete_folder(path)
+                state.Refresh()
+                state.StatusLine <- sprintf "Deleted '%s'" folder
+            with err ->
+                state.StatusLine <- err.Message
+
+        | None -> ()
+
+    [<Extension>]
+    static member Rename(state: State, new_name: string) : unit =
+        match state.Selected with
+        | Some(File file) ->
+            let path = Path.Combine(state.Directory, file)
+
+            try
+                FileSystem.RenameFile(path, new_name)
+                state.Refresh()
+                state.TrySelectByName(new_name)
+                state.StatusLine <- sprintf "Renamed '%s' -> '%s'" file new_name
+            with err ->
+                state.StatusLine <- err.Message
+
+        | Some(Folder folder) ->
+            let path = Path.Combine(state.Directory, folder)
+
+            try
+                FileSystem.RenameDirectory(path, new_name)
+                state.Refresh()
+                state.TrySelectByName(new_name + "/")
+                state.StatusLine <- sprintf "Renamed '%s' -> '%s'" folder new_name
+            with err ->
+                state.StatusLine <- err.Message
+
+        | None -> ()
+
+    [<Extension>]
+    static member Add(state: State, name: string) : unit =
+        try
+            if name.EndsWith('/') then
+                FileSystem.CreateDirectory(Path.Combine(state.Directory, name.TrimEnd('/')))
+            else
+                File.Create(Path.Combine(state.Directory, name)).Dispose()
+
+            state.Refresh()
+            state.TrySelectByName(name)
+            state.StatusLine <- sprintf "Created '%s'" name
+        with err ->
+            state.StatusLine <- err.Message
 
     [<Extension>]
     static member Search(state: State) : unit =
@@ -58,7 +150,6 @@ type StateCommands =
     static member DispatchCommand(state: State, command: string) : unit =
         let split = command.Split(" ", 2, StringSplitOptions.TrimEntries)
         let args = if split.Length < 2 then "" else split.[1]
-        ignore(args)
 
         match split.[0] with
         | "q"
@@ -69,6 +160,9 @@ type StateCommands =
         | "open" -> state.Open()
         | "ascend" -> state.Ascend()
         | "descend" -> state.Descend()
+        | "delete" -> state.Delete()
+        | "rename" -> state.Rename(args)
+        | "add" -> state.Add(args)
         | "search" -> state.Search()
         | _ -> state.StatusLine <- sprintf "Unrecognised command '%s'" split.[0]
 
