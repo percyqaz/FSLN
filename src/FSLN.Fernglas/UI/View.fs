@@ -29,7 +29,6 @@ type View(state: State) =
 
             f.ForeColor(color) + dirty_icon
 
-
     member this.RenderEntries() : unit =
         view.Height <- Console.BufferHeight - 3
         let selected = state.Selected
@@ -81,8 +80,9 @@ type View(state: State) =
 
         let tagline = sprintf "%s %s" location entries
 
-        Console.Write(AnsiCodes.CursorToOrigin)
+        Console.Write(AnsiCodes.CursorInvisible + AnsiCodes.CursorToOrigin)
         Console.WriteLine(tagline.ClearRestOfLine())
         this.RenderEntries()
         Console.WriteLine("Fernglas ".ForeColor(0xFFCC88).Bold() + this.StatusLine().ClearRestOfLine())
         Console.Write(state.CommandBuffer.ToString().ForeColor(0x88FF88).Bold().ClearRestOfLine())
+        Console.Write(AnsiCodes.CursorVisible)
