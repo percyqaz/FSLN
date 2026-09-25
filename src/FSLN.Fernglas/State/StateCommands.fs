@@ -71,6 +71,28 @@ type StateCommands =
         | None -> ()
 
     [<Extension>]
+    static member Go(state: State, path: string) : unit =
+        let inline go_absolute (path: string) =
+            if Directory.Exists(path) then
+                state.ChangeDirectory(path)
+            else
+                state.StatusLine <- sprintf "No such directory '%s'" path
+
+        if Path.IsPathRooted(path) then
+            go_absolute(path)
+        elif path.StartsWith('%') then
+            match Enum.TryParse<Environment.SpecialFolder>(path.Substring(1)) with
+            | true, special_folder -> go_absolute(Environment.GetFolderPath(special_folder))
+            | false, _ -> state.StatusLine <- sprintf "Unrecognised special folder '%s'" path
+        else
+            state.TrySelectByName(path + "/")
+
+            if state.Selected.IsSome && state.Selected.Value.Name = path + "/" then
+                state.Open()
+            else
+                state.StatusLine <- sprintf "No such relative path '%s' found" path
+
+    [<Extension>]
     static member Ascend(state: State) : unit =
         let new_dir = Path.GetDirectoryName(state.Directory)
         let old_folder = Path.GetFileName(state.Directory)
@@ -225,6 +247,7 @@ type StateCommands =
         | "bind_c" -> state.BindCommand(args)
         | "bind_s" -> state.BindShellCommand(args)
         | "refresh" -> state.Refresh()
+        | "go" -> state.Go(args)
         | "up" -> state.NavigateUp()
         | "down" -> state.NavigateDown()
         | "open" -> state.Open()
