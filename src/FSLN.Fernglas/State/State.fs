@@ -12,6 +12,22 @@ type FileSystemEntry =
         | Folder f -> f + "/"
         | File f -> f
 
+[<CustomEquality>]
+[<NoComparison>]
+[<Struct>]
+type HistoryEntry =
+    {
+        Directory: string
+        SelectedName: string
+    }
+
+    override this.Equals(other: obj) : bool =
+        match other with
+        | :? HistoryEntry as h -> h.Directory = this.Directory
+        | _ -> false
+
+    override this.GetHashCode() : int = this.Directory.GetHashCode()
+
 type State =
     {
         mutable Running: bool
@@ -24,6 +40,7 @@ type State =
         SearchBuffer: TextBuffer
         mutable SearchBufferFocused: bool
         mutable StatusLine: string
+        mutable History: HistoryEntry list
         Keymap: Keymap
     }
 
@@ -61,10 +78,11 @@ type State =
                 SearchBuffer = TextBuffer()
                 SearchBufferFocused = false
                 StatusLine = ""
+                History = []
                 Keymap = keymap
             }
 
-        state.ChangeDirectory(path)
+        state.ChangeDirectory(path, false)
         state
 
     member private this.UpdateSearchResults(previous_selection: FileSystemEntry option) : unit =
@@ -82,7 +100,6 @@ type State =
 
     member this.Refresh() : unit =
         let previous_selection = this.Selected
-
         this.RefreshGit()
 
         this.Entries <-
@@ -97,19 +114,39 @@ type State =
 
         this.UpdateSearchResults(previous_selection)
 
-    member this.ChangeDirectory(path: string) : unit =
+    member this.AppendHistory() : unit =
+        let to_add =
+            { Directory = this.Directory; SelectedName = this.Selected |> Option.map _.Name |> Option.defaultValue "" }
+
+        let is_duplicate = List.contains to_add this.History
+
+        if not is_duplicate then
+            this.History <- to_add :: this.History
+
+    member this.PopHistory() : HistoryEntry option =
+        match this.History with
+        | h :: hs ->
+            this.History <- hs
+            Some h
+        | _ -> None
+
+    member this.TopHistory() : HistoryEntry option = List.tryHead this.History
+
+    member this.ChangeDirectory(path: string, include_in_history: bool) : unit =
+
+        if include_in_history then
+            this.AppendHistory()
+        else
+            match this.TopHistory() with
+            | Some h when h.Directory = path -> ignore(this.PopHistory())
+            | _ -> ()
+
         this.Directory <- path
         this.SearchBuffer.Clear()
-
         Directory.SetCurrentDirectory(this.Directory)
-
-        File.WriteAllText(
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".fernglas_location"),
-            path
-        )
-
+        let user_profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
+        File.WriteAllText(Path.Combine(user_profile, ".fernglas_location"), path)
         this.Refresh()
-
         State.DirectoryChanged.Trigger()
 
     member this.AddKey(input: ConsoleKeyInfo) : unit =

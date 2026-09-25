@@ -66,31 +66,50 @@ type StateCommands =
     [<Extension>]
     static member Open(state: State) : unit =
         match state.Selected with
-        | Some(Folder folder) -> state.ChangeDirectory(Path.Combine(state.Directory, folder))
+        | Some(Folder folder) -> state.ChangeDirectory(Path.Combine(state.Directory, folder), true)
         | Some(File _) -> state.StatusLine <- "Opening files not yet supported"
         | None -> ()
+
+    [<Extension>]
+    static member Close(state: State) : unit =
+        match state.PopHistory() with
+        | Some h ->
+            state.ChangeDirectory(h.Directory, false)
+            state.TrySelectByName(h.SelectedName)
+        | None -> state.StatusLine <- "No further history to jump back to"
 
     [<Extension>]
     static member Go(state: State, path: string) : unit =
         let inline go_absolute (path: string) =
             if Directory.Exists(path) then
-                state.ChangeDirectory(path)
+                state.ChangeDirectory(path, true)
             else
                 state.StatusLine <- sprintf "No such directory '%s'" path
 
         if Path.IsPathRooted(path) then
             go_absolute(path)
-        elif path.StartsWith('%') then
-            match Enum.TryParse<Environment.SpecialFolder>(path.Substring(1)) with
-            | true, special_folder -> go_absolute(Environment.GetFolderPath(special_folder))
-            | false, _ -> state.StatusLine <- sprintf "Unrecognised special folder '%s'" path
-        else
-            state.TrySelectByName(path + "/")
 
-            if state.Selected.IsSome && state.Selected.Value.Name = path + "/" then
-                state.Open()
-            else
-                state.StatusLine <- sprintf "No such relative path '%s' found" path
+        elif path.StartsWith('%') then
+            let split = path.Substring(1).Split('/', StringSplitOptions.TrimEntries)
+
+            match Enum.TryParse<Environment.SpecialFolder>(split.[0]) with
+            | true, special_folder ->
+                let mutable path = Environment.GetFolderPath(special_folder)
+
+                for i = 1 to split.Length - 1 do
+                    path <- Path.Combine(path, split.[i])
+
+                go_absolute(path)
+            | false, _ -> state.StatusLine <- sprintf "Unrecognised special folder '%s'" path
+
+        else
+            let split = path.Split('/', StringSplitOptions.TrimEntries)
+            let mutable path = state.Directory
+
+            for i = 0 to split.Length - 1 do
+                path <- Path.Combine(path, split.[i])
+
+            go_absolute(path)
 
     [<Extension>]
     static member Ascend(state: State) : unit =
@@ -98,13 +117,13 @@ type StateCommands =
         let old_folder = Path.GetFileName(state.Directory)
 
         if new_dir <> null then
-            state.ChangeDirectory(new_dir)
+            state.ChangeDirectory(new_dir, false)
             state.TrySelectByName(old_folder + "/")
 
     [<Extension>]
     static member Descend(state: State) : unit =
         match state.Selected with
-        | Some(Folder folder) -> state.ChangeDirectory(Path.Combine(state.Directory, folder))
+        | Some(Folder folder) -> state.ChangeDirectory(Path.Combine(state.Directory, folder), true)
         | _ -> ()
 
     [<Extension>]
@@ -251,6 +270,7 @@ type StateCommands =
         | "up" -> state.NavigateUp()
         | "down" -> state.NavigateDown()
         | "open" -> state.Open()
+        | "close" -> state.Close()
         | "ascend" -> state.Ascend()
         | "descend" -> state.Descend()
         | "delete" -> state.Delete()
