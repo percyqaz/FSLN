@@ -89,7 +89,8 @@ type Pane =
             | Some s -> Array.IndexOf(this.FilteredEntries, s)
             | None -> -1
 
-    member this.RefreshGit() : unit = this.GitStatus <- GitStatus.Fetch()
+    member this.RefreshGit() : unit =
+        this.GitStatus <- GitStatus.Fetch(this.Directory)
 
     member this.Refresh() : unit =
         let previous_selection = this.Selected
@@ -144,4 +145,5 @@ type Pane =
             this.Refresh()
             Pane.MainDirectoryChanged.Trigger()
         else
+            this.Refresh()
             Pane.SplitDirectoryChanged.Trigger()

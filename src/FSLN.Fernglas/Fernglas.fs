@@ -49,4 +49,4 @@ module Fernglas =
                 state.CommandBuffer.Dispatch(state.DispatchMessage, state.Keymap)
             | false, _ -> state.Refresh()
 
-        Console.Write(AnsiCodes.LeaveSecondScreen)
+        Console.Write(AnsiCodes.LeaveSecondScreen + AnsiCodes.CursorVisible)

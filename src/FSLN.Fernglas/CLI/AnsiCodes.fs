@@ -27,6 +27,9 @@ type AnsiCodes =
     [<Extension>]
     static member ClearRestOfLine(text: string) : string = sprintf "%s\u001b[K" text
 
+    static member CursorLeft(columns: int) : string = sprintf "\u001b[%iD" columns
+    static member CursorRight(columns: int) : string = sprintf "\u001b[%iC" columns
+
     static member CursorToOrigin = "\u001b[H"
     static member CursorInvisible = "\u001b[?25l"
     static member CursorVisible = "\u001b[?25h"

@@ -1,8 +1,5 @@
 namespace Fernglas
 
-open System
-open System.Text
-
 type ScreenBuffer(height: int) =
 
     let lines = ResizeArray()
@@ -25,8 +22,7 @@ type ScreenBuffer(height: int) =
 
         this.Line(line)
 
-    member this.Draw() : unit =
-        let sb = StringBuilder().Append(AnsiCodes.CursorInvisible)
+    member this.RenderToArray(empty_line: string) : string array =
 
         let top_of_requested_view = max 0 (cursor - this.ScrollOff)
 
@@ -41,11 +37,15 @@ type ScreenBuffer(height: int) =
 
         let mutable index = scroll_position
 
-        for i = 1 to this.Height do
-            let line = if index < lines.Count then lines.[index] else ""
-            sb.AppendLine(line.ClearRestOfLine()) |> ignore
-            index <- index + 1
-
-        Console.Write(sb.Append(AnsiCodes.CursorVisible).ToString())
+        let result =
+            seq {
+                for i = 1 to this.Height do
+                    let line = if index < lines.Count then lines.[index] else empty_line
+                    yield line
+                    index <- index + 1
+            }
+            |> Array.ofSeq
 
         lines.Clear()
+
+        result

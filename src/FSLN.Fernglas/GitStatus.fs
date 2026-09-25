@@ -103,10 +103,10 @@ type GitStatus =
             WorkingTreeDirty = files.Values |> Seq.map _.WorkingTree |> Seq.filter((<>) Unchanged) |> Seq.length
         }
 
-    static member Fetch() : GitStatus option =
+    static member Fetch(current_directory: string) : GitStatus option =
 
         let inline walk_tree_specific_folder (target: string) : string option =
-            let mutable current_path = Path.GetFullPath(".")
+            let mutable current_path = Path.GetFullPath(current_directory)
 
             while current_path <> null && not(Directory.Exists(Path.Combine(current_path, target))) do
                 current_path <- Path.GetDirectoryName(current_path)
@@ -121,7 +121,8 @@ type GitStatus =
                 ProcessStartInfo(
                     "git",
                     "status --ignore-submodules --no-renames --porcelain=v2 -z -b",
-                    RedirectStandardOutput = true
+                    RedirectStandardOutput = true,
+                    WorkingDirectory = current_directory
                 )
 
             let proc = Process.Start(start_info)
