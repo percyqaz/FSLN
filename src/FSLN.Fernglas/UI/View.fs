@@ -1,6 +1,7 @@
 namespace Fernglas
 
 open System
+open System.IO
 
 type View(state: State) =
 
@@ -8,20 +9,35 @@ type View(state: State) =
 
     do State.DirectoryChanged.Publish.Add(fun () -> view.ScrollToTop())
 
+    member this.RenderEntry(entry: FileSystemEntry) : string =
+        match entry with
+        | Folder f -> (f + "/").ForeColor(0xFFFF88).Bold()
+        | File f ->
+            let git_status = state.GitFileStatus(Path.Combine(state.Directory, f))
+            let wt = git_status.WorkingTree <> Unchanged
+            let status = if wt then git_status.WorkingTree else git_status.Index
+
+            let color =
+                match status with
+                | Added
+                | Untracked -> 0x88ff88
+                | Deleted -> 0xff8888
+                | Unchanged -> 0xdddddd
+                | _ -> 0x88ffff
+
+            let dirty_icon = if wt then " *".ForeColor(0x444444) else ""
+
+            f.ForeColor(color) + dirty_icon
+
+
     member this.RenderEntries() : unit =
         view.Height <- Console.BufferHeight - 3
         let selected = state.Selected
 
         for entry in state.FilteredEntries do
             let is_selected = selected = Some entry
-
-            let line =
-                match entry with
-                | Folder f -> (f + "/").ForeColor(0xFFFF88).Bold()
-                | File f -> f
-
+            let line = this.RenderEntry(entry)
             let fmt_line = if is_selected then line.BackColor(0x666633) else line
-
             view.Line(fmt_line.ClearRestOfLine(), is_selected)
 
         view.Draw()
@@ -68,5 +84,5 @@ type View(state: State) =
         Console.Write(AnsiCodes.CursorToOrigin)
         Console.WriteLine(tagline.ClearRestOfLine())
         this.RenderEntries()
-        Console.WriteLine("Fernglas ".ForeColor(0xFFFF88).Bold() + this.StatusLine().ClearRestOfLine())
+        Console.WriteLine("Fernglas ".ForeColor(0xFFCC88).Bold() + this.StatusLine().ClearRestOfLine())
         Console.Write(state.CommandBuffer.ToString().ForeColor(0x88FF88).Bold().ClearRestOfLine())

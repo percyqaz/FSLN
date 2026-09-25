@@ -38,7 +38,7 @@ type State =
 
         match this.GitStatus with
         | Some status ->
-            match status.Files.TryGetValue(file) with
+            match status.Files.TryGetValue(file.Replace("\\", "/")) with
             | true, result -> result
             | false, _ -> default_status()
         | None -> default_status()

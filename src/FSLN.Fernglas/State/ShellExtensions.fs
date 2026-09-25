@@ -15,16 +15,13 @@ type private ShellExtensions =
             | Some(Folder f) -> Path.Combine(state.Directory, f)
             | None -> state.Directory
 
-        command
-            .Replace("$$", '\uFFFD'.ToString())
-            .Replace(
-                "$GITPATH",
-                match state.GitStatus with
-                | Some gs -> Path.GetRelativePath(gs.RootPath, state.Directory)
-                | None -> ""
-            )
-            .Replace("$", full_path)
-            .Replace('\uFFFD', '$')
+        let name =
+            match state.Selected with
+            | Some(File f)
+            | Some(Folder f) -> f
+            | None -> ""
+
+        command.Replace("$$", '\uFFFD'.ToString()).Replace("$NAME", name).Replace("$", full_path).Replace('\uFFFD', '$')
 
     [<Extension>]
     static member DispatchShell(state: State, command: string) : unit =
