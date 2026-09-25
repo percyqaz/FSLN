@@ -11,6 +11,39 @@ type StateCommands =
     static member Exit(state: State) : unit = state.Running <- false
 
     [<Extension>]
+    static member Alias(state: State, args: string) : unit =
+        let split = args.Split("=", 2, StringSplitOptions.TrimEntries)
+        let source, target = split.[0], if split.Length > 1 then split.[1] else ""
+
+        if source.Length > 0 && target.Length > 0 && source <> target then
+            state.Keymap.Alias(source, target)
+            state.StatusLine <- "Binding set."
+        else
+            state.StatusLine <- "Invalid binding."
+
+    [<Extension>]
+    static member BindCommand(state: State, args: string) : unit =
+        let split = args.Split("=", 2, StringSplitOptions.TrimEntries)
+        let source, target = split.[0], if split.Length > 1 then split.[1] else ""
+
+        if source.Length > 0 && target.Length > 0 && source <> target then
+            state.Keymap.AliasCommand(source, target)
+            state.StatusLine <- "Binding set."
+        else
+            state.StatusLine <- "Invalid binding."
+
+    [<Extension>]
+    static member BindShellCommand(state: State, args: string) : unit =
+        let split = args.Split("=", 2, StringSplitOptions.TrimEntries)
+        let source, target = split.[0], if split.Length > 1 then split.[1] else ""
+
+        if source.Length > 0 && target.Length > 0 && source <> target then
+            state.Keymap.AliasCommand(source, "!" + target)
+            state.StatusLine <- "Binding set."
+        else
+            state.StatusLine <- "Invalid binding."
+
+    [<Extension>]
     static member NavigateUp(state: State) : unit =
         let item_count = state.FilteredEntries.Length
 
@@ -159,6 +192,9 @@ type StateCommands =
         | "q"
         | "q!"
         | "exit" -> state.Exit()
+        | "bind" -> state.Alias(args)
+        | "bind_c" -> state.BindCommand(args)
+        | "bind_s" -> state.BindShellCommand(args)
         | "refresh" -> state.Refresh()
         | "up" -> state.NavigateUp()
         | "down" -> state.NavigateDown()

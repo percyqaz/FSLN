@@ -24,6 +24,7 @@ type State =
         SearchBuffer: TextBuffer
         mutable SearchBufferFocused: bool
         mutable StatusLine: string
+        Keymap: Keymap
     }
 
     member this.Selected: FileSystemEntry option =
@@ -45,7 +46,7 @@ type State =
         | Some i -> this.Selection <- i
         | None -> ()
 
-    static member Create(path: string) : State =
+    static member Create(path: string, keymap: Keymap) : State =
         let entries =
             seq {
                 for folder in Directory.EnumerateDirectories(path) do
@@ -67,6 +68,7 @@ type State =
             SearchBuffer = TextBuffer()
             SearchBufferFocused = false
             StatusLine = ""
+            Keymap = keymap
         }
 
     member private this.UpdateSearchResults(previous_selection: FileSystemEntry option) : unit =

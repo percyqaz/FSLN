@@ -4,7 +4,7 @@ open System
 
 module Fernglas =
 
-    let keymap: Keymap =
+    let create_default_keymap () : Keymap =
         let keymap = Keymap()
         let bind key command = keymap.AliasCommand(key, command)
         let alias key other_key = keymap.Alias(key, other_key)
@@ -30,10 +30,12 @@ module Fernglas =
 
         keymap
 
-    let loop (working_directory: string) : unit =
-        let state = State.Create(working_directory)
-
+    let loop (working_directory: string, config: string seq) : unit =
+        let state = State.Create(working_directory, create_default_keymap())
         let render = View(state)
+
+        state.CommandBuffer.Append(config)
+        state.CommandBuffer.Dispatch(state.DispatchMessage, state.Keymap)
 
         Console.Write(AnsiCodes.EnterSecondScreen)
         let input_thread = InputThread()
@@ -44,7 +46,7 @@ module Fernglas =
             match input_thread.TryReadKey(2000) with
             | true, input ->
                 state.AddKey(input)
-                state.CommandBuffer.Dispatch(state.DispatchMessage, keymap)
+                state.CommandBuffer.Dispatch(state.DispatchMessage, state.Keymap)
             | false, _ -> state.Refresh()
 
         Console.Write(AnsiCodes.LeaveSecondScreen)
