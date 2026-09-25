@@ -99,6 +99,7 @@ type State =
 
     member this.ChangeDirectory(path: string) : unit =
         this.Directory <- path
+        this.SearchBuffer.Clear()
 
         Directory.SetCurrentDirectory(this.Directory)
 

@@ -1,4 +1,4 @@
-﻿namespace Fernglas
+namespace Fernglas
 
 open System
 
@@ -6,6 +6,8 @@ type TextBuffer() =
 
     let mutable buffer = ""
     override this.ToString() : string = buffer
+
+    member this.Clear() : unit = buffer <- ""
 
     member this.TryAddKey(input: ConsoleKeyInfo) : bool =
 

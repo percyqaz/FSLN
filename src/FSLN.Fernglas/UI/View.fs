@@ -52,19 +52,21 @@ type View(state: State) =
         git_status + state.StatusLine.ForeColor(0x444444)
 
     member this.Redraw() : unit =
+        let search_query = state.SearchBuffer.ToString()
+
+        let entries =
+            if search_query <> "" then
+                (sprintf "[%s: %i results]" search_query state.FilteredEntries.Length).ForeColor(0x8888FF)
+            else
+                sprintf "[%i entries]" state.FilteredEntries.Length
+
+        let location =
+            state.Directory.Replace("\\", " > ").Replace("/", " > ").ForeColor(0x88FFFF)
+
+        let tagline = sprintf "%s %s" location entries
+
         Console.Write(AnsiCodes.CursorToOrigin)
-
-        let tagline =
-            let loc = state.Directory.ForeColor(0xFF8888)
-            sprintf "%s (%i)" loc state.FilteredEntries.Length
-
         Console.WriteLine(tagline.ClearRestOfLine())
-
         this.RenderEntries()
-
         Console.WriteLine("Fernglas ".ForeColor(0xFFFF88).Bold() + this.StatusLine().ClearRestOfLine())
-
-        if state.SearchBufferFocused then
-            Console.Write(("SEARCH: " + state.SearchBuffer.ToString()).ForeColor(0x8888FF).Bold().ClearRestOfLine())
-        else
-            Console.Write(state.CommandBuffer.ToString().ForeColor(0x88FF88).Bold().ClearRestOfLine())
+        Console.Write(state.CommandBuffer.ToString().ForeColor(0x88FF88).Bold().ClearRestOfLine())
