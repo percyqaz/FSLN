@@ -148,6 +148,10 @@ type StateCommands =
 
     [<Extension>]
     static member DispatchCommand(state: State, command: string) : unit =
+        if command.StartsWith('!') then
+            state.DispatchShell(command.Substring(1))
+        else
+
         let split = command.Split(" ", 2, StringSplitOptions.TrimEntries)
         let args = if split.Length < 2 then "" else split.[1]
 
@@ -155,6 +159,7 @@ type StateCommands =
         | "q"
         | "q!"
         | "exit" -> state.Exit()
+        | "refresh" -> state.Refresh()
         | "up" -> state.NavigateUp()
         | "down" -> state.NavigateDown()
         | "open" -> state.Open()

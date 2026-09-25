@@ -14,6 +14,7 @@
     <Compile Include="CLI\CommandBuffer.fs" />
     <Compile Include="CLI\TextBuffer.fs" />
     <Compile Include="State\State.fs" />
+    <Compile Include="State\ShellExtensions.fs" />
     <Compile Include="State\StateCommands.fs" />
     <Compile Include="UI\View.fs" />
     <Compile Include="Fernglas.fs" />
