@@ -49,29 +49,23 @@ type State =
         | None -> ()
 
     static member Create(path: string, keymap: Keymap) : State =
-        let entries =
-            seq {
-                for folder in Directory.EnumerateDirectories(path) do
-                    yield Folder(Path.GetFileName(folder))
-
-                for file in Directory.EnumerateFiles(path) do
-                    yield File(Path.GetFileName(file))
+        let state =
+            {
+                Running = true
+                Directory = path
+                GitStatus = None
+                Entries = [||]
+                FilteredEntries = [||]
+                Selection = -1
+                CommandBuffer = CommandBuffer()
+                SearchBuffer = TextBuffer()
+                SearchBufferFocused = false
+                StatusLine = ""
+                Keymap = keymap
             }
-            |> Array.ofSeq
 
-        {
-            Running = true
-            Directory = path
-            GitStatus = GitStatus.Fetch()
-            Entries = entries
-            FilteredEntries = entries
-            Selection = -1
-            CommandBuffer = CommandBuffer()
-            SearchBuffer = TextBuffer()
-            SearchBufferFocused = false
-            StatusLine = ""
-            Keymap = keymap
-        }
+        state.ChangeDirectory(path)
+        state
 
     member private this.UpdateSearchResults(previous_selection: FileSystemEntry option) : unit =
         let query = this.SearchBuffer.ToString()
@@ -89,7 +83,6 @@ type State =
     member this.Refresh() : unit =
         let previous_selection = this.Selected
 
-        Directory.SetCurrentDirectory(this.Directory)
         this.RefreshGit()
 
         this.Entries <-
@@ -106,12 +99,15 @@ type State =
 
     member this.ChangeDirectory(path: string) : unit =
         this.Directory <- path
-        this.Refresh()
+
+        Directory.SetCurrentDirectory(this.Directory)
 
         File.WriteAllText(
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".fernglas_location"),
             path
         )
+
+        this.Refresh()
 
         State.DirectoryChanged.Trigger()
 
