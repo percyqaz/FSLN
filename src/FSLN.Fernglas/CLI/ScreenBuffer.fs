@@ -13,6 +13,8 @@ type ScreenBuffer(height: int) =
     member val LinesBelow = 1 with get, set
     member val Height = height with get, set
 
+    member this.ScrollToTop() : unit = scroll_position <- 0
+
     member this.CursorHere() : unit = cursor <- lines.Count
 
     member this.Line(line: string) : unit = lines.Add(line)

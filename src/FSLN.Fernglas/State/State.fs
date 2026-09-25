@@ -27,6 +27,8 @@ type State =
         Keymap: Keymap
     }
 
+    static member val DirectoryChanged = Event<unit>()
+
     member this.Selected: FileSystemEntry option =
         if this.Selection < 0 then None else Some this.FilteredEntries.[this.Selection]
 
@@ -101,6 +103,17 @@ type State =
             |> Array.ofSeq
 
         this.UpdateSearchResults(previous_selection)
+
+    member this.ChangeDirectory(path: string) : unit =
+        this.Directory <- path
+        this.Refresh()
+
+        File.WriteAllText(
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".fernglas_location"),
+            path
+        )
+
+        State.DirectoryChanged.Trigger()
 
     member this.AddKey(input: ConsoleKeyInfo) : unit =
         if this.SearchBufferFocused then

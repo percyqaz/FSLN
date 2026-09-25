@@ -66,26 +66,23 @@ type StateCommands =
     [<Extension>]
     static member Open(state: State) : unit =
         match state.Selected with
-        | Some(Folder folder) ->
-            state.Directory <- Path.Combine(state.Directory, folder)
-            state.Refresh()
+        | Some(Folder folder) -> state.ChangeDirectory(Path.Combine(state.Directory, folder))
         | Some(File _) -> state.StatusLine <- "Opening files not yet supported"
         | None -> ()
 
     [<Extension>]
     static member Ascend(state: State) : unit =
         let new_dir = Path.GetDirectoryName(state.Directory)
+        let old_folder = Path.GetFileName(state.Directory)
 
         if new_dir <> null then
-            state.Directory <- new_dir
-            state.Refresh()
+            state.ChangeDirectory(new_dir)
+            state.TrySelectByName(old_folder + "/")
 
     [<Extension>]
     static member Descend(state: State) : unit =
         match state.Selected with
-        | Some(Folder folder) ->
-            state.Directory <- Path.Combine(state.Directory, folder)
-            state.Refresh()
+        | Some(Folder folder) -> state.ChangeDirectory(Path.Combine(state.Directory, folder))
         | _ -> ()
 
     [<Extension>]

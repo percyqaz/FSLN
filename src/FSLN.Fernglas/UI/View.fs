@@ -6,6 +6,8 @@ type View(state: State) =
 
     let view = ScreenBuffer(Console.BufferHeight - 3)
 
+    do State.DirectoryChanged.Publish.Add(fun () -> view.ScrollToTop())
+
     member this.RenderEntries() : unit =
         view.Height <- Console.BufferHeight - 3
         let selected = state.Selected
