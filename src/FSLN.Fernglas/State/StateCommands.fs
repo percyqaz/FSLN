@@ -128,6 +128,17 @@ type StateCommands =
         | _ -> ()
 
     [<Extension>]
+    static member Close(state: State) : unit =
+        let pane = state.ActivePane
+
+        if not(pane.Back()) then
+            if pane.IsMain then
+                state.StatusLine <- "No further history to jump back to"
+            else
+                state.SplitPane <- None
+                state.SplitPaneFocused <- false
+
+    [<Extension>]
     static member DispatchCommand(state: State, command: string) : unit =
         if command.StartsWith('!') then
             state.DispatchShell(command.Substring(1))
@@ -160,7 +171,7 @@ type StateCommands =
         | "descend" -> state.ActivePane.Descend()
         | "go" -> pane_cmd(_.Go(args))
         | "open" -> pane_cmd(_.Open())
-        | "close" -> pane_cmd(_.Close())
+        | "close" -> state.Close()
         | "delete" -> pane_cmd(_.Delete())
         | "rename" -> pane_cmd(_.Rename(args))
         | "copy" -> pane_cmd(_.Copy(args))

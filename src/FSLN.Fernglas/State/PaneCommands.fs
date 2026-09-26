@@ -33,13 +33,13 @@ type PaneCommands =
         | None -> None
 
     [<Extension>]
-    static member Close(pane: Pane) : string option =
+    static member Back(pane: Pane) : bool =
         match pane.PopHistory() with
         | Some h ->
             pane.ChangeDirectory(h.Directory, false)
             pane.TrySelectByName(h.SelectedName)
-            None
-        | None -> Some("No further history to jump back to")
+            true
+        | None -> false
 
     [<Extension>]
     static member Go(pane: Pane, path: string) : string option =
