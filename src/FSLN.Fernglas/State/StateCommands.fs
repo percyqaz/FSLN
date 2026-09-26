@@ -138,6 +138,24 @@ type StateCommands =
                 state.SplitPaneFocused <- false
 
     [<Extension>]
+    static member Split(state: State) : unit =
+        match state.SplitPane with
+        | Some _ ->
+            state.SplitPane <- None
+            state.SplitPaneFocused <- false
+        | None ->
+            let pane =
+                match state.MainPane.PopHistory() with
+                | Some h ->
+                    let pane = Pane.Create(h.Directory, false)
+                    pane.TrySelectByName(h.SelectedName)
+                    pane
+                | None -> Pane.Create(state.MainPane.Directory, false)
+
+            state.SplitPane <- Some(pane)
+            state.SplitPaneFocused <- true
+
+    [<Extension>]
     static member DispatchCommand(state: State, command: string) : unit =
         if command.StartsWith('!') then
             state.DispatchShell(command.Substring(1))
@@ -176,6 +194,7 @@ type StateCommands =
         | "copy" -> pane_cmd(_.Copy(args))
         | "add" -> pane_cmd(_.Add(args))
         | "search" -> state.Search()
+        | "split" -> state.Split()
         | _ -> state.StatusLine <- sprintf "Unrecognised command '%s'" split.[0]
 
     [<Extension>]
