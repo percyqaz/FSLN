@@ -156,6 +156,15 @@ type StateCommands =
             state.SplitPaneFocused <- true
 
     [<Extension>]
+    static member Swap(state: State) : unit =
+        match state.SplitPane with
+        | Some pane ->
+            let temp = state.MainPane.Directory
+            state.MainPane.ChangeDirectory(pane.Directory, false)
+            pane.ChangeDirectory(temp, false)
+        | None -> state.StatusLine <- "No pane to swap with"
+
+    [<Extension>]
     static member DispatchCommand(state: State, command: string) : unit =
         if command.StartsWith('!') then
             state.DispatchShell(command.Substring(1))
@@ -195,6 +204,7 @@ type StateCommands =
         | "add" -> pane_cmd(_.Add(args))
         | "search" -> state.Search()
         | "split" -> state.Split()
+        | "swap" -> state.Swap()
         | _ -> state.StatusLine <- sprintf "Unrecognised command '%s'" split.[0]
 
     [<Extension>]

@@ -123,6 +123,7 @@ type PaneCommands =
 
             try
                 delete_file(path)
+                pane.NavigateUp()
                 pane.Refresh()
                 Some(sprintf "Deleted '%s'" file)
             with err ->
@@ -133,6 +134,7 @@ type PaneCommands =
 
             try
                 delete_folder(path)
+                pane.NavigateUp()
                 pane.Refresh()
                 Some(sprintf "Deleted '%s'" folder)
             with err ->
