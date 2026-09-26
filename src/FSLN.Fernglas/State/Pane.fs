@@ -93,6 +93,11 @@ type Pane =
         this.GitStatus <- GitStatus.Fetch(this.Directory)
 
     member this.Refresh() : unit =
+
+        if not(Directory.Exists(this.Directory)) then
+            this.ChangeDirectory(Path.GetDirectoryName(this.Directory), false)
+        else
+
         let previous_selection = this.Selected
         this.RefreshGit()
 
