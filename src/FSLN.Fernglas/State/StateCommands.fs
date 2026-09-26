@@ -60,6 +60,37 @@ type StateCommands =
             state.SplitPaneFocused <- true
 
     [<Extension>]
+    static member MoveLeft(state: State) : unit =
+        match state.SplitPane with
+        | Some pane when state.SplitPaneFocused ->
+            try
+                match pane.Selected with
+                | Some(Folder folder) ->
+                    FileSystem.MoveDirectory(
+                        Path.Combine(pane.Directory, folder),
+                        Path.Combine(state.MainPane.Directory, folder)
+                    )
+
+                    pane.NavigateUp()
+                    state.Refresh()
+                    state.MainPane.TrySelectByName(folder + "/")
+                    state.StatusLine <- sprintf "Moved '%s'" folder
+                | Some(File file) ->
+                    FileSystem.MoveFile(
+                        Path.Combine(pane.Directory, file),
+                        Path.Combine(state.MainPane.Directory, file)
+                    )
+
+                    pane.NavigateUp()
+                    state.Refresh()
+                    state.MainPane.TrySelectByName(file)
+                    state.StatusLine <- sprintf "Moved '%s'" file
+                | None -> ()
+            with err ->
+                state.StatusLine <- err.Message
+        | _ -> ()
+
+    [<Extension>]
     static member MoveRight(state: State) : unit =
         match state.SplitPane with
         | None ->
@@ -77,6 +108,9 @@ type StateCommands =
                         Path.Combine(pane.Directory, folder)
                     )
 
+                    state.MainPane.NavigateUp()
+                    state.Refresh()
+                    pane.TrySelectByName(folder + "/")
                     state.StatusLine <- sprintf "Moved '%s'" folder
                 | Some(File file) ->
                     FileSystem.MoveFile(
@@ -84,6 +118,9 @@ type StateCommands =
                         Path.Combine(pane.Directory, file)
                     )
 
+                    state.MainPane.NavigateUp()
+                    state.Refresh()
+                    pane.TrySelectByName(file)
                     state.StatusLine <- sprintf "Moved '%s'" file
                 | None -> ()
             with err ->
@@ -117,6 +154,7 @@ type StateCommands =
         | "down" -> state.ActivePane.NavigateDown()
         | "left" -> state.Left()
         | "right" -> state.Right()
+        | "move_left" -> state.MoveLeft()
         | "move_right" -> state.MoveRight()
         | "ascend" -> state.ActivePane.Ascend()
         | "descend" -> state.ActivePane.Descend()
