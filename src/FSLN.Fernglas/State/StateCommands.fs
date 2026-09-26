@@ -62,7 +62,8 @@ type StateCommands =
     [<Extension>]
     static member MoveLeft(state: State) : unit =
         match state.SplitPane with
-        | Some pane when state.SplitPaneFocused ->
+        | None -> ()
+        | Some pane ->
             try
                 match pane.Selected with
                 | Some(Folder folder) ->
@@ -88,7 +89,6 @@ type StateCommands =
                 | None -> ()
             with err ->
                 state.StatusLine <- err.Message
-        | _ -> ()
 
     [<Extension>]
     static member MoveRight(state: State) : unit =
@@ -99,7 +99,7 @@ type StateCommands =
                 state.SplitPane <- Some(Pane.Create(Path.Combine(state.MainPane.Directory, f), false))
                 state.SplitPaneFocused <- true
             | _ -> ()
-        | Some pane when not state.SplitPaneFocused ->
+        | Some pane ->
             try
                 match state.MainPane.Selected with
                 | Some(Folder folder) ->
@@ -125,7 +125,6 @@ type StateCommands =
                 | None -> ()
             with err ->
                 state.StatusLine <- err.Message
-        | _ -> ()
 
     [<Extension>]
     static member Close(state: State) : unit =
