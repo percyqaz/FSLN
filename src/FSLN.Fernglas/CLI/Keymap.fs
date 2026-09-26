@@ -18,7 +18,7 @@ type Keymap() =
     member this.Alias(string: string, target: string) : unit =
 
         let inline replace_special (s: string) : string =
-            s.Replace("<", Keymap.LT).Replace(">", Keymap.GT)
+            s.Replace("<Space>", " ").Replace("<", Keymap.LT).Replace(">", Keymap.GT)
 
         map <- map.Add(replace_special string, replace_special target)
 
