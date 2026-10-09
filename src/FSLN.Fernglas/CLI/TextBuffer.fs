@@ -14,7 +14,7 @@ type TextBuffer() =
         let inline is_displayable () : bool =
             input.KeyChar <> '\u0000'
             && input.Modifiers &&& ConsoleModifiers.Alt <> ConsoleModifiers.Alt
-            && Char.IsAscii(input.KeyChar)
+            && not(Char.IsControl(input.KeyChar))
             && not(Char.IsWhiteSpace(input.KeyChar))
 
         let inline delete_last_key () : unit =

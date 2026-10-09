@@ -95,4 +95,5 @@ type CommandBuffer() =
                 handle_keymap_and_messages()
 
     member this.Append(lines: string seq) : unit =
-        buffer <- String.concat Keymap.ENTER lines + Keymap.ENTER
+        for line in lines do
+            buffer <- buffer + line + Keymap.ENTER
