@@ -127,6 +127,15 @@ type StateCommands =
                 state.StatusLine <- err.Message
 
     [<Extension>]
+    static member Open(state: State) : unit =
+        let pane = state.ActivePane
+
+        if not(pane.Open()) then
+            match pane.Selected with
+            | Some(FileSystemEntry.File _) -> state.DispatchShell("$")
+            | _ -> ()
+
+    [<Extension>]
     static member Close(state: State) : unit =
         let pane = state.ActivePane
 
@@ -196,7 +205,7 @@ type StateCommands =
         | "ascend" -> state.ActivePane.Ascend()
         | "descend" -> state.ActivePane.Descend()
         | "go" -> pane_cmd(_.Go(args))
-        | "open" -> pane_cmd(_.Open())
+        | "open" -> state.Open()
         | "close" -> state.Close()
         | "delete" -> pane_cmd(_.Delete())
         | "rename" -> pane_cmd(_.Rename(args))

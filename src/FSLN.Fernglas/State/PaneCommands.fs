@@ -24,13 +24,13 @@ type PaneCommands =
         | index -> pane.Selection <- if index + 1 >= item_count then 0 else index + 1
 
     [<Extension>]
-    static member Open(pane: Pane) : string option =
+    static member Open(pane: Pane) : bool =
         match pane.Selected with
         | Some(Folder folder) ->
             pane.ChangeDirectory(Path.Combine(pane.Directory, folder), true)
-            None
-        | Some(File _) -> Some("Opening files not yet supported")
-        | None -> None
+            true
+        | Some(File _) -> false
+        | None -> true
 
     [<Extension>]
     static member Back(pane: Pane) : bool =
