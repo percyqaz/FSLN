@@ -42,10 +42,7 @@ type ExpandMarkers =
 
         if split.Length <> 2 then
             Error "Expand markers must be 2 values"
-        else if
-
-            split.[1].Length <> split.[0].Length
-        then
+        elif split.[1].Length <> split.[0].Length then
             Error "Expand markers must be the same length (1 or 2 characters recommended)"
         else
 
