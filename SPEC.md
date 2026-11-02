@@ -2,20 +2,20 @@
 
 ## Status
 
-This document records the product and architectural requirements discussed for a future FSLN controller and pane system. It is a design specification, not an implementation plan. Implementation choices that have not yet been agreed are listed under [Open design questions](#open-design-questions).
+This document records the product and architectural requirements for FSLN.Controller and its managed terminal programs. It is a design specification, not an implementation plan. No open product or architecture questions remain; platform-specific implementation details will be resolved during development.
 
 ## 1. Purpose
 
-FSLN currently provides a terminal-based view of a .NET solution tree and can dispatch user-defined commands and shell macros. External interactive programs such as Vim and Git run directly in the terminal; FSLN waits for them to finish and then restores its own view.
+FSLN.Browser provides the existing user-facing terminal view of a .NET solution tree and dispatches user-defined commands and shell macros. External interactive programs such as Vim and Git currently run directly in the terminal; FSLN.Browser waits for them to finish and then restores its own view.
 
-The proposed system extends this into a coordinated terminal application. It must support multiple interactive programs in panes, change which programs are visible as workflows change, preserve selected programs across view changes, route input to the focused pane, and coordinate program lifetimes and communication.
+FSLN.Controller is the entry point and hosts the coordinated terminal application. It launches FSLN.Browser as a managed process, alongside other configured programs. The controller supports multiple interactive programs in panes, changes which programs are visible as workflows change, preserves selected programs across view changes, routes input to the focused pane, and coordinates program lifetimes and communication.
 
 The system should support Windows, Linux, and macOS desktop environments with the same user-facing pane experience and, preferably, the same pane backend on every operating system.
 
 ## 2. Goals
 
-- Make the FSLN controller the entry point users launch.
-- Run the existing solution explorer as one program managed by the controller.
+- Make FSLN.Controller the entry point users launch.
+- Run FSLN.Browser, which provides the existing solution explorer and user functionality, as a process managed by FSLN.Controller.
 - Display multiple interactive terminal programs in resizable panes in one terminal UI.
 - Coordinate processes and views centrally, including lifecycle transitions and inter-process communication.
 - Keep long-lived programs and their state across view changes.
@@ -32,13 +32,17 @@ The system should support Windows, Linux, and macOS desktop environments with th
 
 ## 4. Terminology
 
-### Controller
+### FSLN.Controller
 
-The top-level FSLN program launched by the user. It owns the session, process supervision, terminal hosting, view stack, pane layout, focus, input routing, and mediated communication.
+The top-level FSLN program launched by the user. It owns the session, process supervision, terminal hosting, view stack, pane layout, focus, input routing, and mediated communication. All new controller and pane coordination functionality described in this specification is implemented in FSLN.Controller.
+
+### FSLN.Browser
+
+The existing user-facing solution browser. FSLN.Controller launches it as a managed terminal process. FSLN.Browser provides the solution explorer and existing user functionality; the controller hosts its terminal and manages its lifecycle. This specification does not authorize changes to FSLN.Browser's implementation or functionality.
 
 ### Managed program / process instance
 
-An interactive program launched or supervised by the controller. Examples include the solution explorer, a shell, `git commit`, and a diff viewer. A process instance has an identity, a lifetime policy, a terminal session, and lifecycle state.
+An interactive program launched or supervised by FSLN.Controller. Examples include FSLN.Browser, a shell, `git commit`, and a diff viewer. A process instance has an identity, a lifetime policy, a terminal session, and lifecycle state.
 
 ### Pane
 
@@ -66,14 +70,14 @@ The view that is active immediately before a new view is pushed. Its focused loc
 
 ## 5. User-facing model
 
-Users launch the controller, not an independent pane manager. The controller starts and supervises the solution explorer and other configured or requested programs. The explorer is an application that can run in a terminal environment; it should not need to own pane rendering or directly control other programs.
+Users launch FSLN.Controller. It starts and supervises FSLN.Browser and other configured or requested programs. FSLN.Browser runs in its own managed terminal process; it does not own pane rendering or directly control other programs.
 
 The controller presents a view composed of panels. For example, the initial `main` view may contain:
 
-- The FSLN solution explorer on the left.
+- FSLN.Browser on the left.
 - A persistent terminal emulator/shell on the right.
 
-The term “terminal emulator” here describes an interactive terminal program hosted in a pane. The controller is responsible for rendering the child program's terminal output and forwarding input through a pseudo-terminal or equivalent terminal interface.
+The term “terminal emulator” here describes an interactive terminal program hosted in a pane. FSLN.Controller is responsible for rendering each child program's terminal output and forwarding input through a pseudo-terminal or equivalent terminal interface.
 
 ## 6. Views and panes
 
@@ -98,6 +102,10 @@ view <view name> = { <process> }
 view <view name> = { <left process> } | { <right process> }
 ```
 
+For the initial implementation, FSLN.Controller reads its view configuration from a separate `.fsln-controller` file at the repository root. This is separate from the configuration file read by FSLN.Browser and is a temporary location that may change.
+
+The configuration must define a view named `main`. FSLN.Controller starts by activating this configured view.
+
 The first form displays one fullscreen pane. The second displays two equal-width side-by-side panes, with any odd leftover column assigned to the right pane. The divider does not consume a column. The initial syntax supports at most two panes, with no nested splits or tabs. There is no minimum pane size; the controller uses the available dimensions even if a process renders poorly at that size. The left process receives initial focus and controls when the view returns to the previous view. The right process is a companion process; its exit alone does not pop the view.
 
 The process text is a command string. A process may have one optional prefix:
@@ -116,15 +124,15 @@ Persistent process identity uses the `!` prefix and the command text. Whitespace
 
 ### 6.3 Pane sizing and process terminal size
 
-The controller lays out panes and communicates each visible pane's dimensions to its process terminal. When a reused process appears in a differently sized pane after a view transition, its terminal dimensions are updated. Processes should receive the normal terminal resize notification supported by the platform backend.
+FSLN.Controller lays out panes and communicates each visible pane's dimensions to its process terminal. When a reused process appears in a differently sized pane after a view transition, its terminal dimensions are updated. Processes should receive the normal terminal resize notification supported by the platform backend.
 
 Hidden processes do not receive keyboard input. Their terminal output and screen state are retained by the controller while they run. Each process's scrollback is capped at 200 lines; when the cap is reached, the oldest lines are discarded. No guarantee is made that hidden processes can continue useful interactive work without input.
 
 ### 6.4 Focus and input routing
 
-The controller tracks one focused pane in the active view and routes user keystrokes to that process's terminal session. The leftmost process is focused when a view is pushed.
+FSLN.Controller tracks one focused pane in the active view and routes user keystrokes to that process's terminal session. The leftmost process is focused when a view is pushed.
 
-The controller exposes commands to focus the left pane and the right pane. FSLN-owned programs may request these commands through the controller protocol. The default keybindings are capital `L` for the right pane and capital `H` for the left pane. These keys are reserved globally by the controller and are not forwarded to the focused process. There are no alternate bindings for now. A command targeting a pane that is absent from the active view has no target.
+FSLN.Controller exposes commands to focus the left pane and the right pane. FSLN-owned programs may request these commands through the controller protocol. The default keybindings are capital `L` for the right pane and capital `H` for the left pane. These keys are reserved globally by FSLN.Controller and are not forwarded to the focused process. There are no alternate bindings for now. A command targeting a pane that is absent from the active view has no target.
 
 ## 7. View stack and transitions
 
@@ -146,13 +154,13 @@ When the user or controller exits a view without its primary process having comp
 
 ### 7.4 Long-lived process exit
 
-Long-lived processes are expected to remain alive for the controller session. If a long-lived process exits while visible, its pane retains the final screen, displays the exit code, and waits for a keypress. If the process exits while hidden, the controller restarts it cleanly when returning to a view that needs it. A clean restart may lose in-memory state.
+Long-lived processes are expected to remain alive for the controller session. If one exits while visible, its pane retains the final screen, displays the exit code, and waits for a keypress. If it is the primary process, the view then follows its normal exit behavior. If it is a companion process, the keypress requests a clean restart in the same pane. If a persistent process exits while hidden, the controller attempts a clean restart when returning to a view that needs it. A clean restart may lose in-memory state.
 
-If a persistent process exits while visible, the controller retains its final screen, displays the exit code, and waits for a keypress. The view then follows its normal exit behavior. When a persistent process that exited while hidden is needed again, the controller attempts a clean restart. If that restart fails, the pane displays a process-start error and waits for a keypress before retrying. Each retry requires a separate keypress; the controller never retries automatically.
+If a restart attempt fails, the pane displays a process-start error and waits for a keypress before retrying. Each retry requires a separate keypress; the controller never retries automatically.
 
 ### 7.5 Starting a configured view
 
-FSLN macros and other controller actions can request a view push by name using the controller command `:view <view name>`. The controller looks up the configured view and pushes it onto the view stack. The view's leftmost process controls its automatic return transition as described above.
+FSLN.Browser macros and other controller actions can request a view push by name using the controller command `:view <view name>`. FSLN.Controller looks up the configured view and pushes it onto the view stack. The view's leftmost process controls its automatic return transition as described above.
 
 ## 8. Process lifetime and supervision
 
@@ -164,7 +172,7 @@ FSLN macros and other controller actions can request a view push by name using t
 - Are restarted cleanly when found exited while hidden and needed again.
 - Do not have to preserve state across a restart.
 
-The solution explorer and the main terminal shell are examples of long-lived processes. The shell is intended to remain alive across every view transition until the controller exits.
+FSLN.Browser and the main terminal shell are examples of long-lived processes. The shell is intended to remain alive across every view transition until FSLN.Controller exits.
 
 ### 8.2 View-scoped processes
 
@@ -181,7 +189,7 @@ The controller must distinguish a program's own exit from an exit resulting from
 
 ## 9. Terminal hosting and portability
 
-The controller must render multiple child terminal sessions in panes and route input to them. It must preserve each process's terminal output state while that process is hidden and restore that state when visible again.
+FSLN.Controller must render multiple child terminal sessions in panes and route input to them. It must preserve each process's terminal output state while that process is hidden and restore that state when visible again.
 
 The target experience is consistent across Windows, Linux, and macOS. The selected libraries for the initial implementation are Porta.Pty for pseudo-terminal process hosting and XTerm.NET for terminal emulation. These libraries provide a shared .NET API while handling platform-specific terminal mechanisms internally. Higher-level view, process, and pane logic should remain shared across operating systems.
 
@@ -189,7 +197,7 @@ The initial design does not rely on tmux or another external terminal multiplexe
 
 ## 10. Communication between programs
 
-Only FSLN-owned programs use the structured controller protocol. Managed programs communicate with one another only through the controller. Direct process-to-process communication is out of scope for the initial design. Ordinary external programs such as Vim, shells, Git, and diff viewers use their terminal sessions and do not need to implement this protocol.
+Only FSLN-owned programs, including FSLN.Browser, use the structured controller protocol. Managed programs communicate with one another only through FSLN.Controller. Direct process-to-process communication is out of scope for the initial design. Ordinary external programs such as Vim, shells, Git, and diff viewers use their terminal sessions and do not need to implement this protocol.
 
 Each participating process has a separate duplex named pipe to the controller. The protocol is intentionally minimal for the initial implementation:
 
@@ -203,7 +211,7 @@ Each participating process has a separate duplex named pipe to the controller. T
 
 If a requested controller command is not recognized, the controller reports that in its status line. The status line is displayed below the panels; the controller does not require a keypress for this error.
 
-The controller mediates messages, routes them to the intended FSLN-owned program, and coordinates them with process and view lifecycle. Hidden processes may continue to send and receive controller messages while running.
+FSLN.Controller mediates messages, routes them to the intended FSLN-owned program, and coordinates them with process and view lifecycle. Hidden processes may continue to send and receive controller messages while running.
 
 The program-to-controller communication channel is distinct in concept from terminal input/output: terminal I/O carries interactive screen content and user keystrokes; controller messages carry structured requests and events.
 
@@ -211,9 +219,9 @@ The program-to-controller communication channel is distinct in concept from term
 
 ### 11.1 Main view
 
-The controller launches the main view containing:
+FSLN.Controller launches the `main` view containing:
 
-- A long-lived FSLN solution explorer in the left pane.
+- The long-lived FSLN.Browser process in the left pane.
 - A long-lived shell in the right pane.
 
 Both processes remain alive across other views. The shell keeps its working session while hidden, although it receives no keyboard input while not focused/visible.
@@ -229,14 +237,14 @@ The user can interact with either pane by focusing it. When `git commit` exits, 
 
 ### 11.3 Fullscreen command
 
-A macro can request a named configured view with `:view <view name>`. A one-process view occupies the full terminal presentation. The process lifetime and return behavior follow its view configuration.
+A FSLN.Browser macro can request a named configured view with `:view <view name>`. A one-process view occupies the full terminal presentation. The process lifetime and return behavior follow its view configuration.
 
 ## 12. Failure and edge behavior
 
 - A non-zero exit of a view's primary process causes the same return transition as a zero exit, after showing the final screen and status and waiting for a keypress.
 - A view-scoped sibling process stopped during cleanup does not create a second user-facing failure prompt.
 - A long-lived process found exited while hidden is restarted when next needed; state restoration is not guaranteed.
-- A long-lived process that exits while visible retains its last screen, displays the exit status, and waits for a keypress before the view follows its normal exit behavior.
+- A long-lived process that exits while visible retains its last screen, displays the exit status, and waits for a keypress. The view follows its normal exit behavior if it was the primary process; a companion process is restarted in its pane.
 - If a process cannot be started, its panel displays an error message and waits for a keystroke before exiting. For a failed primary process, that acknowledgement then allows the normal view return transition. A failed restart of a hidden persistent process instead waits for a keypress before another restart attempt.
 - Controller shutdown requests graceful shutdown of all remaining processes simultaneously, then force-kills any that have not exited after the shared 500 ms deadline.
 - Mouse input, clipboard integration, and other terminal features beyond those verified in the evaluation are optional enhancements for the first version.
@@ -246,9 +254,9 @@ A macro can request a named configured view with `:view <view name>`. A one-proc
 
 The system naturally separates into these responsibilities:
 
-1. **Controller/session manager:** owns the view stack, lifecycle policies, process registry, transitions, and message mediation.
-2. **Terminal host/pane renderer:** creates and manages child terminal sessions, renders their terminal state into panes, forwards input, and handles resize.
-3. **Managed applications:** the solution explorer, shells, and workflow programs, each focused on its own job and communicating with other managed programs through the controller.
+1. **FSLN.Controller:** owns the view stack, lifecycle policies, process registry, transitions, and message mediation. All controller functionality described here lives in this program.
+2. **Terminal host/pane renderer (within FSLN.Controller):** creates and manages child terminal sessions, renders their terminal state into panes, forwards input, and handles resize. It is not a separately launched program.
+3. **Managed applications:** FSLN.Browser, shells, and workflow programs, each focused on its own job and communicating with other managed programs through FSLN.Controller.
 
 The terminal host should have a cross-platform boundary. The view and lifecycle model should not depend on Windows-specific or Unix-specific terminal APIs.
 
