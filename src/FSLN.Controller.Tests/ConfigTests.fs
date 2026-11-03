@@ -8,19 +8,19 @@ open NUnit.Framework
 type ConfigTests() =
 
     [<Extension>]
-    static member AssertOk(result: Result<'T, string>) =
+    static member AssertOk(result: Result<'T, string>) : unit =
         match result with
         | Ok _ -> ()
         | Error reason -> Assert.Fail(reason)
 
     [<Extension>]
-    static member AssertOk(result: Result<'T, string>, expected: 'T) =
+    static member AssertOk(result: Result<'T, string>, expected: 'T) : unit =
         match result with
         | Ok actual -> Assert.That(actual, Is.EqualTo<'T>(expected))
         | Error reason -> Assert.Fail(reason)
 
     [<Test>]
-    member _.ParseFullscreenViewWithWhitespace() =
+    member _.ParseFullscreenViewWithWhitespace() : unit =
         let config = Config()
         let parse_result = config.ParseConfigLine("  view main = {  fsln  }  ")
         let resolve_result = config.ResolveViewConfig(None, "main")
@@ -33,7 +33,7 @@ type ConfigTests() =
         resolve_result.AssertOk(expected)
 
     [<Test>]
-    member _.ParseWaitForKeypressPrefix() =
+    member _.ParseWaitForKeypressPrefix() : unit =
         let config = Config()
         let parse_result = config.ParseConfigLine("  view main = { . fsln  }  ")
         let resolve_result = config.ResolveViewConfig(None, "main")
@@ -46,7 +46,7 @@ type ConfigTests() =
         resolve_result.AssertOk(expected)
 
     [<Test>]
-    member _.ParseTwoSideBySideProcesses() =
+    member _.ParseTwoSideBySideProcesses() : unit =
         let config = Config()
 
         let parse_result =
@@ -65,7 +65,7 @@ type ConfigTests() =
         resolve_result.AssertOk(expected)
 
     [<Test>]
-    member _.ParseTwoSideBySideProcesses_OnlyCloseIfLeftCloses() =
+    member _.ParseTwoSideBySideProcesses_OnlyCloseIfLeftCloses() : unit =
         let config = Config()
 
         let parse_result =
@@ -84,7 +84,7 @@ type ConfigTests() =
         resolve_result.AssertOk(expected)
 
     [<Test>]
-    member _.ParseTwoSideBySideProcesses_OnlyCloseIfRightCloses() =
+    member _.ParseTwoSideBySideProcesses_OnlyCloseIfRightCloses() : unit =
         let config = Config()
 
         let parse_result =
@@ -103,7 +103,7 @@ type ConfigTests() =
         resolve_result.AssertOk(expected)
 
     [<Test>]
-    member _.PreservePipeInsideShellCommand() =
+    member _.PreservePipeInsideShellCommand() : unit =
         let config = Config()
 
         let parse_result =
@@ -119,7 +119,7 @@ type ConfigTests() =
         resolve_result.AssertOk(expected)
 
     [<Test>]
-    member _.PreserveInternalWhitespace() =
+    member _.PreserveInternalWhitespace() : unit =
         let config = Config()
         let parse_result = config.ParseConfigLine("view main = { echo   hello }")
         let resolve_result = config.ResolveViewConfig(None, "main")
@@ -132,7 +132,7 @@ type ConfigTests() =
         resolve_result.AssertOk(expected)
 
     [<Test>]
-    member _.FollowsAliases() =
+    member _.FollowsAliases() : unit =
         let config = Config()
 
         let parse_result_1 =
@@ -153,7 +153,7 @@ type ConfigTests() =
         resolve_result.AssertOk(expected)
 
     [<Test>]
-    member _.DepthsStackCorrectly() =
+    member _.DepthsStackCorrectly() : unit =
         let config = Config()
         let parse_result = config.ParseConfigLine("view main = { fsln } | { bash }")
 
@@ -173,7 +173,7 @@ type ConfigTests() =
         resolve_result.AssertOk(expected)
 
     [<Test(Description = "This test acts as a note of what happens when you do this")>]
-    member _.DepthsStackEdgeCase() =
+    member _.DepthsStackEdgeCase() : unit =
         let config = Config()
         let parse_result = config.ParseConfigLine("view main = { fsln } > { bash }")
 
@@ -198,7 +198,7 @@ type ConfigTests() =
     [<TestCase("view main = { fsln")>]
     [<TestCase("view main = fsln }")>]
     [<TestCase("view main = { fsln } | { git diff } | { shell }")>]
-    member _.InvalidConfigLines(line: string) =
+    member _.InvalidConfigLines(line: string) : unit =
         let config = Config()
         let parse_result = config.ParseConfigLine(line)
 

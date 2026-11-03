@@ -131,7 +131,7 @@ and Process =
                     | other -> raise(other)
             }
             :> Task
-            
+
         Task.Run(Func<Task>(output_loop))
 
     member this.SendInterrupt() : unit =
@@ -213,13 +213,13 @@ and Process =
     member this.Destroy() : unit =
         this.SendInterrupt()
         this.ReadCancellation.Cancel()
-        
+
         if not(this.HasExitSignal) then
             if this.Pty.WaitForExit(50) then
                 this.ExitSignal.TrySetResult(this.Pty.ExitCode) |> ignore
             else
                 this.Pty.Kill()
-                
+
         this.ReadCancellation.Dispose()
         this.Pty.Dispose()
         this.Terminal.Dispose()

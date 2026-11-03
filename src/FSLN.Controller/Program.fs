@@ -1,7 +1,7 @@
 open FSLN.Controller
 
 [<EntryPoint>]
-let main _args =
+let main (_args: string array) : int =
     match State.TryCreate() with
     | Error error ->
         printfn "%s" error

@@ -1,4 +1,4 @@
-﻿namespace FSLN.Controller
+namespace FSLN.Controller
 
 open System
 open System.Runtime.CompilerServices

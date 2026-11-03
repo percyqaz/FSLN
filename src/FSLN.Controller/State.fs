@@ -1,4 +1,4 @@
-﻿namespace FSLN.Controller
+namespace FSLN.Controller
 
 open System
 open System.IO
@@ -18,7 +18,7 @@ type State =
     }
 
     static member TryCreate() : Result<State, string> =
-        
+
         let find_controller_config_path () =
             let rec search_from (directory: DirectoryInfo) =
                 let config_path = Path.Combine(directory.FullName, ".fsln-controller")
@@ -34,7 +34,7 @@ type State =
 
         let config =
             let config = Config()
-            
+
             match find_controller_config_path() with
             | None -> Error "Could not find `.fsln-controller` in the current directory or any parent directory."
             | Some config_path ->
@@ -43,7 +43,7 @@ type State =
                         match config.ParseConfigLine(line) with
                         | Ok() -> ()
                         | Error reason -> failwithf "Line %i: %s" i reason
-                        
+
                     Ok config
                 with error ->
                     Error $"Could not read controller configuration `{config_path}`: {error.Message}"
@@ -89,17 +89,18 @@ type State =
         }
 
     member private this.StartNextView() : Task =
-        let destroy_current_view() =
+        let destroy_current_view () =
             task {
                 let closing_view = this.CurrentView
-                if not(isNull(closing_view)) then 
+
+                if not(isNull(closing_view)) then
                     do! this.ProcessTracker.Release(closing_view.Left)
-                    
+
                     match closing_view.Right with
                     | Some proc -> do! this.ProcessTracker.Release(proc)
                     | None -> ()
             }
-        
+
         task {
             if this.Stack.Count = 0 then
                 this.Running <- false
@@ -117,16 +118,16 @@ type State =
             this.Stack.Add(config)
             do! this.StartNextView()
         }
-        
+
     member this.AfterClose(depth: int) : Task =
         task {
             for _ = 1 to depth do
                 this.Stack.RemoveAt(this.Stack.Count - 1)
                 do! this.StartNextView()
-                
+
             if depth = 0 then
                 do! this.StartNextView()
-                
+
             this.Render()
         }
 
@@ -140,7 +141,7 @@ type State =
 
     member this.Run() : Task =
 
-        let main_loop() =
+        let main_loop () =
             task {
                 let current_view = this.CurrentView
                 current_view.Left.UpdateState()
@@ -153,7 +154,9 @@ type State =
                     | 'K' ->
                         match this.Config.ResolveViewConfig(Some this.CurrentView.Config, "diff") with
                         | Ok config -> do! this.OpenView(config)
-                        | Error reason -> this.StatusLine <- reason; this.Render()
+                        | Error reason ->
+                            this.StatusLine <- reason
+                            this.Render()
                     | 'h' when key.Modifiers &&& ConsoleModifiers.Alt <> ConsoleModifiers.None ->
                         current_view.FocusedPane <- LeftPane
                         this.Render()
@@ -166,8 +169,7 @@ type State =
                     do! this.AfterClose(snd current_view.Config.Left)
                 else
                     match current_view.Right with
-                    | Some pane when pane.State.IsExited ->
-                        do! this.AfterClose(snd current_view.Config.Right.Value)
+                    | Some pane when pane.State.IsExited -> do! this.AfterClose(snd current_view.Config.Right.Value)
                     | _ -> ()
 
                 if current_view.AutoResize() then
@@ -178,11 +180,11 @@ type State =
             match this.Config.ResolveViewConfig(None, "main") with
             | Ok config -> do! this.OpenView(config)
             | Error reason -> failwithf "No 'main' view defined: %s" reason
-            
+
             let old_cursor = Console.CursorVisible
             Console.Write("\u001b[?1049h\u001b[2J\u001b[H\u001b[?25l")
             Console.CursorVisible <- false
-            
+
             let cancel_handler =
                 Console.CancelKeyPress.Subscribe(fun args ->
                     args.Cancel <- true
@@ -196,7 +198,7 @@ type State =
                     while this.Running do
                         do! main_loop()
                         do! Task.Delay(8)
-                        
+
                     cancel_handler.Dispose()
                     do! this.ProcessTracker.WaitForExit()
                 with _ ->
@@ -209,8 +211,10 @@ type State =
 
     interface IState with
         override this.Rerender() : unit = this.Render()
+
         override this.IsVisible(proc: Process) : bool =
             if this.Stack.Count > 0 && not(isNull(this.CurrentView)) then
                 let v = this.CurrentView
                 v.Left = proc || v.Right = Some proc
-            else false
+            else
+                false

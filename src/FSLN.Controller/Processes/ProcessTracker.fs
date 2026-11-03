@@ -6,8 +6,7 @@ open System.Threading.Tasks
 open FSLN.Controller.Config
 open FSLN.Controller
 
-type ProcessTrackerEntry =
-    { mutable Process: Process; mutable RefCount: int }
+type ProcessTrackerEntry = { mutable Process: Process; mutable RefCount: int }
 
 type ProcessTracker =
     private
@@ -19,16 +18,21 @@ type ProcessTracker =
         }
 
     static member Create() : ProcessTracker =
-        { Processes = Dictionary(); Gate = new SemaphoreSlim(1, 1); Loops = ResizeArray(); HasShutdown = false }
+        {
+            Processes = Dictionary()
+            Gate = new SemaphoreSlim(1, 1)
+            Loops = ResizeArray()
+            HasShutdown = false
+        }
 
     member this.Acquire(config: ProcessConfig, state: IState) : Task<Process> =
-        let create_proc() =
+        let create_proc () =
             task {
                 let! process_instance = Process.StartAsync(config)
                 this.Loops.Add(process_instance.StartRenderLoop(state), config.Command)
                 return process_instance
             }
-        
+
         task {
             do! this.Gate.WaitAsync()
 
@@ -39,6 +43,7 @@ type ProcessTracker =
                         entry.Process.Destroy()
                         let! new_process = create_proc()
                         entry.Process <- new_process
+
                     entry.RefCount <- entry.RefCount + 1
                     return entry.Process
                 | false, _ ->
@@ -48,7 +53,7 @@ type ProcessTracker =
             finally
                 this.Gate.Release() |> ignore
         }
-        
+
     member this.Release(proc: Process) : Task =
         task {
             do! this.Gate.WaitAsync()
@@ -57,6 +62,7 @@ type ProcessTracker =
                 match this.Processes.TryGetValue(proc.Config.Command) with
                 | true, entry ->
                     entry.RefCount <- entry.RefCount - 1
+
                     if entry.RefCount = 0 then
                         entry.Process.Destroy()
                         this.Processes.Remove(proc.Config.Command) |> ignore
