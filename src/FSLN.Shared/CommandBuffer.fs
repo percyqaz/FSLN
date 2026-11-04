@@ -96,4 +96,4 @@ type CommandBuffer() =
 
     member this.Append(lines: string seq) : unit =
         for line in lines do
-            buffer <- buffer + line + Keymap.ENTER
+            buffer <- buffer + ":" + line + Keymap.ENTER
