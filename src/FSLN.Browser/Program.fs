@@ -22,10 +22,11 @@ let get_fsln_config () : string seq =
 let main (argv: string array) : int =
     let init = argv.Length > 0 && argv.[0].ToLower() = "init"
 
-    let client = PipeClient.EstablishConnection(5000)
-    client.SendMessage("hello, world!")
-
-    Console.ReadLine() |> ignore
+    match PipeClient.TryConnect() with
+    | Ok client -> client.SendMessage("hello, world!")
+    | Error reason ->
+        printfn "%s" reason
+        ignore(Console.ReadLine())
 
     match Workspace.TryDetect() with
     | Some _ when init ->

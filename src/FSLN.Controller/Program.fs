@@ -13,7 +13,8 @@ let main (_args: string array) : int =
     let main_async =
         task {
             do! server.StartAsync()
-            do! state.Run()
+            server.OnCommandReceived.Add(state.QueueCommand)
+            do! state.RunAsync()
             do! server.StopAsync()
         }
 

@@ -8,6 +8,8 @@ open System.Text
 open System.Threading
 open System.Threading.Tasks
 
+type PipeCommand = { SourcePID: int; Command: string }
+
 type PipeCommandServer() =
     let active_pipes = ConcurrentDictionary<Guid, NamedPipeServerStream>()
     let reader_tasks = ConcurrentDictionary<Guid, Task>()
@@ -15,8 +17,9 @@ type PipeCommandServer() =
     let mutable cts: CancellationTokenSource option = None
     let mutable accept_task: Task option = None
 
-    // Override this in a derived class.
-    member this.HandleCommand(pid: int, command: string) : unit = printfn "%i: %s" pid command
+    let command_ev = Event<PipeCommand>()
+
+    member this.OnCommandReceived = command_ev.Publish
 
     member private this.HandleClientAsync(id: Guid, pipe: NamedPipeServerStream, token: CancellationToken) : Task =
         task {
@@ -29,9 +32,9 @@ type PipeCommandServer() =
                     let mutable pid = 0
 
                     if not(Int32.TryParse(pid_message, &pid)) then
-                        raise(InvalidDataException("Invalid PID registration."))
+                        raise(InvalidDataException("invalid pid"))
 
-                    writer.WriteLine("OK")
+                    writer.WriteLine()
                     do! writer.FlushAsync(token)
 
                     let mutable reading = true
@@ -39,9 +42,13 @@ type PipeCommandServer() =
                     while reading && not token.IsCancellationRequested do
                         let! command = reader.ReadLineAsync(token)
 
-                        if isNull command then reading <- false else this.HandleCommand(pid, command)
+                        if isNull command then
+                            reading <- false
+                        else
+                            command_ev.Trigger({ SourcePID = pid; Command = command })
                 with
-                | :? OperationCanceledException -> ()
+                | :? InvalidDataException
+                | :? OperationCanceledException
                 | :? IOException -> ()
             finally
                 active_pipes.TryRemove(id) |> ignore

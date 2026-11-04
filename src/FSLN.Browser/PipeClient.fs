@@ -18,7 +18,7 @@ type PipeClient private (pipe: NamedPipeClientStream, writer: StreamWriter) =
                 writer.Flush()
             )
 
-    static member TryConnect() : PipeClient =
+    static member TryConnect() : Result<PipeClient, string> =
         let pipe =
             new NamedPipeClientStream(".", "EXAMPLE", PipeDirection.InOut, PipeOptions.None)
 
@@ -35,12 +35,12 @@ type PipeClient private (pipe: NamedPipeClientStream, writer: StreamWriter) =
             let confirmation = reader.ReadLine()
 
             if confirmation <> "" then
-                failwith $"Unexpected controller confirmation: {confirmation}"
+                failwith $"Unexpected controller confirmation: '{confirmation}'"
 
-            new PipeClient(pipe, writer)
-        with _ ->
+            Ok(new PipeClient(pipe, writer))
+        with error ->
             pipe.Dispose()
-            reraise()
+            Error(error.Message)
 
     interface IDisposable with
         member _.Dispose() : unit =
