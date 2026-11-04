@@ -8,7 +8,7 @@ let main (_args: string array) : int =
         1
     | Ok state ->
 
-    let server = PipeCommandServer()
+    let server = PipeCommandServer("fsln")
 
     let main_async =
         task {

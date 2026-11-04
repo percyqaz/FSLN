@@ -10,7 +10,7 @@ open System.Threading.Tasks
 
 type PipeCommand = { SourcePID: int; Command: string }
 
-type PipeCommandServer() =
+type PipeCommandServer(name: string) =
     let active_pipes = ConcurrentDictionary<Guid, NamedPipeServerStream>()
     let reader_tasks = ConcurrentDictionary<Guid, Task>()
 
@@ -62,7 +62,7 @@ type PipeCommandServer() =
 
                 let pipe =
                     new NamedPipeServerStream(
-                        "EXAMPLE",
+                        name,
                         PipeDirection.InOut,
                         NamedPipeServerStream.MaxAllowedServerInstances,
                         PipeTransmissionMode.Byte,

@@ -18,9 +18,9 @@ type PipeClient private (pipe: NamedPipeClientStream, writer: StreamWriter) =
                 writer.Flush()
             )
 
-    static member TryConnect() : Result<PipeClient, string> =
+    static member TryConnect(name: string) : Result<PipeClient, string> =
         let pipe =
-            new NamedPipeClientStream(".", "EXAMPLE", PipeDirection.InOut, PipeOptions.None)
+            new NamedPipeClientStream(".", name, PipeDirection.InOut, PipeOptions.None)
 
         try
             pipe.Connect(0)
