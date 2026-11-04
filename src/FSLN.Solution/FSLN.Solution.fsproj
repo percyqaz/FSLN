@@ -4,7 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>fsln</ToolCommandName>
-    <RootNamespace>FSLN.Browser</RootNamespace>
+    <RootNamespace>FSLN.Solution</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Path.fs" />
