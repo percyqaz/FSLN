@@ -14,7 +14,7 @@ module FSLN =
 
         let render = Display(state)
 
-        Console.Write(AnsiCodes.ENTER_SECOND_SCREEN)
+        Console.Write(AnsiCodes.EnterSecondScreen)
 
         while state.Running do
             render.Redraw()
@@ -27,4 +27,4 @@ module FSLN =
                 state.ReloadGit()
                 state.AutoReload()
 
-        Console.Write(AnsiCodes.LEAVE_SECOND_SCREEN)
+        Console.Write(AnsiCodes.LeaveSecondScreen)

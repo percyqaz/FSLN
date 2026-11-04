@@ -76,7 +76,7 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
         let console_mode = ConsoleInputMode.Capture()
 
         Console.Write(
-            AnsiCodes.LEAVE_SECOND_SCREEN + AnsiCodes.SAVE_SCREEN + AnsiCodes.CLEAR_SCREEN + AnsiCodes.CURSOR_TO_ORIGIN
+            AnsiCodes.LeaveSecondScreen + AnsiCodes.SaveScreen + AnsiCodes.ClearScreen + AnsiCodes.CursorToOrigin
         )
 
         let proc = Process.Start(start_info)
@@ -107,7 +107,7 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
             match input_thread.TryReadKey(Timeout.Infinite) with
             | _ -> ()
 
-        Console.Write(AnsiCodes.RESTORE_SCREEN + AnsiCodes.ENTER_SECOND_SCREEN)
+        Console.Write(AnsiCodes.RestoreScreen + AnsiCodes.EnterSecondScreen)
 
     member private this.OpenEditor(editor: string) : unit =
         if editor.Contains(" $") then this.DispatchShell(editor) else this.DispatchShell(editor + " $")

@@ -265,7 +265,7 @@ type Display(state: State) =
         | Mode.Search sm -> this.RenderSearchTree(sm)
         | Mode.Git gm -> this.RenderSearchTree(gm)
 
-        Console.Write(AnsiCodes.CURSOR_TO_ORIGIN)
+        Console.Write(AnsiCodes.CursorToOrigin)
         view.Draw()
 
         Console.WriteLine(this.StatusLine().ClearRestOfLine())
