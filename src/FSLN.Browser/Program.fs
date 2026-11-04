@@ -18,11 +18,11 @@ let get_fsln_config () : string seq =
         | _ -> ()
     }
     |> Seq.filter(String.IsNullOrWhiteSpace >> not)
-    
+
 let entry_point (config: string seq, workspace: Workspace) : unit =
     let state = State.Create(workspace)
-    let render = Display(state)
-    
+    let render = View(state)
+
     state.CommandBuffer.Append(config)
     state.CommandBuffer.Dispatch(state.DispatchMessage, state.Keymap)
 

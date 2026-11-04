@@ -5,7 +5,7 @@ open System.Drawing
 open FSLN.Shared
 open FSLN
 
-type Display(state: State) =
+type View(state: State) =
 
     let view = ScreenBuffer(Console.BufferHeight - 2)
 
