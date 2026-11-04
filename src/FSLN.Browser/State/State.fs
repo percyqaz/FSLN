@@ -2,6 +2,7 @@ namespace FSLN
 
 open System
 open System.Runtime.CompilerServices
+open FSLN.Shared
 open FSLN
 
 [<RequireQualifiedAccess>]
@@ -60,7 +61,7 @@ type State =
         {
             Running = true
             Workspace = workspace
-            GitStatus = GitStatus.Fetch()
+            GitStatus = GitStatus.Fetch(workspace.RootPath)
             Expanded = Set.empty
             Mode = Mode.Normal({ Solution = solution; Selected = Selection.Solution(solution) })
             CommandBuffer = CommandBuffer().RegisterDefaultBinds()

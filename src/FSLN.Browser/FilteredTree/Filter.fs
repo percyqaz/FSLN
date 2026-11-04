@@ -1,6 +1,7 @@
 namespace FSLN
 
 open System
+open FSLN.Shared
 
 [<AbstractClass>]
 type Filter() =

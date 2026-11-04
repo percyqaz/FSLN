@@ -2,6 +2,8 @@ namespace FSLN
 
 open System
 open System.Drawing
+open FSLN.Shared
+open FSLN
 
 type Display(state: State) =
 

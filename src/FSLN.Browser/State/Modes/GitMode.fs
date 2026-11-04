@@ -1,5 +1,7 @@
 namespace FSLN
 
+open FSLN.Shared
+
 type GitMode =
     {
         Query: string

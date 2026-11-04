@@ -1,5 +1,7 @@
 namespace FSLN
 
+open FSLN.Shared
+
 [<RequireQualifiedAccess>]
 type Mode =
     | Normal of NormalMode

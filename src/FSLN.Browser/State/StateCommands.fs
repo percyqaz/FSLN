@@ -4,6 +4,7 @@ open System
 open System.IO
 open System.Runtime.CompilerServices
 open FSLN
+open FSLN.Shared
 
 type StateCommands =
 
@@ -89,7 +90,7 @@ type StateCommands =
 
     [<Extension>]
     static member ReloadGit(state: State) : unit =
-        state.GitStatus <- GitStatus.Fetch()
+        state.GitStatus <- GitStatus.Fetch(state.Workspace.RootPath)
         state.Mode <- state.Mode.Update(state.SearchBuffer.ToString(), state.GitStatus)
 
     [<Extension>]
