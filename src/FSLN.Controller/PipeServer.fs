@@ -9,12 +9,11 @@ open System.Threading
 open System.Threading.Tasks
 
 type PipeCommandServer() =
-    let gate = obj()
-    let activePipes = ConcurrentDictionary<Guid, NamedPipeServerStream>()
-    let clientTasks = ConcurrentDictionary<Guid, Task>()
+    let active_pipes = ConcurrentDictionary<Guid, NamedPipeServerStream>()
+    let reader_tasks = ConcurrentDictionary<Guid, Task>()
 
     let mutable cts: CancellationTokenSource option = None
-    let mutable acceptTask: Task option = None
+    let mutable accept_task: Task option = None
 
     // Override this in a derived class.
     member this.HandleCommand(pid: int, command: string) : unit = printfn "%i: %s" pid command
@@ -24,31 +23,28 @@ type PipeCommandServer() =
             try
                 try
                     use reader = new StreamReader(pipe, UTF8Encoding(false), false, 1024, true)
-
                     use writer = new StreamWriter(pipe, UTF8Encoding(false), 1024, true)
 
-                    // First line is the PID registration message.
-                    let! pidLine = reader.ReadLineAsync(token)
-
+                    let! pid_message = reader.ReadLineAsync(token)
                     let mutable pid = 0
 
-                    if not(Int32.TryParse(pidLine, &pid)) then
+                    if not(Int32.TryParse(pid_message, &pid)) then
                         raise(InvalidDataException("Invalid PID registration."))
 
                     writer.WriteLine("OK")
                     do! writer.FlushAsync(token)
 
-                    let mutable keepReading = true
+                    let mutable reading = true
 
-                    while keepReading && not token.IsCancellationRequested do
+                    while reading && not token.IsCancellationRequested do
                         let! command = reader.ReadLineAsync(token)
 
-                        if isNull command then keepReading <- false else this.HandleCommand(pid, command)
+                        if isNull command then reading <- false else this.HandleCommand(pid, command)
                 with
                 | :? OperationCanceledException -> ()
                 | :? IOException -> ()
             finally
-                activePipes.TryRemove(id) |> ignore
+                active_pipes.TryRemove(id) |> ignore
                 pipe.Dispose()
         }
 
@@ -66,17 +62,17 @@ type PipeCommandServer() =
                         PipeOptions.Asynchronous
                     )
 
-                activePipes.[id] <- pipe
+                active_pipes.[id] <- pipe
 
                 try
                     do! pipe.WaitForConnectionAsync(token)
 
-                    let clientTask = this.HandleClientAsync(id, pipe, token)
-                    clientTasks.[id] <- clientTask
+                    let reader_task = this.HandleClientAsync(id, pipe, token)
+                    reader_tasks.[id] <- reader_task
 
                     // Remove completed tasks from the tracking dictionary.
-                    clientTask.ContinueWith(
-                        (fun (_: Task) -> clientTasks.TryRemove(id) |> ignore),
+                    reader_task.ContinueWith(
+                        (fun (_: Task) -> reader_tasks.TryRemove(id) |> ignore),
                         TaskScheduler.Default
                     )
                     |> ignore
@@ -84,20 +80,20 @@ type PipeCommandServer() =
                 | :? OperationCanceledException
                 | :? ObjectDisposedException
                 | :? IOException ->
-                    activePipes.TryRemove(id) |> ignore
+                    active_pipes.TryRemove(id) |> ignore
                     pipe.Dispose()
         }
 
     /// Start listening. Returns once the accept loop has been started.
     member this.StartAsync() : Task =
         lock
-            gate
+            this
             (fun () ->
                 match cts with
                 | Some _ -> invalidOp "Server is already started."
                 | None ->
                     cts <- Some(new CancellationTokenSource())
-                    acceptTask <- Some(this.AcceptLoopAsync(cts.Value.Token))
+                    accept_task <- Some(this.AcceptLoopAsync(cts.Value.Token))
                     Task.CompletedTask
             )
 
@@ -106,37 +102,33 @@ type PipeCommandServer() =
         task {
             let state =
                 lock
-                    gate
+                    this
                     (fun () ->
-                        let oldCts = cts
-                        let oldAcceptTask = acceptTask
+                        let old_cts = cts
+                        let old_accept_task = accept_task
                         cts <- None
-                        acceptTask <- None
-                        oldCts, oldAcceptTask
+                        accept_task <- None
+                        old_cts, old_accept_task
                     )
 
             match state with
-            | Some stopCts, Some listenerTask ->
-                stopCts.Cancel()
+            | Some cts, Some accept_task ->
+                cts.Cancel()
 
-                // Closing these also unblocks clients waiting for their next command.
-                for KeyValue(_, pipe) in activePipes do
+                for KeyValue(_, pipe) in active_pipes do
                     pipe.Dispose()
 
                 try
-                    do! listenerTask
+                    do! accept_task
                 with :? OperationCanceledException ->
                     ()
 
-                let runningClients = clientTasks.Values |> Seq.toArray
-
                 try
-                    do! Task.WhenAll(runningClients)
+                    do! Task.WhenAll(reader_tasks.Values |> Seq.toArray)
                 with
                 | :? OperationCanceledException -> ()
                 | :? IOException -> ()
 
-                stopCts.Dispose()
-
+                cts.Dispose()
             | _ -> ()
         }
