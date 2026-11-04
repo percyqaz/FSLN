@@ -10,7 +10,7 @@ type InputThread() =
         let now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
 
         let timeout_up () =
-            DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - now >= timeout_millis
+            timeout_millis >= 0 && DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - now >= timeout_millis
 
         while not(Console.KeyAvailable) && not(timeout_up()) do
             sw.SpinOnce()

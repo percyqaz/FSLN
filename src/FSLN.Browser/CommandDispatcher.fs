@@ -6,6 +6,7 @@ open System.Diagnostics
 open System.IO
 open System.Runtime.InteropServices
 open System.Threading
+open FSLN.Shared
 
 module private ConsoleInputMode =
     [<Literal>]
