@@ -100,7 +100,7 @@ type View =
         let visible_status =
             if status_line.Length > this.Width then status_line.Substring(0, this.Width) else status_line
 
-        builder.Append($"\u001b[{this.Height};1H\u001b[7m").Append(visible_status).Append("\u001b[0m") |> ignore
+        builder.Append($"\u001b[{this.Height};1H\u001b[2m").Append(visible_status).Append("\u001b[0m") |> ignore
 
         if this.Focused = this.Left && this.Left.Terminal.CursorVisible then
             let buffer = this.Left.Terminal.Buffer
