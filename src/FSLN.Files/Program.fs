@@ -1,7 +1,7 @@
 open System
 open System.IO
-open Fernglas
 open FSLN.Shared
+open FSLN.Files
 
 let entry_point (working_directory: string, config: string seq) : unit =
     let state = State.Create(working_directory, Keymap())

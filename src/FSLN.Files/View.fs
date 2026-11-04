@@ -1,4 +1,4 @@
-namespace Fernglas
+namespace FSLN.Files
 
 open System
 open System.IO
