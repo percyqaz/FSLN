@@ -95,7 +95,11 @@ type State =
             this
             (fun () ->
                 if this.Stack.Count > 0 then
-                    Console.Write(this.CurrentView.Render(StringBuilder(), this.StatusLine).ToString())
+                    Console.Write(
+                        this.CurrentView
+                            .Render(StringBuilder(), this.StatusLine, this.CommandBuffer.ToString())
+                            .ToString()
+                    )
             )
 
     member this.RunAsync(starting_view: string) : Task =

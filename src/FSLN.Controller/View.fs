@@ -3,6 +3,7 @@ namespace FSLN.Controller
 open System
 open System.Text
 open FSLN.Controller
+open FSLN.Shared
 open XTerm
 
 [<Struct>]
@@ -60,7 +61,7 @@ type View =
         else
             false
 
-    member this.Render(builder: StringBuilder, status_line: string) : StringBuilder =
+    member this.Render(builder: StringBuilder, status_line: string, command_buffer: string) : StringBuilder =
 
         let append_terminal (builder: StringBuilder) (terminal: Terminal) (left: int) =
             let buffer = terminal.Buffer
@@ -97,18 +98,29 @@ type View =
         builder.Append($"\u001b[{this.Height};1H\u001b[0m") |> ignore
         builder.Append(' ', this.Width) |> ignore
 
-        let visible_status =
-            if status_line.Length > this.Width then status_line.Substring(0, this.Width) else status_line
+        let full_width (s: string) : string =
+            if s.Length > this.Width then s.Substring(0, this.Width) else s.PadRight(this.Width)
 
-        builder.Append($"\u001b[{this.Height};1H\u001b[2m").Append(visible_status).Append("\u001b[0m") |> ignore
+        let status_line =
+            if command_buffer <> "" then
+                full_width(command_buffer).ForeColor(0xFF99FF).BackColor(0x111111)
+            else
+                full_width(status_line).ForeColor(0xDDDDDD).BackColor(0x111111)
 
-        if this.Focused = this.Left && this.Left.Terminal.CursorVisible then
-            let buffer = this.Left.Terminal.Buffer
-            builder.Append($"\u001b[{buffer.Y + 1};{buffer.X + 1}H\u001b[?25h") |> ignore
+        builder.Append($"\u001b[{this.Height};1H").Append(status_line) |> ignore
 
-        elif Some this.Focused = this.Right && this.Right.Value.Terminal.CursorVisible then
-            let buffer = this.Right.Value.Terminal.Buffer
-            let left_cols = this.Left.Terminal.Cols
-            builder.Append($"\u001b[{buffer.Y + 1};{left_cols + buffer.X + 1}H\u001b[?25h") |> ignore
+        if command_buffer = "" then
+
+            if this.Focused = this.Left && this.Left.Terminal.CursorVisible then
+                let buffer = this.Left.Terminal.Buffer
+                builder.Append($"\u001b[{buffer.Y + 1};{buffer.X + 1}H\u001b[?25h") |> ignore
+
+            elif Some this.Focused = this.Right && this.Right.Value.Terminal.CursorVisible then
+                let buffer = this.Right.Value.Terminal.Buffer
+                let left_cols = this.Left.Terminal.Cols
+                builder.Append($"\u001b[{buffer.Y + 1};{left_cols + buffer.X + 1}H\u001b[?25h") |> ignore
+
+        else
+            builder.Append($"\u001b[{this.Height};{command_buffer.Length + 1}H\u001b[?25h") |> ignore
 
         builder
