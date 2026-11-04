@@ -63,7 +63,7 @@ type StateCommands =
             state.StatusLine <- "Invalid binding."
 
     [<Extension>]
-    static member Edit(state: State, callback: string -> unit) : unit =
+    static member Edit(state: State) : unit =
         let filetype =
             match state.Mode.Selection with
             | Selection.Folder _ -> "/"
@@ -72,7 +72,7 @@ type StateCommands =
             | Selection.Solution sln -> Path.GetExtension(sln.FullPath).ToLower()
 
         let editor = state.Editors.Get(filetype)
-        callback(editor)
+        if editor.Contains(" $") then state.DispatchShell(editor) else state.DispatchShell(editor + " $")
 
     [<Extension>]
     static member Echo(state: State, args: string) : unit = state.StatusLine <- args
@@ -166,3 +166,45 @@ type StateCommands =
         match state.Mode with
         | Mode.Normal nm -> nm.RenameSelection(state, args)
         | _ -> state.StatusLine <- "Files cannot be moved in this mode."
+
+    [<Extension>]
+    static member DispatchCommand(state: State, command: string) : unit =
+        if command.StartsWith('!') then
+            state.DispatchShell(command.Substring(1))
+        else
+
+        let split = command.Split(" ", 2, StringSplitOptions.TrimEntries)
+        let args = if split.Length < 2 then "" else split.[1]
+
+        match split.[0] with
+        | "q"
+        | "q!" -> state.Quit()
+        | "up" -> state.NavigateUp()
+        | "down" -> state.NavigateDown()
+        | "expand_all" -> state.ExpandAll()
+        | "expand" -> state.ExpandSelection()
+        | "collapse" -> state.CollapseSelection()
+        | "move_up" -> state.MoveSelectionUp()
+        | "move_down" -> state.MoveSelectionDown()
+        | "search" -> state.Search()
+        | "git" -> state.ToggleGitMode()
+        | "reload" -> state.Reload()
+        | "reload_git" -> state.ReloadGit()
+        | "reload_auto" -> state.AutoReload()
+        | "add" when args <> "" -> state.AddFile(args)
+        | "move" when args <> "" -> state.RenameSelection(args)
+        | "set" when args <> "" -> state.SetConfig(args)
+        | "bind" when args <> "" -> state.SetBinding(args)
+        | "bind_c" when args <> "" -> state.SetCommandBinding(args)
+        | "bind_s" when args <> "" -> state.SetShellBinding(args)
+        | "editor" when args <> "" -> state.SetEditor(args)
+        | "echo" -> state.Echo(state.ApplySubstitutions(args))
+        | "edit" -> state.Edit()
+        | _ -> ()
+
+    [<Extension>]
+    static member DispatchMessage(state: State, message: string) : unit =
+        if message.StartsWith(':') then
+            state.DispatchCommand(message.Substring(1))
+        else
+            state.StatusLine <- sprintf "Unrecognised message: '%s'" message

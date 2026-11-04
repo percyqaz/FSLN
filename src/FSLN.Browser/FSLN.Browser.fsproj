@@ -33,7 +33,6 @@
     <Compile Include="State\SearchModeCommands.fs" />
     <Compile Include="State\StateCommands.fs" />
     <Compile Include="UI\Display.fs" />
-    <Compile Include="CommandDispatcher.fs" />
     <Compile Include="FSLN.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

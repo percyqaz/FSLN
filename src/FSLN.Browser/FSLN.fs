@@ -9,8 +9,8 @@ module FSLN =
         let state = State.Create(workspace)
         let render = Display(state)
         
-        let command_dispatcher = CommandDispatcher(state)
-        command_dispatcher.DispatchInitialCommandsOnState(config)
+        state.CommandBuffer.Append(config)
+        state.CommandBuffer.Dispatch(state.DispatchMessage, state.Keymap)
 
         Console.Write(AnsiCodes.EnterSecondScreen)
         let input_thread = InputThread()
@@ -21,7 +21,7 @@ module FSLN =
             match input_thread.TryReadKey(2000) with
             | true, input ->
                 state.AddKey(input)
-                command_dispatcher.DispatchCommandsOnState()
+                state.CommandBuffer.Dispatch(state.DispatchMessage, state.Keymap)
             | false, _ ->
                 state.ReloadGit()
                 state.AutoReload()
