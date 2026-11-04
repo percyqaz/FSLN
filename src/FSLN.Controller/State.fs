@@ -2,7 +2,6 @@ namespace FSLN.Controller
 
 open System
 open System.Collections.Concurrent
-open System.IO
 open System.Text
 open System.Threading.Tasks
 open FSLN.Controller
@@ -143,7 +142,7 @@ type State =
         task {
             match this.Config.ResolveViewConfig(None, starting_view) with
             | Ok config -> do! this.OpenViewAsync(config)
-            | Error reason -> failwithf "No 'main' view defined: %s" reason
+            | Error reason -> failwithf "Cannot start with view '%s': %s" starting_view reason
 
             let old_cursor = Console.CursorVisible
             Console.Write("\u001b[?1049h\u001b[2J\u001b[H\u001b[?25l")
