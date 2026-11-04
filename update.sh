@@ -1,3 +1,3 @@
-(cd src/FSLN.Browser && ./update.sh)&
-(cd src/FSLN.Fernglas && ./update.sh)&
+(cd src/FSLN.Solution && ./update.sh)&
+(cd src/FSLN.Files && ./update.sh)&
 wait
