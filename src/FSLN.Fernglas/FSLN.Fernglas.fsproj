@@ -6,13 +6,6 @@
     <ToolCommandName>fernglas</ToolCommandName>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CLI\AnsiCodes.fs" />
-    <Compile Include="CLI\ScreenBuffer.fs" />
-    <Compile Include="CLI\InputThread.fs" />
-    <Compile Include="CLI\Keymap.fs" />
-    <Compile Include="CLI\CommandBuffer.fs" />
-    <Compile Include="CLI\TextBuffer.fs" />
-    <Compile Include="CLI\ConfigFile.fs" />
     <Compile Include="State\Pane.fs" />
     <Compile Include="State\State.fs" />
     <Compile Include="State\ShellExtensions.fs" />

@@ -39,7 +39,7 @@ type ScreenBuffer(height: int) =
 
         let result =
             seq {
-                for i = 1 to this.Height do
+                for _ = 1 to this.Height do
                     let line = if index < lines.Count then lines.[index] else empty_line
                     yield line
                     index <- index + 1

@@ -7,6 +7,13 @@
 
     <ItemGroup>
         <Compile Include="GitStatus.fs" />
+        <Compile Include="AnsiCodes.fs" />
+        <Compile Include="ScreenBuffer.fs" />
+        <Compile Include="InputThread.fs" />
+        <Compile Include="Keymap.fs" />
+        <Compile Include="CommandBuffer.fs" />
+        <Compile Include="TextBuffer.fs" />
+        <Compile Include="ConfigFile.fs" />
     </ItemGroup>
 
 </Project>
