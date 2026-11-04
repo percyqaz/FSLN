@@ -9,6 +9,7 @@
     <Compile Include="Config\Config.fs" />
     <Compile Include="Processes\Process.fs" />
     <Compile Include="Processes\ProcessTracker.fs" />
+    <Compile Include="PipeServer.fs" />
     <Compile Include="BufferCellExtensions.fs" />
     <Compile Include="View.fs" />
     <Compile Include="State.fs" />

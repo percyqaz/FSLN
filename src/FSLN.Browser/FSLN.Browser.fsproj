@@ -6,6 +6,7 @@
     <ToolCommandName>fsln</ToolCommandName>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="PipeClient.fs" />
     <Compile Include="Path.fs" />
     <Compile Include="GitStatus.fs" />
     <Compile Include="Workspace\OrderFile.fs" />
