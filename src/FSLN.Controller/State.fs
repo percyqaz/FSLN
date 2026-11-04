@@ -97,8 +97,7 @@ type State =
                     Console.Write(this.CurrentView.Render(StringBuilder(), this.StatusLine).ToString())
             )
 
-    // todo: pass in view
-    member this.RunAsync() : Task =
+    member this.RunAsync(starting_view: string) : Task =
 
         let main_loop () =
             task {
@@ -142,7 +141,7 @@ type State =
             }
 
         task {
-            match this.Config.ResolveViewConfig(None, "main") with
+            match this.Config.ResolveViewConfig(None, starting_view) with
             | Ok config -> do! this.OpenViewAsync(config)
             | Error reason -> failwithf "No 'main' view defined: %s" reason
 
@@ -187,10 +186,12 @@ type State =
         let config =
             try
                 let config = Config()
+
                 for line in FSLN.Shared.ConfigFile.FromUserFile(".fsln", "views").Commands do
                     match config.ParseConfigLine(line) with
                     | Ok() -> ()
                     | Error reason -> failwithf "Error: %s\nAt line: %s" reason line
+
                 Ok config
             with error ->
                 Error $"Could not read controller configuration: {error.Message}"

@@ -5,13 +5,16 @@ open FSLN.Solution
 
 let get_fsln_config () : string seq =
     let global_config = ConfigFile.FromUserFile(".fsln", "solution")
-    
+
     match Path.walk_tree_specific_file(".fsln") with
     | Some local_config_path ->
         let local_config = ConfigFile.FromPath(local_config_path, "solution")
-        seq { yield! global_config.Commands; yield! local_config.Commands }
-    | None ->
-        global_config.Commands
+
+        seq {
+            yield! global_config.Commands
+            yield! local_config.Commands
+        }
+    | None -> global_config.Commands
 
 let entry_point (config: string seq, workspace: Workspace) : unit =
     let state = State.Create(workspace)
