@@ -1,7 +1,7 @@
 namespace FSLN.Controller.Tests
 
 open System.Runtime.CompilerServices
-open FSLN.Controller.Config
+open FSLN.Controller
 open NUnit.Framework
 
 [<TestFixture>]
