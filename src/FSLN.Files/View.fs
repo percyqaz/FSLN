@@ -117,7 +117,7 @@ type View(state: State) =
         | None -> ()
 
         let status_line =
-            "Fernglas ".ForeColor(0xFFCC88).Bold() + state.StatusLine.ForeColor(0x444444)
+            "FSLN ".ForeColor(0xFFCC88).Bold() + state.StatusLine.ForeColor(0x444444)
 
         let buffer =
             if state.SearchBufferFocused then

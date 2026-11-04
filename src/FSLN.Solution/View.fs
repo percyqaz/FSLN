@@ -248,7 +248,7 @@ type View(state: State) =
                     (dirty_files(status).ForeColor(state.Theme.ColorGitWorkingTreeDirty))
             | None -> ""
 
-        git_status + state.StatusLine
+        "FSLN ".ForeColor(0xCC88FF).Bold() + git_status + state.StatusLine
 
     member this.BufferLine() : string =
         match state.ActiveBuffer with
