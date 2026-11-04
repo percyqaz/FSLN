@@ -1,7 +1,7 @@
 <Solution>
-  <Project Path="src/FSLN.Fernglas/FSLN.Fernglas.fsproj" />
   <Project Path="src/FSLN.Controller/FSLN.Controller.fsproj" />
   <Project Path="src/FSLN.Controller.Tests/FSLN.Controller.Tests.fsproj" />
+  <Project Path="src/FSLN.Files/FSLN.Files.fsproj" />
   <Project Path="src/FSLN.Shared/FSLN.Shared.fsproj" />
   <Project Path="src/FSLN.Solution/FSLN.Solution.fsproj" />
 </Solution>

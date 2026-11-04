@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>fernglas</ToolCommandName>
+    <RootNamespace>FSLN.Fernglas</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="State\Pane.fs" />
