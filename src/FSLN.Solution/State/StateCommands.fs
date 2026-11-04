@@ -177,7 +177,7 @@ type StateCommands =
 
         match split.[0] with
         | "q"
-        | "q!" -> state.Quit()
+        | "exit" -> state.Quit()
         | "up" -> state.NavigateUp()
         | "down" -> state.NavigateDown()
         | "expand_all" -> state.ExpandAll()

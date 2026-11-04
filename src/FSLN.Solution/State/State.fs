@@ -1,7 +1,6 @@
 namespace FSLN.Solution
 
 open System
-open System.Runtime.CompilerServices
 open FSLN.Shared
 
 [<RequireQualifiedAccess>]
@@ -64,7 +63,7 @@ type State =
             GitStatus = GitStatus.Fetch(workspace.RootPath)
             Expanded = Set.empty
             Mode = Mode.Normal({ Solution = solution; Selected = Selection.Solution(solution) })
-            Keymap = Keymap().RegisterDefaultBinds()
+            Keymap = Keymap()
             CommandBuffer = CommandBuffer()
             SearchBuffer = TextBuffer()
             ActiveBuffer = ActiveBuffer.Command
@@ -72,27 +71,3 @@ type State =
             Theme = Theme.Default
             Editors = Editors.Default
         }
-
-    [<Extension>]
-    static member private RegisterDefaultBinds(keymap: Keymap) : Keymap =
-        keymap.Alias("<Esc>", ":q<Enter>")
-
-        keymap.Alias("h", ":collapse<Enter>")
-        keymap.Alias("j", ":down<Enter>")
-        keymap.Alias("k", ":up<Enter>")
-        keymap.Alias("l", ":expand<Enter>")
-        keymap.Alias("<A-k>", ":move_up<Enter>")
-        keymap.Alias("<A-j>", ":move_down<Enter>")
-        keymap.Alias("<Tab>", ":search<Enter>")
-        keymap.Alias(".", ":echo $<Enter>")
-
-        keymap.Alias("<Left>", "h")
-        keymap.Alias("<Down>", "j")
-        keymap.Alias("<Up>", "k")
-        keymap.Alias("<Right>", "l")
-        keymap.Alias("<A-Up>", "<A-k>")
-        keymap.Alias("<A-Down>", "<A-j>")
-        keymap.Alias("<Enter>", ":edit<Enter>")
-        keymap.Alias("a", "lj")
-
-        keymap

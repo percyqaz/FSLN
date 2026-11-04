@@ -189,7 +189,6 @@ type StateCommands =
 
         match split.[0] with
         | "q"
-        | "q!"
         | "exit" -> state.Exit()
         | "echo" -> state.Echo(args)
         | "bind" -> state.Alias(args)
