@@ -6,7 +6,6 @@
     <ToolCommandName>fernglas</ToolCommandName>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="GitStatus.fs" />
     <Compile Include="CLI\AnsiCodes.fs" />
     <Compile Include="CLI\ScreenBuffer.fs" />
     <Compile Include="CLI\InputThread.fs" />
@@ -22,5 +21,8 @@
     <Compile Include="UI\View.fs" />
     <Compile Include="Fernglas.fs" />
     <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FSLN.Shared\FSLN.Shared.fsproj" />
   </ItemGroup>
 </Project>

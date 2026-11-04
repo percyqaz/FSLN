@@ -3,7 +3,6 @@ namespace Fernglas
 open System.IO
 open System.Diagnostics
 
-
 [<Struct>]
 type GitStatusType =
     | Unchanged
