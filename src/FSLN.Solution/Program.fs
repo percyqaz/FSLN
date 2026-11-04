@@ -20,7 +20,7 @@ let entry_point (config: string seq, workspace: Workspace) : unit =
     let state = State.Create(workspace)
     let render = View(state)
 
-    state.CommandBuffer.Append(config)
+    state.CommandBuffer.AppendCommands(config)
     state.CommandBuffer.Dispatch(state.DispatchMessage, state.Keymap)
 
     Console.Write(AnsiCodes.EnterSecondScreen)

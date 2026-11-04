@@ -7,7 +7,7 @@ let entry_point (working_directory: string, config: string seq) : unit =
     let state = State.Create(working_directory, Keymap())
     let render = View(state)
 
-    state.CommandBuffer.Append(config)
+    state.CommandBuffer.AppendCommands(config)
     state.CommandBuffer.Dispatch(state.DispatchMessage, state.Keymap)
 
     Console.Write(AnsiCodes.EnterSecondScreen)

@@ -94,6 +94,6 @@ type CommandBuffer() =
                 previous_buffer <- buffer
                 handle_keymap_and_messages()
 
-    member this.Append(lines: string seq) : unit =
-        for line in lines do
-            buffer <- buffer + ":" + line + Keymap.ENTER
+    member this.AppendCommands(commands: string seq) : unit =
+        for cmd in commands do
+            buffer <- buffer + ":" + cmd + Keymap.ENTER
