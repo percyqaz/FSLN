@@ -4,6 +4,7 @@ open System
 open System.Collections.Concurrent
 open System.Text
 open System.Threading.Tasks
+open FSLN.Shared
 open FSLN.Controller
 
 type State =
@@ -16,6 +17,7 @@ type State =
             CommandQueue: ConcurrentQueue<PipeCommand>
             mutable CurrentView: View | null
             mutable StatusLine: string
+            CommandBuffer: CommandBuffer
         }
 
     member private this.CreateViewAsync(config: ViewConfig) : Task<View> =
@@ -88,7 +90,7 @@ type State =
             this.Render()
         }
 
-    member this.Render() : unit =
+    member private this.Render() : unit =
         lock
             this
             (fun () ->
@@ -100,27 +102,36 @@ type State =
 
         let main_loop () =
             task {
+                let empty_keymap = Keymap()
                 let current_view = this.CurrentView
                 current_view.Left.UpdateState()
                 current_view.Right |> Option.iter(_.UpdateState())
 
                 if Console.KeyAvailable then
                     let key = Console.ReadKey(true)
+                    let alt = key.Modifiers &&& ConsoleModifiers.Alt <> ConsoleModifiers.None
 
                     match key.KeyChar with
-                    | 'K' ->
-                        match this.Config.ResolveViewConfig(Some this.CurrentView.Config, "diff") with
-                        | Ok config -> do! this.OpenViewAsync(config)
-                        | Error reason ->
-                            this.StatusLine <- reason
-                            this.Render()
-                    | 'h' when key.Modifiers &&& ConsoleModifiers.Alt <> ConsoleModifiers.None ->
-                        current_view.FocusedPane <- LeftPane
-                        this.Render()
-                    | 'l' when key.Modifiers &&& ConsoleModifiers.Alt <> ConsoleModifiers.None ->
+                    | ';' when alt ->
+                        this.CommandBuffer.AddKey(ConsoleKeyInfo(':', ConsoleKey.OemComma, false, false, false))
+                    | _ when this.CommandBuffer.ToString() <> "" -> this.CommandBuffer.AddKey(key)
+                    | 'h' when alt -> current_view.FocusedPane <- LeftPane
+                    | 'l' when alt ->
                         current_view.FocusedPane <- if current_view.Right.IsSome then RightPane else LeftPane
-                        this.Render()
                     | _ -> current_view.Focused.SendKey(key)
+
+                    this.Render()
+
+                if this.CommandBuffer.ToString() <> "" then
+                    this.CommandBuffer.Dispatch(
+                        (fun msg ->
+                            this
+                                .DispatchCommandAsync(msg.Substring(1), this.CurrentView.FocusedPane = RightPane)
+                                .GetAwaiter()
+                                .GetResult()
+                        ),
+                        empty_keymap
+                    )
 
                 if current_view.Left.State.IsExited then
                     do! this.HandleCloseAsync(snd current_view.Config.Left)
@@ -135,7 +146,13 @@ type State =
 
                 while not(this.CommandQueue.IsEmpty) do
                     match this.CommandQueue.TryDequeue() with
-                    | true, cmd -> do! this.DispatchCommandAsync(cmd)
+                    | true, cmd ->
+                        let is_right =
+                            not(isNull(this.CurrentView))
+                            && this.CurrentView.Right.IsSome
+                            && this.CurrentView.Right.Value.Pty.Pid = cmd.SourcePID
+
+                        do! this.DispatchCommandAsync(cmd.Command, is_right)
                     | false, _ -> ()
             }
 
@@ -172,9 +189,38 @@ type State =
                 Console.CursorVisible <- old_cursor
         }
 
-    member this.DispatchCommandAsync(command: PipeCommand) : Task =
+    member this.DispatchCommandAsync(command: string, is_right_side: bool) : Task =
         task {
-            this.StatusLine <- sprintf "%i: %s" command.SourcePID command.Command
+            let split = command.Split(' ', 2)
+            let cmd = split.[0].Trim()
+            let args = if split.Length > 1 then split.[1].Trim() else ""
+
+            match cmd with
+            | "q"
+            | "exit" -> do! this.HandleCloseAsync(1)
+            | "echo" -> this.StatusLine <- args
+            | "show" ->
+                match this.Config.ResolveViewConfig(Some this.CurrentView.Config, args) with
+                | Error reason -> this.StatusLine <- reason
+                | Ok view -> do! this.OpenViewAsync(view)
+            | "aside" when is_right_side ->
+                match this.Config.ResolveViewConfig(Some this.CurrentView.Config, args + " | .") with
+                | Error reason -> this.StatusLine <- reason
+                | Ok view -> do! this.OpenViewAsync(view)
+            | "aside" ->
+                match this.Config.ResolveViewConfig(Some this.CurrentView.Config, ". | " + args) with
+                | Error reason -> this.StatusLine <- reason
+                | Ok view -> do! this.OpenViewAsync(view)
+            | "atop" when is_right_side ->
+                match this.Config.ResolveViewConfig(Some this.CurrentView.Config, ". | " + args) with
+                | Error reason -> this.StatusLine <- reason
+                | Ok view -> do! this.OpenViewAsync(view)
+            | "atop" ->
+                match this.Config.ResolveViewConfig(Some this.CurrentView.Config, args + " | .") with
+                | Error reason -> this.StatusLine <- reason
+                | Ok view -> do! this.OpenViewAsync(view)
+            | _ -> this.StatusLine <- sprintf "Unrecognised command: '%s'" cmd
+
             this.Render()
         }
 
@@ -186,7 +232,7 @@ type State =
             try
                 let config = Config()
 
-                for line in FSLN.Shared.ConfigFile.FromUserFile(".fsln", "views").Commands do
+                for line in ConfigFile.FromUserFile(".fsln", "views").Commands do
                     match config.ParseConfigLine(line) with
                     | Ok() -> ()
                     | Error reason -> failwithf "Error: %s\nAt line: %s" reason line
@@ -207,6 +253,7 @@ type State =
                     CommandQueue = ConcurrentQueue()
                     CurrentView = null
                     StatusLine = ""
+                    CommandBuffer = CommandBuffer()
                 }
 
     interface IState with
