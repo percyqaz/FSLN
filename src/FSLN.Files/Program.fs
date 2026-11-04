@@ -24,5 +24,5 @@ let entry_point (working_directory: string, config: string seq) : unit =
 
     Console.Write(AnsiCodes.LeaveSecondScreen + AnsiCodes.CursorVisible)
 
-let config = ConfigFile.FromUserFile(".fernglas")
+let config = ConfigFile.FromUserFile(".fsln", "files")
 entry_point(Directory.GetCurrentDirectory(), config.Commands)

@@ -4,20 +4,14 @@ open FSLN.Shared
 open FSLN.Solution
 
 let get_fsln_config () : string seq =
-    let user_profile_settings =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".fsln")
-
-    let local_directory_settings = Path.walk_tree_specific_file(".fsln")
-
-    seq {
-        if File.Exists(user_profile_settings) then
-            yield! File.ReadAllLines(user_profile_settings)
-
-        match local_directory_settings with
-        | Some file when file <> user_profile_settings && File.Exists(file) -> yield! File.ReadAllLines(file)
-        | _ -> ()
-    }
-    |> Seq.filter(String.IsNullOrWhiteSpace >> not)
+    let global_config = ConfigFile.FromUserFile(".fsln", "solution")
+    
+    match Path.walk_tree_specific_file(".fsln") with
+    | Some local_config_path ->
+        let local_config = ConfigFile.FromPath(local_config_path, "solution")
+        seq { yield! global_config.Commands; yield! local_config.Commands }
+    | None ->
+        global_config.Commands
 
 let entry_point (config: string seq, workspace: Workspace) : unit =
     let state = State.Create(workspace)
