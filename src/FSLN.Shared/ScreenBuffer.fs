@@ -1,5 +1,8 @@
 namespace FSLN.Shared
 
+open System
+open System.Text
+
 type ScreenBuffer(height: int) =
 
     let lines = ResizeArray()
@@ -21,6 +24,14 @@ type ScreenBuffer(height: int) =
             this.CursorHere()
 
         this.Line(line)
+
+    member this.Draw() : unit =
+        let sb = StringBuilder().Append(AnsiCodes.CursorInvisible)
+
+        for line in this.RenderToArray("") do
+            sb.AppendLine(line.ClearRestOfLine()) |> ignore
+
+        Console.Write(sb.Append(AnsiCodes.CursorVisible).ToString())
 
     member this.RenderToArray(empty_line: string) : string array =
 
