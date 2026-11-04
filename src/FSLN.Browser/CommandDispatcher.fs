@@ -1,47 +1,10 @@
 namespace FSLN
 
 open System
-open System.ComponentModel
 open System.Diagnostics
 open System.IO
-open System.Runtime.InteropServices
 open System.Threading
 open FSLN.Shared
-
-module private ConsoleInputMode =
-    [<Literal>]
-    let STD_INPUT_HANDLE = -10
-
-    [<DllImport("kernel32.dll", SetLastError = true)>]
-    extern nativeint GetStdHandle(int nStdHandle)
-
-    [<DllImport("kernel32.dll", SetLastError = true)>]
-    extern bool GetConsoleMode(nativeint hConsoleHandle, uint32& lpMode)
-
-    [<DllImport("kernel32.dll", SetLastError = true)>]
-    extern bool SetConsoleMode(nativeint hConsoleHandle, uint32 dwMode)
-
-    let Capture () : (nativeint * uint32) option =
-        if not(OperatingSystem.IsWindows()) then
-            None
-        else
-            let handle = GetStdHandle(STD_INPUT_HANDLE)
-
-            if handle = IntPtr.Zero || handle = IntPtr(-1) then
-                raise(Win32Exception(Marshal.GetLastWin32Error()))
-
-            let mutable mode = 0u
-
-            if not(GetConsoleMode(handle, &mode)) then
-                raise(Win32Exception(Marshal.GetLastWin32Error()))
-
-            Some(handle, mode)
-
-    let Restore (snapshot: (nativeint * uint32) option) : unit =
-        match snapshot with
-        | Some(handle, mode) when not(SetConsoleMode(handle, mode)) ->
-            raise(Win32Exception(Marshal.GetLastWin32Error()))
-        | _ -> ()
 
 type CommandDispatcher(state: State, input_thread: InputThread) =
 
@@ -73,7 +36,6 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
                 "/bin/sh", "-c \"" + this.ApplySubstitutions(command) + "\""
 
         let start_info = ProcessStartInfo(shell, args)
-        let console_mode = ConsoleInputMode.Capture()
 
         Console.Write(
             AnsiCodes.LeaveSecondScreen + AnsiCodes.SaveScreen + AnsiCodes.ClearScreen + AnsiCodes.CursorToOrigin
@@ -93,7 +55,6 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
             proc.WaitForExit()
         finally
             ctrl_c_handler.Dispose()
-            ConsoleInputMode.Restore(console_mode)
 
         if proc.ExitCode <> 0 then
             match input_thread.TryReadKey(Timeout.Infinite) with
