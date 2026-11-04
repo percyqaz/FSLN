@@ -12,7 +12,6 @@
     <Compile Include="State\PaneCommands.fs" />
     <Compile Include="State\StateCommands.fs" />
     <Compile Include="UI\View.fs" />
-    <Compile Include="Fernglas.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

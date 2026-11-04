@@ -1,6 +1,28 @@
+open System
 open System.IO
 open Fernglas
 open FSLN.Shared
 
+let entry_point (working_directory: string, config: string seq) : unit =
+    let state = State.Create(working_directory, Keymap())
+    let render = View(state)
+
+    state.CommandBuffer.Append(config)
+    state.CommandBuffer.Dispatch(state.DispatchMessage, state.Keymap)
+
+    Console.Write(AnsiCodes.EnterSecondScreen)
+    let input_thread = InputThread()
+
+    while state.Running do
+        render.Redraw()
+
+        match input_thread.TryReadKey(2000) with
+        | true, input ->
+            state.AddKey(input)
+            state.CommandBuffer.Dispatch(state.DispatchMessage, state.Keymap)
+        | false, _ -> state.Refresh()
+
+    Console.Write(AnsiCodes.LeaveSecondScreen + AnsiCodes.CursorVisible)
+
 let config = ConfigFile.FromUserFile(".fernglas")
-Fernglas.loop(Directory.GetCurrentDirectory(), config.Commands)
+entry_point(Directory.GetCurrentDirectory(), config.Commands)
