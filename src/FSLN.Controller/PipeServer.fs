@@ -8,7 +8,6 @@ open System.Text
 open System.Threading
 open System.Threading.Tasks
 
-[<AbstractClass>]
 type PipeCommandServer() =
     let gate = obj()
     let activePipes = ConcurrentDictionary<Guid, NamedPipeServerStream>()
@@ -77,20 +76,13 @@ type PipeCommandServer() =
 
                     // Remove completed tasks from the tracking dictionary.
                     clientTask.ContinueWith(
-                        (fun (_: Task) ->
-                            let mutable ignored = Unchecked.defaultof<Task>
-                            clientTasks.TryRemove(id, &ignored) |> ignore
-                        ),
+                        (fun (_: Task) -> clientTasks.TryRemove(id) |> ignore),
                         TaskScheduler.Default
                     )
                     |> ignore
                 with
-                | :? OperationCanceledException ->
-                    activePipes.TryRemove(id) |> ignore
-                    pipe.Dispose()
-                | :? ObjectDisposedException ->
-                    activePipes.TryRemove(id) |> ignore
-                    pipe.Dispose()
+                | :? OperationCanceledException
+                | :? ObjectDisposedException
                 | :? IOException ->
                     activePipes.TryRemove(id) |> ignore
                     pipe.Dispose()
@@ -104,9 +96,8 @@ type PipeCommandServer() =
                 match cts with
                 | Some _ -> invalidOp "Server is already started."
                 | None ->
-                    let newCts = new CancellationTokenSource()
-                    cts <- Some newCts
-                    acceptTask <- Some(this.AcceptLoopAsync(newCts.Token))
+                    cts <- Some(new CancellationTokenSource())
+                    acceptTask <- Some(this.AcceptLoopAsync(cts.Value.Token))
                     Task.CompletedTask
             )
 

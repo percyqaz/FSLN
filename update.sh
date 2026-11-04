@@ -1,4 +1,4 @@
 cd src/FSLN.Browser
-dotnet tool uninstall -g fsln
+dotnet tool uninstall -g fsln.browser
 dotnet pack
-dotnet tool install -g --add-source bin/Release fsln
+dotnet tool install -g --add-source bin/Release FSLN.Browser

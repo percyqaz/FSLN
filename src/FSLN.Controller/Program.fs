@@ -8,8 +8,17 @@ let main (_args: string array) : int =
         1
     | Ok state ->
 
+    let server = PipeCommandServer()
+
+    let main_async =
+        task {
+            do! server.StartAsync()
+            do! state.Run()
+            do! server.StopAsync()
+        }
+
     try
-        state.Run().GetAwaiter().GetResult()
+        main_async.GetAwaiter().GetResult()
         0
     with error ->
         printfn "%s" error.Message

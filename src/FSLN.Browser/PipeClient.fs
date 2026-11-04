@@ -6,7 +6,7 @@ open System.IO.Pipes
 open System.Text
 
 type PipeClient private (pipe: NamedPipeClientStream, writer: StreamWriter) =
-    member _.SendMessage(message: string) =
+    member this.SendMessage(message: string) : unit =
         if isNull message then
             nullArg(nameof message)
 
@@ -23,11 +23,11 @@ type PipeClient private (pipe: NamedPipeClientStream, writer: StreamWriter) =
             )
 
     interface IDisposable with
-        member _.Dispose() =
+        member _.Dispose() : unit =
             writer.Dispose()
             pipe.Dispose()
 
-    static member EstablishConnection(timeoutMs: int) =
+    static member EstablishConnection(timeoutMs: int) : PipeClient =
         let pipe =
             new NamedPipeClientStream(".", "EXAMPLE", PipeDirection.InOut, PipeOptions.None)
 
