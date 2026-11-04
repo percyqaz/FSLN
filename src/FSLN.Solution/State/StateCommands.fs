@@ -1,9 +1,8 @@
-namespace FSLN
+namespace FSLN.Solution
 
 open System
 open System.IO
 open System.Runtime.CompilerServices
-open FSLN
 open FSLN.Shared
 
 type StateCommands =

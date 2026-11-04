@@ -1,9 +1,8 @@
-namespace FSLN
+namespace FSLN.Solution
 
 open System
 open System.Drawing
 open FSLN.Shared
-open FSLN
 
 type View(state: State) =
 

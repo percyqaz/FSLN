@@ -1,11 +1,11 @@
-namespace FSLN
+namespace FSLN.Solution
 
 open System
 open System.IO
 open System.Runtime.CompilerServices
 open Microsoft.Build.Evaluation
 open Microsoft.Build.Construction
-open FSLN
+open FSLN.Solution
 
 type WorkspaceLoader =
 

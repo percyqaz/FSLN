@@ -1,7 +1,6 @@
-namespace FSLN
+namespace FSLN.Solution
 
 open System.Runtime.CompilerServices
-open FSLN
 
 type NormalModeCommands =
 

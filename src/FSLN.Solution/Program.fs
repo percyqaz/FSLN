@@ -1,7 +1,7 @@
 open System
 open System.IO
 open FSLN.Shared
-open FSLN
+open FSLN.Solution
 
 let get_fsln_config () : string seq =
     let user_profile_settings =

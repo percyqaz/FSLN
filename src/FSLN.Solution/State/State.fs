@@ -1,9 +1,8 @@
-namespace FSLN
+namespace FSLN.Solution
 
 open System
 open System.Runtime.CompilerServices
 open FSLN.Shared
-open FSLN
 
 [<RequireQualifiedAccess>]
 type ActiveBuffer =

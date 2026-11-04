@@ -1,4 +1,4 @@
-namespace FSLN
+namespace FSLN.Solution
 
 type Editors =
     private
