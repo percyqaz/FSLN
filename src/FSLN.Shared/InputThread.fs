@@ -1,4 +1,4 @@
-namespace Fernglas
+namespace FSLN.Shared
 
 open System
 open System.Threading

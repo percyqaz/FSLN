@@ -4,6 +4,7 @@ open System
 open System.IO
 open System.Diagnostics
 open System.Runtime.CompilerServices
+open FSLN.Shared
 
 type private ShellExtensions =
 

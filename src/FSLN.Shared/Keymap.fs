@@ -1,4 +1,4 @@
-﻿namespace Fernglas
+﻿namespace FSLN.Shared
 
 open System.Collections
 open System.Collections.Generic

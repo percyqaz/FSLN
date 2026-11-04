@@ -2,6 +2,7 @@ namespace Fernglas
 
 open System
 open System.IO
+open FSLN.Shared
 
 type View(state: State) =
 

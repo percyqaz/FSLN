@@ -1,5 +1,6 @@
 open System
 open System.IO
+open FSLN.Shared
 open FSLN
 
 let get_fsln_config () : string seq =

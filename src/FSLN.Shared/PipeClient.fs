@@ -1,4 +1,4 @@
-namespace FSLN
+namespace FSLN.Shared
 
 open System
 open System.IO

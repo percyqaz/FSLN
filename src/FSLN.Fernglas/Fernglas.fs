@@ -1,6 +1,7 @@
 namespace Fernglas
 
 open System
+open FSLN.Shared
 
 module Fernglas =
 

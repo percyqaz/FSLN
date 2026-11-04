@@ -1,4 +1,4 @@
-namespace Fernglas
+namespace FSLN.Shared
 
 open System.IO
 open System.Diagnostics

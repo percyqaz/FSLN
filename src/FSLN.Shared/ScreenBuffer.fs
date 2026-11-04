@@ -1,4 +1,4 @@
-namespace Fernglas
+namespace FSLN.Shared
 
 type ScreenBuffer(height: int) =
 
