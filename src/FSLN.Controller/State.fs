@@ -97,6 +97,7 @@ type State =
                     Console.Write(this.CurrentView.Render(StringBuilder(), this.StatusLine).ToString())
             )
 
+    // todo: pass in view
     member this.RunAsync() : Task =
 
         let main_loop () =
@@ -183,34 +184,16 @@ type State =
 
     static member TryCreate() : Result<State, string> =
 
-        let find_controller_config_path () =
-            let rec search_from (directory: DirectoryInfo) =
-                let config_path = Path.Combine(directory.FullName, ".fsln-controller")
-
-                if File.Exists(config_path) then
-                    Some config_path
-                else
-                    match directory.Parent with
-                    | null -> None
-                    | parent -> search_from parent
-
-            search_from(DirectoryInfo(Environment.CurrentDirectory))
-
         let config =
-            let config = Config()
-
-            match find_controller_config_path() with
-            | None -> Error "Could not find `.fsln-controller` in the current directory or any parent directory."
-            | Some config_path ->
-                try
-                    for i, line in File.ReadAllLines(config_path) |> Seq.indexed do
-                        match config.ParseConfigLine(line) with
-                        | Ok() -> ()
-                        | Error reason -> failwithf "Line %i: %s" i reason
-
-                    Ok config
-                with error ->
-                    Error $"Could not read controller configuration `{config_path}`: {error.Message}"
+            try
+                let config = Config()
+                for line in FSLN.Shared.ConfigFile.FromUserFile(".fsln", "views").Commands do
+                    match config.ParseConfigLine(line) with
+                    | Ok() -> ()
+                    | Error reason -> failwithf "Error: %s\nAt line: %s" reason line
+                Ok config
+            with error ->
+                Error $"Could not read controller configuration: {error.Message}"
 
         match config with
         | Error reason -> Error reason
