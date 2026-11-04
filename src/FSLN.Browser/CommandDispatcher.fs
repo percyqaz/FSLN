@@ -1,81 +1,15 @@
 namespace FSLN
 
 open System
-open System.Diagnostics
-open System.IO
-open System.Threading
-open FSLN.Shared
 
-type CommandDispatcher(state: State, input_thread: InputThread) =
-
-    member private this.ApplySubstitutions(command: string) : string =
-        command
-            .Replace("$$", '\uFFFD'.ToString())
-            .Replace("$SOLUTION", state.Mode.Solution.FullPath)
-            .Replace(
-                "$GITPATH",
-                match state.GitStatus with
-                | Some gs -> Path.GetRelativePath(gs.RootPath, state.Mode.Selection.FullPath)
-                | None -> ""
-            )
-            .Replace(
-                "$PROJECT",
-                match state.Mode.Selection.ParentProject with
-                | Some project -> project.FullPath
-                | None -> ""
-            )
-            .Replace("$", state.Mode.Selection.FullPath)
-            .Replace('\uFFFD', '$')
-
-    member private this.DispatchShell(command: string) : unit =
-
-        let shell, args =
-            if OperatingSystem.IsWindows() then
-                "cmd.exe", "/c " + this.ApplySubstitutions(command)
-            else
-                "/bin/sh", "-c \"" + this.ApplySubstitutions(command) + "\""
-
-        let start_info = ProcessStartInfo(shell, args)
-
-        Console.Write(
-            AnsiCodes.LeaveSecondScreen + AnsiCodes.SaveScreen + AnsiCodes.ClearScreen + AnsiCodes.CursorToOrigin
-        )
-
-        let proc = Process.Start(start_info)
-
-        let ctrl_c_handler =
-            Console.CancelKeyPress.Subscribe(fun ev ->
-                if not(command.StartsWith("vim")) then
-                    ev.Cancel <- true
-                    proc.Kill()
-                    Console.WriteLine("Process force-killed!".ForeColor(0xFF8888))
-            )
-
-        try
-            proc.WaitForExit()
-        finally
-            ctrl_c_handler.Dispose()
-
-        if proc.ExitCode <> 0 then
-            match input_thread.TryReadKey(Timeout.Infinite) with
-            | _ -> ()
-
-            state.StatusLine <- sprintf "(%i)" proc.ExitCode
-
-        elif Console.GetCursorPosition() <> struct (0, 0) then
-            Console.WriteLine("Press any key to return".ForeColor(0x666666))
-
-            match input_thread.TryReadKey(Timeout.Infinite) with
-            | _ -> ()
-
-        Console.Write(AnsiCodes.RestoreScreen + AnsiCodes.EnterSecondScreen)
+type CommandDispatcher(state: State) =
 
     member private this.OpenEditor(editor: string) : unit =
-        if editor.Contains(" $") then this.DispatchShell(editor) else this.DispatchShell(editor + " $")
+        if editor.Contains(" $") then state.DispatchShell(editor) else state.DispatchShell(editor + " $")
 
     member this.DispatchCommand(command: string) : unit =
         if command.StartsWith('!') then
-            this.DispatchShell(command.Substring(1))
+            state.DispatchShell(command.Substring(1))
         else
 
         let split = command.Split(" ", 2, StringSplitOptions.TrimEntries)
@@ -103,7 +37,7 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
         | "bind_c" when args <> "" -> state.SetCommandBinding(args)
         | "bind_s" when args <> "" -> state.SetShellBinding(args)
         | "editor" when args <> "" -> state.SetEditor(args)
-        | "echo" -> state.Echo(this.ApplySubstitutions(args))
+        | "echo" -> state.Echo(state.ApplySubstitutions(args))
         | "edit" -> state.Edit(this.OpenEditor)
         | _ -> ()
 

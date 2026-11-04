@@ -7,14 +7,13 @@ module FSLN =
 
     let loop (config: string seq, workspace: Workspace) : unit =
         let state = State.Create(workspace)
-        let input_thread = InputThread()
-        let command_dispatcher = CommandDispatcher(state, input_thread)
-
+        let render = Display(state)
+        
+        let command_dispatcher = CommandDispatcher(state)
         command_dispatcher.DispatchInitialCommandsOnState(config)
 
-        let render = Display(state)
-
         Console.Write(AnsiCodes.EnterSecondScreen)
+        let input_thread = InputThread()
 
         while state.Running do
             render.Redraw()

@@ -28,6 +28,7 @@
     <Compile Include="State\Modes\GitMode.fs" />
     <Compile Include="State\Modes\Mode.fs" />
     <Compile Include="State\State.fs" />
+    <Compile Include="State\ShellExtensions.fs" />
     <Compile Include="State\NormalModeCommands.fs" />
     <Compile Include="State\SearchModeCommands.fs" />
     <Compile Include="State\StateCommands.fs" />
