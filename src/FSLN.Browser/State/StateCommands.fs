@@ -35,7 +35,7 @@ type StateCommands =
         let source, target = split.[0], if split.Length > 1 then split.[1] else ""
 
         if source.Length > 0 && target.Length > 0 && source <> target then
-            state.CommandBuffer.Bind(source, target)
+            state.Keymap.Alias(source, target)
             state.StatusLine <- "Binding set."
         else
             state.StatusLine <- "Invalid binding."
@@ -46,7 +46,7 @@ type StateCommands =
         let source, target = split.[0], if split.Length > 1 then split.[1] else ""
 
         if source.Length > 0 && target.Length > 0 && source <> target then
-            state.CommandBuffer.Bind(source, sprintf ":%s<Enter>" target)
+            state.Keymap.Alias(source, sprintf ":%s<Enter>" target)
             state.StatusLine <- "Binding set."
         else
             state.StatusLine <- "Invalid binding."
@@ -57,7 +57,7 @@ type StateCommands =
         let source, target = split.[0], if split.Length > 1 then split.[1] else ""
 
         if source.Length > 0 && target.Length > 0 && source <> target then
-            state.CommandBuffer.Bind(source, sprintf ":!%s<Enter>" target)
+            state.Keymap.Alias(source, sprintf ":!%s<Enter>" target)
             state.StatusLine <- "Binding set."
         else
             state.StatusLine <- "Invalid binding."

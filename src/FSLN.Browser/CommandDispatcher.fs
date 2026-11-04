@@ -146,8 +146,15 @@ type CommandDispatcher(state: State, input_thread: InputThread) =
         | "edit" -> state.Edit(this.OpenEditor)
         | _ -> ()
 
+    member this.DispatchMessage(message: string) : unit =
+        if message.StartsWith(':') then
+            this.DispatchCommand(message.Substring(1))
+        else
+            state.StatusLine <- sprintf "Unrecognised message: '%s'" message
+
     member this.DispatchCommandsOnState() : unit =
-        state.CommandBuffer.DispatchCommands(this.DispatchCommand)
+        state.CommandBuffer.Dispatch(this.DispatchMessage, state.Keymap)
 
     member this.DispatchInitialCommandsOnState(config: string seq) : unit =
-        state.CommandBuffer.DispatchInitialCommands(config, this.DispatchCommand)
+        state.CommandBuffer.Append(config)
+        this.DispatchCommandsOnState()

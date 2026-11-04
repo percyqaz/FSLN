@@ -17,6 +17,7 @@ type State =
         mutable GitStatus: GitStatus option
         mutable Expanded: Set<string>
         mutable Mode: Mode
+        Keymap: Keymap
         CommandBuffer: CommandBuffer
         SearchBuffer: TextBuffer
         mutable ActiveBuffer: ActiveBuffer
@@ -64,7 +65,8 @@ type State =
             GitStatus = GitStatus.Fetch(workspace.RootPath)
             Expanded = Set.empty
             Mode = Mode.Normal({ Solution = solution; Selected = Selection.Solution(solution) })
-            CommandBuffer = CommandBuffer().RegisterDefaultBinds()
+            Keymap = Keymap().RegisterDefaultBinds()
+            CommandBuffer = CommandBuffer()
             SearchBuffer = TextBuffer()
             ActiveBuffer = ActiveBuffer.Command
             StatusLine = ""
@@ -73,25 +75,25 @@ type State =
         }
 
     [<Extension>]
-    static member private RegisterDefaultBinds(buffer: CommandBuffer) : CommandBuffer =
-        buffer.Bind("<Esc>", ":q<Enter>")
+    static member private RegisterDefaultBinds(keymap: Keymap) : Keymap =
+        keymap.Alias("<Esc>", ":q<Enter>")
 
-        buffer.Bind("h", ":collapse<Enter>")
-        buffer.Bind("j", ":down<Enter>")
-        buffer.Bind("k", ":up<Enter>")
-        buffer.Bind("l", ":expand<Enter>")
-        buffer.Bind("<A-k>", ":move_up<Enter>")
-        buffer.Bind("<A-j>", ":move_down<Enter>")
-        buffer.Bind("<Tab>", ":search<Enter>")
-        buffer.Bind(".", ":echo $<Enter>")
+        keymap.Alias("h", ":collapse<Enter>")
+        keymap.Alias("j", ":down<Enter>")
+        keymap.Alias("k", ":up<Enter>")
+        keymap.Alias("l", ":expand<Enter>")
+        keymap.Alias("<A-k>", ":move_up<Enter>")
+        keymap.Alias("<A-j>", ":move_down<Enter>")
+        keymap.Alias("<Tab>", ":search<Enter>")
+        keymap.Alias(".", ":echo $<Enter>")
 
-        buffer.Bind("<Left>", "h")
-        buffer.Bind("<Down>", "j")
-        buffer.Bind("<Up>", "k")
-        buffer.Bind("<Right>", "l")
-        buffer.Bind("<A-Up>", "<A-k>")
-        buffer.Bind("<A-Down>", "<A-j>")
-        buffer.Bind("<Enter>", ":edit<Enter>")
-        buffer.Bind("a", "lj")
+        keymap.Alias("<Left>", "h")
+        keymap.Alias("<Down>", "j")
+        keymap.Alias("<Up>", "k")
+        keymap.Alias("<Right>", "l")
+        keymap.Alias("<A-Up>", "<A-k>")
+        keymap.Alias("<A-Down>", "<A-j>")
+        keymap.Alias("<Enter>", ":edit<Enter>")
+        keymap.Alias("a", "lj")
 
-        buffer
+        keymap

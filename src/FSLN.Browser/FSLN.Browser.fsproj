@@ -19,7 +19,6 @@
     <Compile Include="Tree\WorkspaceLoader.fs" />
     <Compile Include="FilteredTree\FilteredTree.fs" />
     <Compile Include="FilteredTree\Filter.fs" />
-    <Compile Include="Input\CommandBuffer.fs" />
     <Compile Include="State\Config\Theme.fs" />
     <Compile Include="State\Config\Editors.fs" />
     <Compile Include="State\Modes\Selection.fs" />
