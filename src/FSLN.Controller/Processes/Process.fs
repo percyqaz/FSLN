@@ -6,7 +6,6 @@ open System.IO
 open System.Text
 open System.Threading
 open System.Threading.Tasks
-open FSLN.Controller.Config
 open Porta.Pty
 open XTerm
 open XTerm.Input

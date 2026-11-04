@@ -3,7 +3,6 @@ namespace FSLN.Controller
 open System.Collections.Generic
 open System.Threading
 open System.Threading.Tasks
-open FSLN.Controller.Config
 open FSLN.Controller
 
 type ProcessTrackerEntry = { mutable Process: Process; mutable RefCount: int }

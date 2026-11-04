@@ -5,7 +5,6 @@ open System.Collections.Concurrent
 open System.IO
 open System.Text
 open System.Threading.Tasks
-open FSLN.Controller.Config
 open FSLN.Controller
 
 type State =

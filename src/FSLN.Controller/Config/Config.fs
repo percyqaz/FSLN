@@ -1,4 +1,4 @@
-namespace FSLN.Controller.Config
+namespace FSLN.Controller
 
 open System
 open System.Collections.Generic

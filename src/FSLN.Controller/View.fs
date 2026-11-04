@@ -2,7 +2,6 @@ namespace FSLN.Controller
 
 open System
 open System.Text
-open FSLN.Controller.Config
 open FSLN.Controller
 open XTerm
 
