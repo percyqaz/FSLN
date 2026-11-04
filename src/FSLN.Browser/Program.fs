@@ -46,12 +46,6 @@ let entry_point (config: string seq, workspace: Workspace) : unit =
 let main (argv: string array) : int =
     let init = argv.Length > 0 && argv.[0].ToLower() = "init"
 
-    match PipeClient.TryConnect() with
-    | Ok client -> client.SendMessage("hello, world!")
-    | Error reason ->
-        printfn "%s" reason
-        ignore(Console.ReadLine())
-
     match Workspace.TryDetect() with
     | Some _ when init ->
         printfn "Cannot init, a solution or workspace already exists here!"
