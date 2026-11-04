@@ -2,6 +2,7 @@ namespace FSLN
 
 open System
 open System.Text
+open FSLN.Shared
 
 type ScreenBuffer(height: int) =
 
