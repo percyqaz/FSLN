@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="src/FSLN.Browser/FSLN.Browser.fsproj" />
+  <Project Path="src/FSLN.Fernglas/FSLN.Fernglas.fsproj" />
   <Project Path="src/FSLN.Controller/FSLN.Controller.fsproj" />
   <Project Path="src/FSLN.Controller.Tests/FSLN.Controller.Tests.fsproj" />
 </Solution>
