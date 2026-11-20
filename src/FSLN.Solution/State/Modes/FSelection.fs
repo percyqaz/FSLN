@@ -4,7 +4,7 @@ namespace FSLN.Solution
 type FSelection =
     | FFile of FilteredTreeFile
     | FFolder of FilteredTreeFolder
-    | FProject of FilteredProject
+    | FProject of FilteredProjectFileTree
     | FSolution of FilteredSolution
 
     member this.ToSelection() : Selection =

@@ -6,7 +6,7 @@ open Microsoft.Build.Construction
 
 [<RequireQualifiedAccess>]
 type Parent =
-    | Project of Project
+    | Project of ProjectFileTree
     | Folder of FileTreeFolder
 
     member this.Children =
@@ -41,7 +41,7 @@ and FileTreeFile =
         Parent: Parent
     }
 
-    member this.ParentProject: Project =
+    member this.ParentProject: ProjectFileTree =
         match this.Parent with
         | Parent.Folder parent_folder -> parent_folder.ParentProject
         | Parent.Project parent_project -> parent_project
@@ -72,7 +72,7 @@ and FileTreeFolder =
                     yield! folder.EnumerateSubfolders()
         }
 
-    member this.ParentProject: Project =
+    member this.ParentProject: ProjectFileTree =
         match this.Parent with
         | Parent.Folder parent_folder -> parent_folder.ParentProject
         | Parent.Project parent_project -> parent_project
@@ -96,7 +96,7 @@ and FileTreeEntry =
         | File f -> File { f with Parent = parent }
         | Folder f -> Folder { f with Parent = parent }
 
-and Project =
+and ProjectFileTree =
     {
         Name: string
         Guts: ProjectGuts

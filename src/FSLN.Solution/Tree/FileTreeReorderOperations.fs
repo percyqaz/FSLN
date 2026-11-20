@@ -27,7 +27,7 @@ type FileTreeReorderOperations =
         ordering.PlaceAfter([ above.FullPath ], below.FullPath)
 
     [<Extension>]
-    static member private SwapOrder(project: Project, above: FileTreeEntry, below: FileTreeEntry) : unit =
+    static member private SwapOrder(project: ProjectFileTree, above: FileTreeEntry, below: FileTreeEntry) : unit =
         match project.Guts with
         | FileSystem fs -> swap_file_system_order(fs.Ordering, above, below)
         | FSharp _ ->
@@ -41,7 +41,7 @@ type FileTreeReorderOperations =
         project.Save()
 
     [<Extension>]
-    static member MoveUp(project: Project, file: FileTreeFile) : unit =
+    static member MoveUp(project: ProjectFileTree, file: FileTreeFile) : unit =
         let siblings = file.Parent.Children
         let folder_pos = siblings.IndexOf(File file)
 
@@ -56,7 +56,7 @@ type FileTreeReorderOperations =
                 merge_folders_if_needed(siblings.[folder_pos], siblings.[folder_pos + 1], siblings)
 
     [<Extension>]
-    static member MoveDown(project: Project, file: FileTreeFile) : unit =
+    static member MoveDown(project: ProjectFileTree, file: FileTreeFile) : unit =
         let siblings = file.Parent.Children
         let folder_pos = siblings.IndexOf(File file)
 
@@ -71,7 +71,7 @@ type FileTreeReorderOperations =
                 merge_folders_if_needed(siblings.[folder_pos - 1], siblings.[folder_pos], siblings)
 
     [<Extension>]
-    static member MoveUp(project: Project, folder: FileTreeFolder) : unit =
+    static member MoveUp(project: ProjectFileTree, folder: FileTreeFolder) : unit =
         let siblings = folder.Parent.Children
         let folder_pos = siblings.IndexOf(Folder folder)
 
@@ -89,7 +89,7 @@ type FileTreeReorderOperations =
                 merge_folders_if_needed(siblings.[folder_pos], siblings.[folder_pos + 1], siblings)
 
     [<Extension>]
-    static member MoveDown(project: Project, folder: FileTreeFolder) : unit =
+    static member MoveDown(project: ProjectFileTree, folder: FileTreeFolder) : unit =
         let siblings = folder.Parent.Children
         let folder_pos = siblings.IndexOf(Folder folder)
 
@@ -107,7 +107,7 @@ type FileTreeReorderOperations =
                 merge_folders_if_needed(siblings.[folder_pos - 1], siblings.[folder_pos], siblings)
 
     [<Extension>]
-    static member MoveUp(solution: Solution, project: Project) : unit =
+    static member MoveUp(solution: Solution, project: ProjectFileTree) : unit =
         let siblings = solution.Projects
         let pos = siblings.IndexOf(project)
 
@@ -120,7 +120,7 @@ type FileTreeReorderOperations =
             solution.Ordering.Save()
 
     [<Extension>]
-    static member MoveDown(solution: Solution, project: Project) : unit =
+    static member MoveDown(solution: Solution, project: ProjectFileTree) : unit =
         let siblings = solution.Projects
         let pos = siblings.IndexOf(project)
 

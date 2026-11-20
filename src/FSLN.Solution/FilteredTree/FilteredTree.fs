@@ -2,7 +2,7 @@ namespace FSLN.Solution
 
 [<RequireQualifiedAccess>]
 type FParent =
-    | FProject of FilteredProject
+    | FProject of FilteredProjectFileTree
     | FFolder of FilteredTreeFolder
 
     member this.Children =
@@ -47,9 +47,9 @@ and FilteredTreeEntry =
         | FFolder folder -> folder.Parent
 
 
-and FilteredProject =
+and FilteredProjectFileTree =
     {
-        Original: Project
+        Original: ProjectFileTree
         Children: ResizeArray<FilteredTreeEntry>
     }
 
@@ -71,4 +71,4 @@ and FilteredProject =
                     yield! folder.EnumerateSubfolders()
         }
 
-type FilteredSolution = { Original: Solution; Projects: ResizeArray<FilteredProject> }
+type FilteredSolution = { Original: Solution; Projects: ResizeArray<FilteredProjectFileTree> }

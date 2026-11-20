@@ -9,7 +9,9 @@ open FSLN.Solution
 
 type WorkspaceLoader =
 
-    static member LoadFileSystemProject(workspace: Workspace, name: string, project_guts: FileSystemProject) : Project =
+    static member LoadFileSystemProject
+        (workspace: Workspace, name: string, project_guts: FileSystemProject)
+        : ProjectFileTree =
 
         let project =
             {
@@ -56,7 +58,7 @@ type WorkspaceLoader =
 
         project
 
-    static member LoadFSharpProject(name: string, project_path: string) : Project =
+    static member LoadFSharpProject(name: string, project_path: string) : ProjectFileTree =
 
         let project_guts = FSharpProject.Create(project_path)
 

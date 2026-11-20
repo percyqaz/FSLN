@@ -26,12 +26,12 @@ type State =
 
     member this.IsExpanded(folder: FileTreeFolder) : bool = this.Expanded.Contains(folder.FullPath)
 
-    member this.IsExpanded(project: Project) : bool =
+    member this.IsExpanded(project: ProjectFileTree) : bool =
         this.Expanded.Contains(project.FullPath)
 
     member this.IsSelected(file: FileTreeFile) : bool = this.Mode.Selection.Equals(file)
     member this.IsSelected(folder: FileTreeFolder) : bool = this.Mode.Selection.Equals(folder)
-    member this.IsSelected(project: Project) : bool = this.Mode.Selection.Equals(project)
+    member this.IsSelected(project: ProjectFileTree) : bool = this.Mode.Selection.Equals(project)
     member this.IsSelected(solution: Solution) : bool = this.Mode.Selection.Equals(solution)
 
     member this.GitFileStatus(file: string) : GitFileStatus =

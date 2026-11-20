@@ -4,10 +4,10 @@ namespace FSLN.Solution
 type Selection =
     | File of FileTreeFile
     | Folder of FileTreeFolder
-    | Project of Project
+    | Project of ProjectFileTree
     | Solution of Solution
 
-    member this.ParentProject: Project option =
+    member this.ParentProject: ProjectFileTree option =
         match this with
         | File file -> Some file.ParentProject
         | Folder folder -> Some folder.ParentProject
@@ -53,5 +53,5 @@ type Selection =
 
     member this.Equals(file: FileTreeFile) : bool = this = File file
     member this.Equals(folder: FileTreeFolder) : bool = this = Folder folder
-    member this.Equals(project: Project) : bool = this = Project project
+    member this.Equals(project: ProjectFileTree) : bool = this = Project project
     member this.Equals(solution: Solution) : bool = this = Solution solution

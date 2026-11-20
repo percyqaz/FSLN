@@ -8,7 +8,7 @@ type Solution =
         Name: string
         FullPath: string
         Ordering: OrderFile
-        Projects: ResizeArray<Project>
+        Projects: ResizeArray<ProjectFileTree>
         mutable LastSeenUtc: int64
     }
 

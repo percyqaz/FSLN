@@ -21,7 +21,7 @@ type NormalModeCommands =
             else
                 Selection.Folder(folder)
 
-    static let bottom_child_project (state: State, project: Project) : Selection =
+    static let bottom_child_project (state: State, project: ProjectFileTree) : Selection =
         if state.IsExpanded(project) then
             bottom_child_tree(state, project.Children.[project.Children.Count - 1])
         else

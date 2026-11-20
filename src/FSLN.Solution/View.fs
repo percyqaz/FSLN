@@ -59,7 +59,7 @@ type View(state: State) =
 
         view.Line(indent + (if is_selected then line.BackColor(state.Theme.ColorSelection) else line), is_selected)
 
-    member inline private this.RenderProject(is_selected: bool, is_expanded: bool, project: Project) : unit =
+    member inline private this.RenderProject(is_selected: bool, is_expanded: bool, project: ProjectFileTree) : unit =
         let git_status = state.GitFileStatus(project.FullPath)
         let wt = git_status.WorkingTree <> Unchanged
         let status = if wt then git_status.WorkingTree else git_status.Index
@@ -156,7 +156,7 @@ type View(state: State) =
                         display_entry(indent + indent_symbol, inner_color, child_is_last, folder.Children.[i])
                         i <- i + 1
 
-        let inline display_project (project: Project) : unit =
+        let inline display_project (project: ProjectFileTree) : unit =
             let is_selected = state.IsSelected(project)
             let is_expanded = state.IsExpanded(project)
             this.RenderProject(is_selected, is_expanded, project)
@@ -205,7 +205,7 @@ type View(state: State) =
                         display_entry(indent + indent_symbol, inner_color, child_is_last, folder.Children.[i])
                         i <- i + 1
 
-        let inline display_project (project: FilteredProject) : unit =
+        let inline display_project (project: FilteredProjectFileTree) : unit =
             let is_selected = state.IsSelected(project.Original)
             let is_expanded = state.IsExpanded(project.Original)
             this.RenderProject(is_selected, is_expanded, project.Original)

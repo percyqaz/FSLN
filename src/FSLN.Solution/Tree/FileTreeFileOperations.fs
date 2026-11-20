@@ -61,7 +61,7 @@ type FileTreeFileOperations =
             | FileTreeEntry.Folder folder -> find_lowest_neighbor(Parent.Folder(folder))
 
     static let insert_after_neighbor
-        (project: Project, relative_path: string, neighbor: FileTreeFile)
+        (project: ProjectFileTree, relative_path: string, neighbor: FileTreeFile)
         : ProjectItemElement option =
         match project.Guts with
         | FileSystem _ -> None
@@ -93,7 +93,7 @@ type FileTreeFileOperations =
             | Parent.Folder folder -> remove_from_tree(folder.Parent, Folder folder)
 
     [<Extension>]
-    static member TryAdd(project: Project, parent: Parent, new_name_or_path: string) : Result<unit, string> =
+    static member TryAdd(project: ProjectFileTree, parent: Parent, new_name_or_path: string) : Result<unit, string> =
         let directory_parts =
             new_name_or_path.Replace('\\', '/').Split('/', StringSplitOptions.None) |> List.ofArray
 
@@ -135,7 +135,9 @@ type FileTreeFileOperations =
             Ok()
 
     [<Extension>]
-    static member TryMove(project: Project, file: FileTreeFile, new_name_or_path: string) : Result<unit, string> =
+    static member TryMove
+        (project: ProjectFileTree, file: FileTreeFile, new_name_or_path: string)
+        : Result<unit, string> =
         let directory_parts =
             new_name_or_path.Replace('\\', '/').Split('/', StringSplitOptions.None) |> List.ofArray
 

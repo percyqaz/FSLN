@@ -19,7 +19,7 @@ type Filter() =
             if ffolder.Children.Count > 0 then Some(FFolder ffolder) else None
         | File file -> if this.Apply(file) then Some(FFile { Original = file; Parent = parent }) else None
 
-    member this.Apply(project: Project) : FilteredProject option =
+    member this.Apply(project: ProjectFileTree) : FilteredProjectFileTree option =
         let fproject = { Original = project; Children = ResizeArray() }
 
         for child in project.Children |> Seq.choose(fun c -> this.Apply(c, FParent.FProject(fproject))) do

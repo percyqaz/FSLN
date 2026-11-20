@@ -21,7 +21,7 @@ type SearchModeCommands =
             else
                 FSelection.FFolder(folder)
 
-    static let bottom_child_project (state: State, project: FilteredProject) : FSelection =
+    static let bottom_child_project (state: State, project: FilteredProjectFileTree) : FSelection =
         if state.IsExpanded(project.Original) then
             bottom_child_tree(state, project.Children.[project.Children.Count - 1])
         else
