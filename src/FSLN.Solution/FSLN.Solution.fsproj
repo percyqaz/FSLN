@@ -13,12 +13,12 @@
     <Compile Include="Workspace\FileSystemProject.fs" />
     <Compile Include="Workspace\FSharpProject.fs" />
     <Compile Include="Workspace\ProjectGuts.fs" />
-    <Compile Include="Tree\FileTree.fs" />
+    <Compile Include="Tree\ProjectFileTree.fs" />
     <Compile Include="Tree\Solution.fs" />
     <Compile Include="Tree\FileTreeFileOperations.fs" />
     <Compile Include="Tree\FileTreeReorderOperations.fs" />
     <Compile Include="Tree\WorkspaceLoader.fs" />
-    <Compile Include="FilteredTree\FilteredTree.fs" />
+    <Compile Include="FilteredTree\FilteredSolution.fs" />
     <Compile Include="FilteredTree\Filter.fs" />
     <Compile Include="State\Config\Theme.fs" />
     <Compile Include="State\Config\Editors.fs" />
